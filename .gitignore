@@ -1,0 +1,28 @@
+# OS
+.DS_Store
+
+# Secrets
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Test output
+coverage/
+playwright-report/
+test-results/
