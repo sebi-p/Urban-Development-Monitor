@@ -9,9 +9,9 @@ apps/web/                  Next.js App Router (map, project pages, archive, admi
 packages/db/               Drizzle schema, migrations, seed, SQL functions
 packages/shared/           enums, zod schemas, i18n keys shared with the web
 pipeline/                  Python 3.12 (uv)
-  core/                    http client, storage, stages, llm client, geocoder
-  adapters/<city>/         one module per source (SourceAdapter protocol, PLAN §7)
-  prompts/                 versioned prompt + JSON schema files
+  src/mdu/core/            http client, storage, stages, llm client, geocoder
+  src/mdu/adapters/<city>/ one module per source (SourceAdapter protocol, PLAN §7)
+  src/mdu/prompts/         versioned prompt + JSON schema files
   tests/fixtures/<city>/   saved HTML/PDF + golden JSON
 config/jurisdictions/      one YAML per city (brasov.yaml)
 docs/adr/                  one ADR per architecture choice
@@ -21,17 +21,17 @@ docs/sources/<city>.md     URL patterns, quirks, sample files per source
 
 ## Commands
 
-- `pnpm dev` runs the web app locally
-- `pnpm test` runs Vitest + Playwright
-- `pnpm db:migrate` applies the Drizzle migrations
-- `uv run pytest` runs the pipeline tests (fixtures only)
-- `uv run mdu ingest --adapter brasov.council_debates --dry-run` runs one adapter without writing
+TS (repo root): `pnpm install`, `pnpm dev`, `pnpm test` (Vitest), `pnpm lint`, `pnpm typecheck`, `pnpm format` / `pnpm format:check`, `pnpm build`. Playwright arrives in M4.1, and `pnpm db:migrate` in M1.2.
+
+Python (run inside `pipeline/`): `uv sync`, `uv run pytest`, `uv run ruff check .`, `uv run ruff format .`, `uv run mypy`, `uv run mdu ingest --adapter brasov.council_debates --dry-run`. Code lives in `pipeline/src/mdu/` (`mdu.core`, `mdu.adapters.<city>`), see ADR 0001.
+
+CI (`.github/workflows/ci.yml`) runs every check above. Run them before you commit.
 
 ## Rules
 
-- Never fetch live municipal URLs in tests; add a fixture instead. Live access goes only through `pipeline/core/http.py` (robots.txt, throttle, User-Agent).
+- Never fetch live municipal URLs in tests; add a fixture instead. Live access goes only through `pipeline/src/mdu/core/http.py` (robots.txt, throttle, User-Agent).
 - Change the schema only through Drizzle migrations, and update the `packages/shared` enums in the same PR.
-- No Brașov-specific strings outside `pipeline/adapters/brasov/` and `config/jurisdictions/brasov.yaml`.
+- No Brașov-specific strings outside `pipeline/src/mdu/adapters/brasov/` and `config/jurisdictions/brasov.yaml`.
 - Every extracted value keeps its `source_document_id` and page number.
 - UI strings go only through `next-intl` message files (`ro` default, `en`).
 - Write an ADR in `docs/adr/` for any new dependency or service.
