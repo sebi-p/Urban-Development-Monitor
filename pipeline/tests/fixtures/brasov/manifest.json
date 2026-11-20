@@ -1,0 +1,270 @@
+{
+  "city": "brasov",
+  "note": "Metadata only. Raw files are in private R2; run `uv run mdu fixtures pull`.",
+  "fixtures": [
+    {
+      "id": "council_agendas/session-400",
+      "source": "council_agendas",
+      "fetched_at": "2026-11-20T14:44:38+00:00",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 229429,
+      "sha256": "d67e0f92c779455266a4a4e17be758cb0f6713e8e407926dcba370a2c61ad264",
+      "file": "d67e0f92c779455266a4a4e17be758cb0f6713e8e407926dcba370a2c61ad264.html",
+      "note": "Old session id: HTTP 200 but only the page template, no agenda (ids are not a full history)"
+    },
+    {
+      "id": "council_agendas/session-470",
+      "source": "council_agendas",
+      "fetched_at": "2026-11-20T14:44:35+00:00",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 249599,
+      "sha256": "d9bfc9ba72b2e91dc69b69a04ce3749490c8ebf05088f4f14a6f484d3c8480b9",
+      "file": "d9bfc9ba72b2e91dc69b69a04ce3749490c8ebf05088f4f14a6f484d3c8480b9.html",
+      "note": "Council agenda page, session id 470 (2026-11-20)"
+    },
+    {
+      "id": "council_debates/listing",
+      "source": "council_debates",
+      "fetched_at": "2026-11-20T14:43:40+00:00",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 929728,
+      "sha256": "d269a26ce4a65959532dc9a14e97cc088ef00ca513e1473235ca2f3de34ec660",
+      "file": "d269a26ce4a65959532dc9a14e97cc088ef00ca513e1473235ca2f3de34ec660.html",
+      "note": "Public-debate listing page (all open and past debates)"
+    },
+    {
+      "id": "council_debates/puz-01-announcement",
+      "source": "council_debates",
+      "fetched_at": "2026-11-20T14:43:43+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 89022,
+      "sha256": "26546dd36d9fc2081640cef4aa0e0f137a28db0ba1595412ff4e766537ab59db",
+      "file": "26546dd36d9fc2081640cef4aa0e0f137a28db0ba1595412ff4e766537ab59db.pdf",
+      "note": "PUZ debate: announcement"
+    },
+    {
+      "id": "council_debates/puz-02-draft-decision",
+      "source": "council_debates",
+      "fetched_at": "2026-11-20T14:43:46+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 120942,
+      "sha256": "fbc1a44c6adac272d837a879c46831f5b39f4691df86584ea58ef0addce430e3",
+      "file": "fbc1a44c6adac272d837a879c46831f5b39f4691df86584ea58ef0addce430e3.pdf",
+      "note": "PUZ debate: draft council decision"
+    },
+    {
+      "id": "council_debates/puz-03-approval-note",
+      "source": "council_debates",
+      "fetched_at": "2026-11-20T14:43:49+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 117881,
+      "sha256": "a7d9801a73d2aa612c5884349c92aa08be460cb396683e5a160ac9b3d2c48022",
+      "file": "a7d9801a73d2aa612c5884349c92aa08be460cb396683e5a160ac9b3d2c48022.pdf",
+      "note": "PUZ debate: referat de aprobare"
+    },
+    {
+      "id": "council_debates/puz-04-specialist-report",
+      "source": "council_debates",
+      "fetched_at": "2026-11-20T14:43:52+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 231622,
+      "sha256": "2683ab43c3de0d82db1d7bd3adcff4e2e0536c67d585b57f6a03e924d9012921",
+      "file": "2683ab43c3de0d82db1d7bd3adcff4e2e0536c67d585b57f6a03e924d9012921.pdf",
+      "note": "PUZ debate: raport de specialitate"
+    },
+    {
+      "id": "council_debates/puz-06-rlu",
+      "source": "council_debates",
+      "fetched_at": "2026-11-20T14:43:55+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 217371,
+      "sha256": "9fbeb8d06eabc3b1937996cb2708f93c4f2e0ea8a09ae208a7430f40547b42e7",
+      "file": "9fbeb8d06eabc3b1937996cb2708f93c4f2e0ea8a09ae208a7430f40547b42e7.pdf",
+      "note": "PUZ debate: local urbanism regulation (RLU)"
+    },
+    {
+      "id": "council_debates/puz-09-consultation-report",
+      "source": "council_debates",
+      "fetched_at": "2026-11-20T14:43:57+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 128909,
+      "sha256": "4b3dce44fcc567de89e3d309be19f32db64d601f7fc3e974348359952a1af234",
+      "file": "4b3dce44fcc567de89e3d309be19f32db64d601f7fc3e974348359952a1af234.pdf",
+      "note": "PUZ debate: Law 52/2003 consultation report"
+    },
+    {
+      "id": "council_debates/puz-memoriu",
+      "source": "council_debates",
+      "fetched_at": "2026-11-20T14:44:00+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 1566347,
+      "sha256": "fcdf0702705c3fa234068d82369b3e75451f461794dd0eee0a0568027ed00e97",
+      "file": "fcdf0702705c3fa234068d82369b3e75451f461794dd0eee0a0568027ed00e97.pdf",
+      "note": "PUZ debate: explanatory memo (memoriu)"
+    },
+    {
+      "id": "council_drafts/listing",
+      "source": "council_drafts",
+      "fetched_at": "2026-11-20T14:44:59+00:00",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 337789,
+      "sha256": "5114a15e9e4c91861e59619ecdc6a0b7ad2aa92262fd3eb20c8bf68effe40558",
+      "file": "5114a15e9e4c91861e59619ecdc6a0b7ad2aa92262fd3eb20c8bf68effe40558.html",
+      "note": "Council draft-decision listing (documents are on a robots-disallowed host)"
+    },
+    {
+      "id": "council_minutes/listing",
+      "source": "council_minutes",
+      "fetched_at": "2026-11-20T14:44:44+00:00",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 236663,
+      "sha256": "1f2044a73fdfd7e3f7e8629bdb4ae79913f7fba149883e78b92f5df0e227098d",
+      "file": "1f2044a73fdfd7e3f7e8629bdb4ae79913f7fba149883e78b92f5df0e227098d.html",
+      "note": "Council minutes listing"
+    },
+    {
+      "id": "council_minutes/pv-182",
+      "source": "council_minutes",
+      "fetched_at": "2026-11-20T14:44:50+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 185268,
+      "sha256": "25d8dddc1a5222d8d0efb7b613d2bfc4887fe151c3a63e031d663fd7a4e3e05d",
+      "file": "25d8dddc1a5222d8d0efb7b613d2bfc4887fe151c3a63e031d663fd7a4e3e05d.pdf",
+      "note": "Council minutes PV 182 (2013, older format)"
+    },
+    {
+      "id": "council_minutes/pv-468",
+      "source": "council_minutes",
+      "fetched_at": "2026-11-20T14:44:47+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 194978,
+      "sha256": "495a0db9bf62c9f118ab9d007b5097b9985d4f552548fe14144dbbdc12c47eb4",
+      "file": "495a0db9bf62c9f118ab9d007b5097b9985d4f552548fe14144dbbdc12c47eb4.pdf",
+      "note": "Council minutes PV 468 (2026-09-25)"
+    },
+    {
+      "id": "ctatu/agenda-2026-10-20",
+      "source": "ctatu",
+      "fetched_at": "2026-11-20T14:44:53+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 104872,
+      "sha256": "f876487f20e4adba920419c37847c73c0a3d3969fd93e8f0e74db35027bbde86",
+      "file": "f876487f20e4adba920419c37847c73c0a3d3969fd93e8f0e74db35027bbde86.pdf",
+      "note": "Technical urbanism committee (CTATU) agenda"
+    },
+    {
+      "id": "ctatu/decisions-2026-07-29-scanned",
+      "source": "ctatu",
+      "fetched_at": "2026-11-20T14:46:19+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 1549061,
+      "sha256": "fc2a0ec71cb49511000329d97cd90513959f6fedde864365b313d26310c4a083",
+      "file": "fc2a0ec71cb49511000329d97cd90513959f6fedde864365b313d26310c4a083.pdf",
+      "note": "CTATU decisions, scanned PDF without a text layer (OCR sample)"
+    },
+    {
+      "id": "ctatu/decisions-2026-10-20",
+      "source": "ctatu",
+      "fetched_at": "2026-11-20T14:44:55+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 214491,
+      "sha256": "dee2e5e14e6da578dec5a4c871e675f08678c2656b20361dc8b78182df3acde2",
+      "file": "dee2e5e14e6da578dec5a4c871e675f08678c2656b20361dc8b78182df3acde2.pdf",
+      "note": "CTATU decisions"
+    },
+    {
+      "id": "notices/environment-screening-decision",
+      "source": "notices",
+      "fetched_at": "2026-11-20T14:44:30+00:00",
+      "status": 404,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 235170,
+      "sha256": "e2335848d57969d832820d7043d3b292fd7b08f76fde3a923cfa620cd818f09f",
+      "file": "e2335848d57969d832820d7043d3b292fd7b08f76fde3a923cfa620cd818f09f.html",
+      "note": "Environment notice: SEA screening decision for a PUZ. Served with HTTP 404 although the page renders the article title and attachments (CMS quirk)."
+    },
+    {
+      "id": "notices/listing",
+      "source": "notices",
+      "fetched_at": "2026-11-20T14:44:24+00:00",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 274420,
+      "sha256": "0d8c09a39ef075f7e377e0ee2a80bc3767519ffb665e4ec47ef91abb666d9256",
+      "file": "0d8c09a39ef075f7e377e0ee2a80bc3767519ffb665e4ec47ef91abb666d9256.html",
+      "note": "Notices listing (last 90 days)"
+    },
+    {
+      "id": "notices/puz-information-notice",
+      "source": "notices",
+      "fetched_at": "2026-11-20T14:44:27+00:00",
+      "status": 404,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 236977,
+      "sha256": "6828b47fdaa52ef7ce9d4121f58697de16f9481490f513f19f25263cf0c542ce",
+      "file": "6828b47fdaa52ef7ce9d4121f58697de16f9481490f513f19f25263cf0c542ce.html",
+      "note": "Urbanism notice: PUZ public information and consultation (company project). Served with HTTP 404 although the page renders the article title and attachments (CMS quirk)."
+    },
+    {
+      "id": "notices/traffic-committee-agenda",
+      "source": "notices",
+      "fetched_at": "2026-11-20T14:44:33+00:00",
+      "status": 404,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 232128,
+      "sha256": "e5cd1a7f76d18878868bdbcfa2ba8f0af3ff3454d28a6154c54c9ca09746dd28",
+      "file": "e5cd1a7f76d18878868bdbcfa2ba8f0af3ff3454d28a6154c54c9ca09746dd28.html",
+      "note": "Urbanism notice: traffic committee agenda article. Served with HTTP 404 although the page renders the article title and attachments (CMS quirk)."
+    },
+    {
+      "id": "urbanism_hub/page",
+      "source": "urbanism_hub",
+      "fetched_at": "2026-11-20T14:44:03+00:00",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 363937,
+      "sha256": "79c20a7205eacb7d69bfccf4d851d8914b62a7f6d874e60545ea37a65f7bcfa0",
+      "file": "79c20a7205eacb7d69bfccf4d851d8914b62a7f6d874e60545ea37a65f7bcfa0.html",
+      "note": "Urbanism hub page with PUD/PUZ lists and committee files"
+    },
+    {
+      "id": "urbanism_hub/puz-memoriu",
+      "source": "urbanism_hub",
+      "fetched_at": "2026-11-20T14:44:06+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 371978,
+      "sha256": "8cb25c9e02be633d3de4fabaace9c27bfe0b2b1bf6ce37dbad603c857f22579d",
+      "file": "8cb25c9e02be633d3de4fabaace9c27bfe0b2b1bf6ce37dbad603c857f22579d.pdf",
+      "note": "Hub PUZ: memoriu (company initiator)"
+    },
+    {
+      "id": "urbanism_hub/puz-rlu",
+      "source": "urbanism_hub",
+      "fetched_at": "2026-11-20T14:44:09+00:00",
+      "status": 200,
+      "content_type": "application/pdf",
+      "size": 258769,
+      "sha256": "5539074e0783aa210892a6aa45048d4aaebbfefff9a2fea361505992da3b331b",
+      "file": "5539074e0783aa210892a6aa45048d4aaebbfefff9a2fea361505992da3b331b.pdf",
+      "note": "Hub PUZ: local urbanism regulation"
+    }
+  ]
+}

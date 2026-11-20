@@ -1,0 +1,52 @@
+"""Object storage on Cloudflare R2 through its S3 API (PLAN §4)."""
+
+import os
+from dataclasses import dataclass
+
+import boto3
+from botocore.config import Config
+from botocore.exceptions import ClientError
+from mypy_boto3_s3 import S3Client
+
+ENV_VARS = ("R2_ENDPOINT", "R2_BUCKET", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY")
+
+
+class StorageNotConfigured(RuntimeError):
+    pass
+
+
+@dataclass
+class ObjectStore:
+    bucket: str
+    client: S3Client
+
+    @classmethod
+    def from_env(cls) -> "ObjectStore":
+        missing = [v for v in ENV_VARS if not os.environ.get(v)]
+        if missing:
+            raise StorageNotConfigured(f"set {', '.join(missing)} (see .env.example)")
+        client = boto3.client(
+            "s3",
+            endpoint_url=os.environ["R2_ENDPOINT"],
+            aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+            region_name="auto",
+            config=Config(retries={"max_attempts": 5, "mode": "standard"}),
+        )
+        return cls(bucket=os.environ["R2_BUCKET"], client=client)
+
+    def exists(self, key: str) -> bool:
+        try:
+            self.client.head_object(Bucket=self.bucket, Key=key)
+        except ClientError as exc:
+            if exc.response.get("Error", {}).get("Code") in ("404", "NoSuchKey", "NotFound"):
+                return False
+            raise
+        return True
+
+    def put(self, key: str, data: bytes, content_type: str | None = None) -> None:
+        extra = {"ContentType": content_type} if content_type else {}
+        self.client.put_object(Bucket=self.bucket, Key=key, Body=data, **extra)  # type: ignore[arg-type]
+
+    def get(self, key: str) -> bytes:
+        return self.client.get_object(Bucket=self.bucket, Key=key)["Body"].read()

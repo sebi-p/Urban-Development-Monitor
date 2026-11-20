@@ -33,7 +33,8 @@ CI (`.github/workflows/ci.yml`) runs every check above. Run them before you comm
 
 ## Rules
 
-- Never fetch live municipal URLs in tests; add a fixture instead. Live access goes only through `pipeline/src/mdu/core/http.py` (robots.txt, throttle, User-Agent).
+- Never fetch live municipal URLs in tests; add a fixture instead (`uv run mdu fixtures capture|push|pull`). Live access goes only through `pipeline/src/mdu/core/http.py` (robots.txt, throttle, User-Agent).
+- Never commit raw HTML/PDFs or source URLs: they live in private R2 (ADR 0004). Commit only processed output, checked for personal data. Source notes: `docs/sources/brasov.md`.
 - Change the schema only through Drizzle migrations, and update the `packages/shared` enums in the same PR. Enum values live only in `packages/shared/src/enums.ts`; append, never reorder.
 - No Brașov-specific strings outside `pipeline/src/mdu/adapters/brasov/` and `config/jurisdictions/brasov.yaml`.
 - Every extracted value keeps its `source_document_id` and page number.
