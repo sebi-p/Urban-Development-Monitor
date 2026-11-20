@@ -4,3 +4,7 @@ coverage/
 pipeline/
 docs/PLAN.md
 packages/db/migrations/
+# Local agent tooling, kept out of git via .git/info/exclude
+.claude/
+.mcp.json
+skills-lock.json
