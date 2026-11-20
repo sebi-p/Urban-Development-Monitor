@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgis:
-        image: imresamu/postgis:16-3.5 # same image as docker-compose.yml
+        image: imresamu/postgis:18-3.6 # same image as docker-compose.yml
         env:
           POSTGRES_USER: mdu
           POSTGRES_PASSWORD: mdu

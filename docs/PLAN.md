@@ -65,7 +65,7 @@ Use TypeScript for everything users touch and Python for collection and document
 | Layer | Choice | Why | Alternative |
 | --- | --- | --- | --- |
 | Repo | Monorepo, pnpm workspaces (`apps/web`, `packages/db`) + `uv`-managed Python project (`pipeline/`) | One place for schema, docs and CI; Claude Code sees everything | Two repos |
-| Database | PostgreSQL 16 + PostGIS + `pg_trgm` + `unaccent`, on Neon | Spatial queries, full-text search with the built-in `romanian` config, fuzzy matching of names and addresses | Supabase (smaller free DB, pauses when idle) |
+| Database | PostgreSQL 18 + PostGIS 3.6 + `pg_trgm` + `unaccent`, on Neon | Spatial queries, full-text search with the built-in `romanian` config, fuzzy matching of names and addresses | Supabase (smaller free DB, pauses when idle) |
 | Schema and migrations | Drizzle ORM + drizzle-kit (TS side); Python reads/writes via SQLAlchemy Core or psycopg against the same tables | Single source of truth in `packages/db`; typed queries in the web app | Prisma; Alembic |
 | Web framework | Next.js (App Router, React Server Components), TypeScript strict | SSR/ISR project pages for SEO and sharing; route handlers for the map and search API | SvelteKit; Astro + small API |
 | UI | Tailwind CSS + shadcn/ui, lucide icons, `next-intl` (ro default, en) | Fast, accessible components; translations from day one | Mantine |

@@ -16,7 +16,7 @@ PLAN §4 and §6 call for one Postgres/PostGIS schema, owned by `packages/db` an
 - **Migration `0000_extensions.sql` is hand-written.** It enables `postgis`, `pg_trgm` and `unaccent`, and creates `unaccent_immutable()`. It runs before the generated `0001_schema.sql` because the generated `project.search` column calls that function. Later migrations are generated with `pnpm db:generate`, and CI fails if the schema and the committed migrations drift apart.
 - **Geometry and `tsvector` columns are small Drizzle `customType`s**, always SRID 4326. Drizzle's built-in `geometry` type only covers points.
 - **`fetch` and `raw_document` are separate tables.** `fetch` is the discovery and attempt log; `raw_document` is the immutable content, unique per SHA-256. PLAN §6 lists them together.
-- **Local development uses `imresamu/postgis:16-3.5`** (`docker-compose.yml`), and CI uses the same image as a service container. The official `postgis/postgis` image has no arm64 build.
+- **Local development uses `imresamu/postgis:18-3.6`** (`docker-compose.yml`), and CI uses the same image as a service container. The official `postgis/postgis` image has no arm64 build.
 - **The seed** reads `config/jurisdictions/*.yaml` and writes 10 `demo-` projects per jurisdiction. It refuses to write to a non-local host unless `--allow-remote` is passed.
 
 ## Consequences
