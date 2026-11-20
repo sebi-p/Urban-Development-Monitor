@@ -31,6 +31,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ingest.add_argument("--dry-run", action="store_true", help="fetch and parse; write nothing")
 
+    run = sub.add_parser("run", help="run a pipeline stage (discover, fetch) against Postgres")
+    run.add_argument("--stage", required=True, choices=["discover", "fetch"])
+    run.add_argument("--city", required=True)
+    run.add_argument("--adapter", help='e.g. "brasov.council_debates" (required for discover)')
+    run.add_argument("--limit", type=int, default=100, help="fetch: max URLs this run")
+    run.add_argument("--max-mb", type=int, default=30, help="fetch: skip larger files")
+    run.add_argument("--all", action="store_true", help="discover: not only PUZ/PUD (back-fill)")
+    run.add_argument(
+        "--night-only", action="store_true", help="refuse to run outside 22:00–06:00 Bucharest"
+    )
+
     streets = sub.add_parser("streets", help="build and cache a city's street index (OSM tiles)")
     streets.add_argument("--city", required=True)
 
@@ -233,21 +244,64 @@ def _ingest(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run(args: argparse.Namespace) -> int:
+    import importlib  # noqa: PLC0415
+
+    import psycopg  # noqa: PLC0415
+
+    from mdu import stages  # noqa: PLC0415
+    from mdu.core.storage import ObjectStore  # noqa: PLC0415
+
+    if args.night_only and not stages.is_night():
+        print("outside the 22:00–06:00 Bucharest window (PLAN §7); not running", file=sys.stderr)
+        return EXIT_FAILED
+    url = os.environ.get("DATABASE_URL_UNPOOLED") or os.environ.get("DATABASE_URL")
+    if not url:
+        print("DATABASE_URL is not set", file=sys.stderr)
+        return EXIT_FAILED
+    with psycopg.connect(url) as conn, _client(args.city) as client:
+        if args.stage == "discover":
+            if not args.adapter:
+                print("--adapter is required for discover", file=sys.stderr)
+                return EXIT_FAILED
+            registry = importlib.import_module(f"mdu.adapters.{args.city}.discover").DISCOVER
+            base_url, find = registry[args.adapter]
+            items = find(client, include_all=args.all)
+            result = stages.discover(
+                conn, city=args.city, adapter=args.adapter, base_url=base_url, items=items
+            )
+        else:
+            result = stages.fetch(
+                conn,
+                client,
+                city=args.city,
+                adapter=args.adapter,
+                limit=args.limit,
+                upload=ObjectStore.from_env().put,
+                max_bytes=args.max_mb * 1024 * 1024,
+                log=print,
+            )
+    print(f"{args.stage}: {dict(result.counts)}; {client.requests_sent} requests")
+    print(f"database: {urlsplit(url).hostname}")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     load_env()
     args = build_parser().parse_args(argv)
-    if args.command == "fetch":
-        return _fetch(args)
-    if args.command == "fixtures":
-        return _fixtures(args)
-    if args.command == "inventory":
-        return _inventory(args)
-    if args.command == "streets":
-        return _streets(args)
-    if args.command == "ingest":
-        return _ingest(args)
-    print(f"mdu {args.command}: not implemented yet", file=sys.stderr)
-    return EXIT_NOT_IMPLEMENTED
+    commands: dict[str, Callable[[argparse.Namespace], int]] = {
+        "fetch": _fetch,
+        "fixtures": _fixtures,
+        "inventory": _inventory,
+        "streets": _streets,
+        "run": _run,
+        "ingest": _ingest,
+    }
+    handler = commands.get(args.command)
+    if handler is None:
+        print(f"mdu {args.command}: not implemented yet", file=sys.stderr)
+        return EXIT_NOT_IMPLEMENTED
+    return handler(args)
 
 
 if __name__ == "__main__":

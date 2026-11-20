@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "fetch_pending_url_uq" ON "fetch" USING btree ("source_id","url") WHERE "fetch"."status" = 'pending';

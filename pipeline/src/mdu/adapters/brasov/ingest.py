@@ -38,7 +38,8 @@ _NOTICE_PREFIX = re.compile(
 )
 
 
-def _kind(title: str) -> ProjectKind | None:
+def kind_of(title: str) -> ProjectKind | None:
+    """'puz' or 'pud' from a title mentioning P.U.Z. / PUD, else None."""
     m = _KIND.search(title)
     if not m:
         return None
@@ -72,7 +73,7 @@ def debate_records(
     """Pure: one fetched debate listing -> project records (tested on the fixture)."""
     out = []
     for d in council_debates.parse_listing(source.content):
-        kind = _kind(d.title)
+        kind = kind_of(d.title)
         if kind is None:
             stats.skip("not an urban plan (PUZ/PUD)")
             continue
@@ -113,7 +114,7 @@ def urbanism_notices(
         raise HttpError(f"notices listing returned HTTP {resp.status}")
     out = []
     for item in notices.parse_listing(resp.content):
-        kind = _kind(item.title)
+        kind = kind_of(item.title)
         if item.category != "urbanism" or kind is None:
             stats.skip("not an urbanism PUZ/PUD notice")
             continue

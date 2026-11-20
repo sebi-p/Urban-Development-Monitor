@@ -18,6 +18,7 @@ from typing import Any
 
 import psycopg
 
+from mdu.core.documents import store_raw_document
 from mdu.core.enums import EventType, ProjectKind, ProjectStatus
 from mdu.core.streets import StreetPoint, fold
 
@@ -124,48 +125,6 @@ class IngestStats:
         self.skipped_other[reason] = self.skipped_other.get(reason, 0) + 1
 
 
-def _ext(content_type: str | None, url: str) -> str:
-    from mdu.fixtures import extension_for  # noqa: PLC0415
-
-    return extension_for(content_type, url)
-
-
-def _raw_document_id(
-    cur: psycopg.Cursor[Any],
-    jurisdiction_id: int,
-    city: str,
-    doc: SourceDoc,
-    upload: Callable[[str, bytes, str | None], None] | None,
-) -> str:
-    key = f"raw/{city}/{doc.fetched_at:%Y}/{doc.sha256}.{_ext(doc.content_type, doc.url)}"
-    cur.execute(
-        "select id from raw_document where jurisdiction_id = %s and sha256 = %s",
-        (jurisdiction_id, doc.sha256),
-    )
-    row = cur.fetchone()
-    if row:
-        return str(row[0])
-    if upload:
-        upload(key, doc.content, doc.content_type)
-    cur.execute(
-        """insert into raw_document (jurisdiction_id, url, fetched_at, sha256, mime, size_bytes,
-               r2_key, doc_type)
-           values (%s, %s, %s, %s, %s, %s, %s, 'listing') returning id""",
-        (
-            jurisdiction_id,
-            doc.url,
-            doc.fetched_at,
-            doc.sha256,
-            (doc.content_type or "application/octet-stream").split(";")[0],
-            len(doc.content),
-            key if upload else None,
-        ),
-    )
-    created = cur.fetchone()
-    assert created
-    return str(created[0])
-
-
 def write_records(  # noqa: PLR0913
     conn: psycopg.Connection[Any],
     *,
@@ -196,7 +155,17 @@ def write_records(  # noqa: PLR0913
         for rec in records:
             sha = rec.source.sha256
             if sha not in doc_ids:
-                doc_ids[sha] = _raw_document_id(cur, jid, city, rec.source, upload)
+                doc_ids[sha], _ = store_raw_document(
+                    cur,
+                    jurisdiction_id=jid,
+                    city=city,
+                    url=rec.source.url,
+                    content=rec.source.content,
+                    content_type=rec.source.content_type,
+                    fetched_at=rec.source.fetched_at,
+                    upload=upload,
+                    doc_type="listing",
+                )
                 cur.execute(
                     """insert into "fetch" (jurisdiction_id, source_id, url, status, fetched_at,
                            http_status, raw_document_id)

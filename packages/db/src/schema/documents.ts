@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
@@ -10,6 +11,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { createdAt, id, jurisdictionId } from "./columns.ts";
@@ -43,6 +45,10 @@ export const fetch = pgTable(
   (t) => [
     index("fetch_source_status_idx").on(t.sourceId, t.status),
     index("fetch_url_idx").on(t.url),
+    // A URL is queued at most once per source; re-running discover is a no-op (M2.2).
+    uniqueIndex("fetch_pending_url_uq")
+      .on(t.sourceId, t.url)
+      .where(sql`${t.status} = 'pending'`),
   ],
 );
 
