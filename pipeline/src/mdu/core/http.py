@@ -120,6 +120,7 @@ class PoliteClient:
     _last_request: dict[str, float] = field(init=False, default_factory=dict, repr=False)
     _robots: dict[str, _Robots] = field(init=False, default_factory=dict, repr=False)
     _consecutive_errors: int = field(init=False, default=0, repr=False)
+    requests_sent: int = field(init=False, default=0)
     _blocked: frozenset[str] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -254,6 +255,7 @@ class PoliteClient:
         attempt = 0
         while True:
             self._throttle(host)
+            self.requests_sent += 1
             try:
                 resp = self._stream(method, url, headers)
             except httpx.TransportError as exc:

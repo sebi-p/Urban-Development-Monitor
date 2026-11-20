@@ -56,6 +56,13 @@ jobs:
     defaults:
       run:
         working-directory: pipeline
+    env:
+      # Raw fixtures live in private R2 (ADR 0004); a missing one fails the run instead of skipping.
+      MDU_REQUIRE_FIXTURES: "1"
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3; no moving major tag
@@ -66,4 +73,9 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy
+      - name: Pull fixtures from R2
+        run: |
+          for city in tests/fixtures/*/; do
+            uv run mdu fixtures pull --city "$(basename "$city")"
+          done
       - run: uv run pytest

@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from mdu import __version__
@@ -25,7 +25,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ingest.add_argument("--dry-run", action="store_true", help="discover only; write nothing")
 
-    sub.add_parser("inventory", help="discover-only run that counts URLs per source (M0.2)")
+    inv = sub.add_parser("inventory", help="discover-only survey of a city's sources (M0.2)")
+    inv.add_argument("--city", required=True)
+    inv.add_argument("--no-upload", action="store_true", help="don't upload the private CSV to R2")
 
     fetch = sub.add_parser("fetch", help="politely download URLs to a local folder (exploration)")
     fetch.add_argument("--city", required=True, help="jurisdiction slug (for blocked hosts)")
@@ -112,6 +114,33 @@ def _fixtures(args: argparse.Namespace) -> int:
     return 0
 
 
+def _inventory(args: argparse.Namespace) -> int:
+    from mdu import inventory  # noqa: PLC0415
+    from mdu.core.storage import ObjectStore, StorageNotConfigured  # noqa: PLC0415
+
+    upload: Callable[[str, bytes], None] | None = None
+    if not args.no_upload:
+        try:
+            store = ObjectStore.from_env()
+        except StorageNotConfigured as exc:
+            print(f"R2 not configured ({exc}); pass --no-upload to skip", file=sys.stderr)
+            return EXIT_FAILED
+
+        def put_csv(key: str, data: bytes) -> None:
+            store.put(key, data, "text/csv")
+
+        upload = put_csv
+
+    with _client(args.city) as client:
+        survey = inventory.run(args.city, client, log=lambda m: print(m, flush=True))
+    private, summary = inventory.write_outputs(survey, upload)
+    print(
+        f"private rows: {private} ({len(survey.rows)} rows{', uploaded to R2' if upload else ''})"
+    )
+    print(f"summary (commit this): {summary}")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     load_env()
     args = build_parser().parse_args(argv)
@@ -119,6 +148,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _fetch(args)
     if args.command == "fixtures":
         return _fixtures(args)
+    if args.command == "inventory":
+        return _inventory(args)
     print(f"mdu {args.command}: not implemented yet", file=sys.stderr)
     return EXIT_NOT_IMPLEMENTED
 

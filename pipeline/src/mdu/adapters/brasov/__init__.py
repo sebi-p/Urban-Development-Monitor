@@ -1,1 +1,1 @@
-"""Adapters for Brașov sources (PLAN §2). One module per source."""
+"""Adapters for Brașov sources (PLAN §2, docs/sources/brasov.md). One module per source."""

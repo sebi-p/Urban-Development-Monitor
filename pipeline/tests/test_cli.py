@@ -18,5 +18,5 @@ def test_ingest_parses_adapter_and_dry_run() -> None:
 
 
 def test_unimplemented_command_fails_cleanly(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["inventory"]) == EXIT_NOT_IMPLEMENTED
+    assert main(["ingest", "--adapter", "x.y"]) == EXIT_NOT_IMPLEMENTED
     assert "not implemented" in capsys.readouterr().err

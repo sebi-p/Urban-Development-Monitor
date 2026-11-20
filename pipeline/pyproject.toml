@@ -7,7 +7,9 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "boto3>=1.43.125",
     "httpx[http2]>=0.28.1",
+    "pypdf>=7.0.0",
     "pyyaml>=6.0.3",
+    "selectolax>=1.0.2",
 ]
 
 [project.scripts]
@@ -38,6 +40,8 @@ line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
+# Romanian text and year ranges use the en dash legitimately.
+allowed-confusables = ["–"]
 select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "PL", "PT"]
 
 [tool.ruff.lint.per-file-ignores]

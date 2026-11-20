@@ -22,7 +22,10 @@ CLAUDE.md requires all live requests to go through `mdu.core.http`, so it must e
   - a stop after 20 consecutive failures.
 - **Extra pipeline dependencies:**
   - `boto3`, for R2 through its S3 API (with `boto3-stubs` for mypy);
-  - `pyyaml`, for the jurisdiction config.
+  - `pyyaml`, for the jurisdiction config;
+  - `selectolax`, the HTML parser chosen in PLAN §4. Version 1.0 removed its old engine, so the code uses `selectolax.lexbor`.
+  - `pypdf` (BSD-licensed), only to check whether a PDF has a text layer during inventory. Full text extraction stays with PyMuPDF in M2.3.
+- **`mdu inventory`** (M0.2) writes the full list of URLs it finds only to the gitignored `pipeline/.inventory/` and to R2 `inventory/<city>/`. Only an aggregate summary, with no URLs, labels or folder names, goes to `docs/inventory/`.
 - **Raw fixtures live only in private R2,** under `fixtures/<city>/<sha256>.<ext>`, with a private `<sha256>.meta.json` holding the URL and headers. The local cache `pipeline/tests/fixtures/<city>/files/` is gitignored.
 - **The committed `manifest.json`** holds only the ID, source, fetch time, status, content type, size, SHA-256 and a neutral note. It holds **no URLs**, because folder names can contain personal names.
 - **Commands:** `mdu fixtures capture | push | pull | verify` manage fixtures; `mdu fetch` downloads pages to a local folder for exploration.

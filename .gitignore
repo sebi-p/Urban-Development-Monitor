@@ -33,3 +33,6 @@ apps/web/public/maplibre/
 
 # Raw fixture files: private R2 only, never committed (ADR 0004). The manifest is committed.
 pipeline/tests/fixtures/*/files/
+
+# Private inventory rows (URLs can contain personal names); summaries go to docs/inventory/
+pipeline/.inventory/
