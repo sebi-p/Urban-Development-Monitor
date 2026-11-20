@@ -1,7 +1,8 @@
 /**
- * Vercel build step (`pnpm db:deploy`): apply pending migrations, then seed demo data on preview
- * deployments only. The Neon–Vercel integration gives each preview its own Neon branch, so the
- * seed never touches production. Production applies migrations on every deploy (ADR 0003).
+ * Vercel build step (`pnpm db:deploy`): apply pending migrations, then seed the demo projects.
+ * There is one environment: every push to `main` deploys to production and must be testable
+ * live, so production gets the clearly marked [DEMO] projects until real data arrives
+ * (ADR 0003). Set MDU_DEMO_DATA=off to stop seeding; the first real adapter turns it off for good.
  */
 import { createDb } from "./client.ts";
 import { runMigrations } from "./migrate.ts";
@@ -25,7 +26,7 @@ if (!url) {
 await runMigrations(url);
 console.log(`db:deploy: migrations applied (${env ?? "local"})`);
 
-if (env === "preview") {
+if (process.env.MDU_DEMO_DATA !== "off") {
   const { db, client } = createDb(url, { max: 1, onnotice: () => {} });
   try {
     await seed(db);
@@ -33,5 +34,5 @@ if (env === "preview") {
     await client.end();
   }
 } else {
-  console.log("db:deploy: not a preview, demo seed skipped");
+  console.log("db:deploy: MDU_DEMO_DATA=off, demo seed skipped");
 }

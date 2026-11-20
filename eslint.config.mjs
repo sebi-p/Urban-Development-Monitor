@@ -7,7 +7,14 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  globalIgnores(["**/node_modules/", "**/.next/", "**/coverage/", "**/next-env.d.ts", "pipeline/"]),
+  globalIgnores([
+    "apps/web/public/maplibre/",
+    "**/node_modules/",
+    "**/.next/",
+    "**/coverage/",
+    "**/next-env.d.ts",
+    "pipeline/",
+  ]),
   js.configs.recommended,
   tseslint.configs.recommended,
   {

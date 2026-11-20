@@ -27,7 +27,7 @@ DB (repo root, `cp .env.example .env` first): `pnpm db:up` (local PostGIS in Doc
 
 Python (run inside `pipeline/`): `uv sync`, `uv run pytest`, `uv run ruff check .`, `uv run ruff format .`, `uv run mypy`, `uv run mdu ingest --adapter brasov.council_debates --dry-run`. Code lives in `pipeline/src/mdu/` (`mdu.core`, `mdu.adapters.<city>`), see ADR 0001.
 
-Deploy (ADR 0003): Vercel builds `apps/web` with `vercel-build` (`db:deploy` = migrate on every deploy, demo seed on previews only, then `next build`). The Neon–Vercel integration gives each preview a `preview/<git-branch>` Neon branch. `main` is production; work goes to `development`.
+Deploy (ADR 0003): one environment. Every push to `main` deploys to production on Vercel, which runs `vercel-build` (`db:deploy` = migrate, then seed the [DEMO] projects unless `MDU_DEMO_DATA=off`; then `next build`). Run every check locally before pushing: there is no staging.
 
 CI (`.github/workflows/ci.yml`) runs every check above. Run them before you commit.
 

@@ -1,6 +1,6 @@
 # ADR 0003: Hosting, preview databases and database access from the web app
 
-- Status: accepted
+- Status: accepted (amended 2026-11-20: single environment)
 - Date: 2026-11-20
 - Milestone: M1.3
 
@@ -11,7 +11,9 @@ PLAN §5 hosts the web app on Vercel Hobby and the database on Neon Free, with a
 ## Decision
 
 - **Neon-Managed Vercel integration** (Connectable Account) on Neon project `wild-glade-84619873` (aws-eu-central-1, Postgres 18). Production uses the Neon branch `production`. Each Git branch with a preview deployment gets a `preview/<git-branch>` Neon branch, copied from `production`, with its own `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED`. Neon deletes those branches when the Git branch is deleted. There is no `vercel-dev` branch; local development uses Docker.
-- **Migrations run in the Vercel build.** `apps/web`'s `vercel-build` script runs `pnpm --filter @mdu/db db:deploy` before `next build`. `db:deploy` applies pending migrations over the unpooled URL on every deployment, production included, and seeds the 10 demo projects only when `VERCEL_ENV=preview`. A Vercel build with no database URL fails instead of silently skipping. CI runs `pnpm build`, which needs no database.
+- **One environment.** `main` is the only long-lived branch, and every push to it deploys to production, so each deployment can be tested live. There is no staging branch.
+- **Migrations run in the Vercel build.** `apps/web`'s `vercel-build` script runs `pnpm --filter @mdu/db db:deploy` before `next build`. `db:deploy` applies pending migrations over the unpooled URL on every deployment. A Vercel build with no database URL fails instead of silently skipping. CI runs `pnpm build`, which needs no database.
+- **Production shows demo data until real data exists.** `db:deploy` re-seeds the 10 `[DEMO]` projects on every deployment unless `MDU_DEMO_DATA=off`. The first real adapter (M2.4) switches this off and deletes the demo rows.
 - **The web app uses postgres.js through Drizzle**, not Neon's serverless HTTP driver. It connects with the pooled URL, one connection per server instance, and `prepare: false`, which is safe behind Neon's PgBouncer pooler. The same code runs against local Docker Postgres and Neon. The serverless driver can be adopted later if connection setup time becomes a problem.
 - **Pages that read the database are rendered per request** (`force-dynamic`), so builds never need database access. The GeoJSON API sends `s-maxage=300, stale-while-revalidate=3600` so the CDN absorbs traffic and Neon can scale to zero (PLAN §5).
 - **The MapLibre web worker is served from `public/maplibre/`.** A build step copies it from `node_modules`, and the copy is gitignored. MapLibre 6 locates its worker relative to its own module URL, which is wrong once Turbopack has bundled it.
@@ -20,5 +22,5 @@ PLAN §5 hosts the web app on Vercel Hobby and the database on Neon Free, with a
 ## Consequences
 
 - A migration that fails stops the deployment before the new code goes live. Migrations must stay backward-compatible with the running code, because the database changes before the new code is served.
-- Each active preview branch uses one of Neon Free's concurrently active computes. Deleting merged Git branches keeps the count down.
-- Vercel previews require a Vercel login. Automated checks send the `VERCEL_AUTOMATION_BYPASS_SECRET` as the `x-vercel-protection-bypass` header.
+- With no staging, every change is checked locally (lint, typecheck, tests with PostGIS, build) before it is pushed, and CI runs again on `main`. A bad push is fixed by reverting it, which redeploys the previous state. Vercel can also roll back to an earlier deployment instantly.
+- Short-lived branches still get Vercel previews and `preview/<git-branch>` Neon branches if one is ever pushed. Vercel previews require a login; automated checks send the `VERCEL_AUTOMATION_BYPASS_SECRET` as the `x-vercel-protection-bypass` header.
