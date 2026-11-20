@@ -10,6 +10,7 @@ import { createDb } from "./client.ts";
 import { loadEnv } from "./env.ts";
 import { runMigrations } from "./migrate.ts";
 import * as schema from "./schema/index.ts";
+import { getJurisdiction, listJurisdictions, projectsGeoJSON } from "./queries.ts";
 import { DEMO_PROJECTS_PER_JURISDICTION, loadJurisdictionFiles, seed } from "./seed.ts";
 
 /** Drizzle wraps driver errors; the Postgres error is the cause. 23505 = unique_violation. */
@@ -148,5 +149,58 @@ describe.skipIf(!adminUrl)("database (PostGIS)", () => {
         value: "DEMO-1",
       }),
     ).rejects.toMatchObject(UNIQUE_VIOLATION);
+  });
+  describe("queries", () => {
+    it("lists jurisdictions with their bbox", async () => {
+      const files = loadJurisdictionFiles();
+      const list = await listJurisdictions(handle.db);
+      expect(list.map((j) => j.slug).sort()).toEqual(files.map((f) => f.slug).sort());
+      const first = files[0]!;
+      const j = await getJurisdiction(handle.db, first.slug);
+      expect(j?.bbox).toEqual(first.bbox);
+      expect(await getJurisdiction(handle.db, "no-such-city")).toBeNull();
+    });
+
+    it("returns published projects as GeoJSON points", async () => {
+      const slug = loadJurisdictionFiles()[0]!.slug;
+      const fc = await projectsGeoJSON(handle.db, slug);
+      expect(fc?.type).toBe("FeatureCollection");
+      expect(fc?.features).toHaveLength(DEMO_PROJECTS_PER_JURISDICTION);
+      const f = fc!.features[0]!;
+      expect(f.geometry.type).toBe("Point");
+      expect(f.properties).toMatchObject({ slug: expect.stringMatching(/^demo-/) });
+      expect(await projectsGeoJSON(handle.db, "no-such-city")).toBeNull();
+    });
+
+    it("filters by status, kind and bbox", async () => {
+      const file = loadJurisdictionFiles()[0]!;
+      const consult = await projectsGeoJSON(handle.db, file.slug, {
+        statuses: ["in_public_consultation"],
+      });
+      expect(consult!.features.length).toBeGreaterThan(0);
+      for (const f of consult!.features) expect(f.properties.status).toBe("in_public_consultation");
+
+      const puds = await projectsGeoJSON(handle.db, file.slug, { kinds: ["pud"] });
+      for (const f of puds!.features) expect(f.properties.kind).toBe("pud");
+
+      const [minLon, minLat, maxLon, maxLat] = file.bbox;
+      const west = await projectsGeoJSON(handle.db, file.slug, {
+        bbox: [minLon, minLat, (minLon + maxLon) / 2, maxLat],
+      });
+      const all = await projectsGeoJSON(handle.db, file.slug);
+      expect(west!.features.length).toBeLessThan(all!.features.length);
+      for (const f of west!.features) {
+        const [lon] = f.geometry.coordinates as [number, number];
+        expect(lon).toBeLessThanOrEqual((minLon + maxLon) / 2);
+      }
+    });
+
+    it("hides projects that are still pending review", async () => {
+      const slug = loadJurisdictionFiles()[0]!.slug;
+      await sql`update project set review_state = 'pending_review' where slug = 'demo-1'`;
+      const fc = await projectsGeoJSON(handle.db, slug);
+      expect(fc!.features.map((f) => f.properties.slug)).not.toContain("demo-1");
+      await sql`update project set review_state = 'auto_published' where slug = 'demo-1'`;
+    });
   });
 });

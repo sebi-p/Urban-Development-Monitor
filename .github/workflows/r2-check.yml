@@ -1,0 +1,33 @@
+name: R2 check
+
+# Manual smoke test that the R2 secrets work: write, read back and delete one object.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  r2:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+    steps:
+      - name: Secrets are set
+        run: |
+          for v in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY R2_ENDPOINT R2_BUCKET; do
+            [ -n "${!v}" ] || { echo "::error::$v is empty"; exit 1; }
+          done
+      - name: Write, read and delete a test object
+        run: |
+          key="healthcheck/${GITHUB_RUN_ID}.txt"
+          echo "mdu r2 check ${GITHUB_RUN_ID}" > /tmp/probe.txt
+          aws s3 cp /tmp/probe.txt "s3://${R2_BUCKET}/${key}" --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          aws s3 cp "s3://${R2_BUCKET}/${key}" /tmp/back.txt --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          cmp /tmp/probe.txt /tmp/back.txt
+          aws s3 rm "s3://${R2_BUCKET}/${key}" --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          echo "R2 read/write OK"

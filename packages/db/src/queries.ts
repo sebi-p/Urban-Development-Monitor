@@ -1,0 +1,118 @@
+/** Read-only queries used by the web app. The web app never writes (CLAUDE.md). */
+import type { ProjectKind, ProjectStatus } from "@mdu/shared";
+import { and, asc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import type { Db } from "./client.ts";
+import { jurisdiction, project } from "./schema/index.ts";
+
+export type BBox = [minLon: number, minLat: number, maxLon: number, maxLat: number];
+
+export interface JurisdictionSummary {
+  slug: string;
+  name: string;
+  county: string;
+  timezone: string;
+  bbox: BBox | null;
+}
+
+const bboxColumn = sql<BBox | null>`
+  case when ${jurisdiction.bbox} is null then null else json_build_array(
+    ST_XMin(${jurisdiction.bbox}), ST_YMin(${jurisdiction.bbox}),
+    ST_XMax(${jurisdiction.bbox}), ST_YMax(${jurisdiction.bbox})) end`;
+
+const summaryColumns = {
+  slug: jurisdiction.slug,
+  name: jurisdiction.name,
+  county: jurisdiction.county,
+  timezone: jurisdiction.timezone,
+  bbox: bboxColumn,
+};
+
+export async function listJurisdictions(db: Db): Promise<JurisdictionSummary[]> {
+  return db.select(summaryColumns).from(jurisdiction).orderBy(asc(jurisdiction.name));
+}
+
+export async function getJurisdiction(db: Db, slug: string): Promise<JurisdictionSummary | null> {
+  const [row] = await db
+    .select(summaryColumns)
+    .from(jurisdiction)
+    .where(eq(jurisdiction.slug, slug));
+  return row ?? null;
+}
+
+export interface ProjectFilters {
+  bbox?: BBox;
+  kinds?: ProjectKind[];
+  statuses?: ProjectStatus[];
+}
+
+export interface ProjectFeature {
+  type: "Feature";
+  id: string;
+  geometry: { type: string; coordinates: unknown };
+  properties: {
+    slug: string;
+    title: string;
+    kind: ProjectKind;
+    status: ProjectStatus;
+    address: string | null;
+    geomPrecision: string | null;
+  };
+}
+
+export interface ProjectCollection {
+  type: "FeatureCollection";
+  features: ProjectFeature[];
+}
+
+/** Published projects with a geometry, as GeoJSON. Null when the jurisdiction doesn't exist. */
+export async function projectsGeoJSON(
+  db: Db,
+  slug: string,
+  filters: ProjectFilters = {},
+): Promise<ProjectCollection | null> {
+  const [j] = await db
+    .select({ id: jurisdiction.id })
+    .from(jurisdiction)
+    .where(eq(jurisdiction.slug, slug));
+  if (!j) return null;
+
+  const where: SQL[] = [
+    eq(project.jurisdictionId, j.id),
+    sql`${project.geom} is not null`,
+    // Only reviewed or high-confidence records are public (PLAN §7 stage 8).
+    inArray(project.reviewState, ["auto_published", "approved"]),
+  ];
+  if (filters.bbox) {
+    const [minLon, minLat, maxLon, maxLat] = filters.bbox;
+    where.push(
+      sql`${project.geom} && ST_MakeEnvelope(${minLon}, ${minLat}, ${maxLon}, ${maxLat}, 4326)`,
+    );
+  }
+  if (filters.kinds?.length) where.push(inArray(project.kind, filters.kinds));
+  if (filters.statuses?.length) where.push(inArray(project.status, filters.statuses));
+
+  const rows = await db
+    .select({
+      id: project.id,
+      slug: project.slug,
+      title: project.title,
+      kind: project.kind,
+      status: project.status,
+      address: project.addressText,
+      geomPrecision: project.geomPrecision,
+      geometry: sql<string>`ST_AsGeoJSON(${project.geom}, 6)`,
+    })
+    .from(project)
+    .where(and(...where))
+    .orderBy(asc(project.title));
+
+  return {
+    type: "FeatureCollection",
+    features: rows.map(({ id, geometry, ...properties }) => ({
+      type: "Feature",
+      id,
+      geometry: JSON.parse(geometry) as ProjectFeature["geometry"],
+      properties,
+    })),
+  };
+}

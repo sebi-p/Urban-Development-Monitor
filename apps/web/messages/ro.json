@@ -1,6 +1,40 @@
 {
   "Home": {
     "title": "Monitor Dezvoltare Urbană",
-    "tagline": "Ce se construiește lângă tine, din documentele oficiale ale primăriei."
+    "tagline": "Ce se construiește lângă tine, din documentele oficiale ale primăriei.",
+    "noCities": "Nu există încă niciun oraș în baza de date."
+  },
+  "City": {
+    "title": "Dezvoltare urbană în {city}",
+    "mapLabel": "Harta proiectelor",
+    "listHeading": "{count, plural, =0 {Niciun proiect} one {# proiect} few {# proiecte} other {# de proiecte}}",
+    "empty": "Nu există încă proiecte publicate."
+  },
+  "Status": {
+    "announced": "Anunțat",
+    "in_preparation": "În elaborare",
+    "in_public_consultation": "În consultare publică",
+    "under_committee_review": "În analiză la comisie",
+    "on_council_agenda": "Pe ordinea de zi a consiliului",
+    "approved": "Aprobat",
+    "rejected": "Respins",
+    "withdrawn": "Retras",
+    "permitted": "Autorizat",
+    "under_construction": "În construcție",
+    "completed": "Finalizat",
+    "contested": "Contestat",
+    "annulled": "Anulat"
+  },
+  "Kind": {
+    "pug": "PUG",
+    "puz": "PUZ",
+    "pud": "PUD",
+    "cu": "Certificat de urbanism",
+    "ac": "Autorizație de construire",
+    "ad": "Autorizație de desființare",
+    "certificate_of_completion": "Proces-verbal de recepție",
+    "public_infrastructure": "Infrastructură publică",
+    "regulation": "Regulament",
+    "other_council_decision": "Altă hotărâre de consiliu"
   }
 }
