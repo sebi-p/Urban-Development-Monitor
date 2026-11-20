@@ -1,0 +1,14 @@
+# Local PostGIS for development and tests. Production and previews run on Neon.
+services:
+  db:
+    image: imresamu/postgis:16-3.5
+    environment:
+      POSTGRES_USER: mdu
+      POSTGRES_PASSWORD: mdu
+      POSTGRES_DB: mdu
+    ports:
+      - "54329:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mdu"]
+      interval: 2s
+      retries: 30

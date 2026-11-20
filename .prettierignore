@@ -3,3 +3,4 @@ pnpm-lock.yaml
 coverage/
 pipeline/
 docs/PLAN.md
+packages/db/migrations/

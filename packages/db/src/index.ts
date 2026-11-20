@@ -1,3 +1,3 @@
-// Drizzle schema, migrations, seed and SQL functions. The schema for PLAN §6 arrives in M1.2.
-
-export const SRID = 4326;
+export * as schema from "./schema/index.ts";
+export * from "./schema/index.ts";
+export { createDb, type Db } from "./client.ts";

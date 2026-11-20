@@ -12,7 +12,12 @@
     "lint": "eslint .",
     "typecheck": "pnpm -r typecheck",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @mdu/db db:generate",
+    "db:migrate": "pnpm --filter @mdu/db db:migrate",
+    "db:seed": "pnpm --filter @mdu/db db:seed",
+    "db:studio": "pnpm --filter @mdu/db db:studio",
+    "db:up": "docker compose up -d --wait"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

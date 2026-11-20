@@ -1,0 +1,13 @@
+# Jurisdiction config (PLAN §6). Everything city-specific lives here or in pipeline/src/mdu/adapters/brasov/.
+slug: brasov
+name: Brașov
+county: Brașov
+country: RO
+timezone: Europe/Bucharest
+# [min_lon, min_lat, max_lon, max_lat], WGS 84. Municipality area incl. Poiana Brașov.
+bbox: [25.52, 45.58, 25.68, 45.70]
+
+config:
+  neighbourhood_source: osm # open question in PLAN §14: OSM or PUG units
+  legal_regime:
+    catuc_from: "2026-08-25" # Law 169/2026; earlier procedures stay pre_catuc
