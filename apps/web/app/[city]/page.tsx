@@ -1,4 +1,4 @@
-import { getJurisdiction, projectsGeoJSON } from "@mdu/db";
+import { getJurisdiction, listProjects, projectsGeoJSON } from "@mdu/db";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -23,15 +23,15 @@ export default async function CityPage({ params }: Props) {
   const db = getDb();
   const j = await getJurisdiction(db, city);
   if (!j) notFound();
-  const projects = (await projectsGeoJSON(db, city))!;
+  const [projects, list] = await Promise.all([projectsGeoJSON(db, city), listProjects(db, city)]);
   const t = await getTranslations("City");
 
   return (
     <main className="page">
       <h1>{t("title", { city: j.name })}</h1>
-      <ProjectMap bbox={j.bbox} projects={projects} />
-      <h2>{t("listHeading", { count: projects.features.length })}</h2>
-      <ProjectList features={projects.features} />
+      <ProjectMap bbox={j.bbox} projects={projects!} />
+      <h2>{t("listHeading", { count: list!.length })}</h2>
+      <ProjectList projects={list!} />
     </main>
   );
 }

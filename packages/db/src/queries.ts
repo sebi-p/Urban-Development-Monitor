@@ -116,3 +116,75 @@ export async function projectsGeoJSON(
     })),
   };
 }
+
+export interface ProjectDocumentLink {
+  label: string;
+  url: string;
+  size_bytes: number | null;
+}
+
+export interface ProjectListItem {
+  id: string;
+  slug: string;
+  title: string;
+  kind: ProjectKind;
+  status: ProjectStatus;
+  address: string | null;
+  geomPrecision: string | null;
+  hasLocation: boolean;
+  eventDate: string | null; // ISO date of the latest event
+  eventTitle: string | null;
+  sourceUrl: string | null;
+  documents: ProjectDocumentLink[];
+}
+
+/**
+ * Every published project of a jurisdiction, with its latest event, newest first. Unlike the
+ * GeoJSON, this includes projects without a location, so the list shows everything (PLAN §8).
+ */
+export async function listProjects(db: Db, slug: string): Promise<ProjectListItem[] | null> {
+  const [j] = await db
+    .select({ id: jurisdiction.id })
+    .from(jurisdiction)
+    .where(eq(jurisdiction.slug, slug));
+  if (!j) return null;
+  const rows = await db.execute<{
+    id: string;
+    slug: string;
+    title: string;
+    kind: ProjectKind;
+    status: ProjectStatus;
+    address: string | null;
+    geom_precision: string | null;
+    has_location: boolean;
+    event_date: string | null;
+    event_title: string | null;
+    details: { source_url?: string; documents?: ProjectDocumentLink[] } | null;
+  }>(sql`
+    select p.id, p.slug, p.title, p.kind, p.status, p.address_text as address,
+           p.geom_precision, p.geom is not null as has_location,
+           e.event_date::text as event_date, e.title as event_title, e.details
+    from project p
+    left join lateral (
+      select event_date, title, details from project_event
+      where project_id = p.id and review_state in ('auto_published', 'approved')
+      order by event_date desc limit 1
+    ) e on true
+    where p.jurisdiction_id = ${j.id}
+      and p.review_state in ('auto_published', 'approved')
+    order by e.event_date desc nulls last, p.title`);
+  return rows.map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    title: r.title,
+    kind: r.kind,
+    status: r.status,
+    address: r.address,
+    geomPrecision: r.geom_precision,
+    hasLocation: r.has_location,
+    eventDate: r.event_date,
+    eventTitle: r.event_title,
+    sourceUrl: r.details?.source_url ?? null,
+    documents: r.details?.documents ?? [],
+  }));
+}

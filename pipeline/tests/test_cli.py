@@ -17,6 +17,10 @@ def test_ingest_parses_adapter_and_dry_run() -> None:
     assert args.dry_run is True
 
 
-def test_unimplemented_command_fails_cleanly(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["ingest", "--adapter", "x.y"]) == EXIT_NOT_IMPLEMENTED
-    assert "not implemented" in capsys.readouterr().err
+def test_ingest_rejects_an_unknown_city() -> None:
+    with pytest.raises(ModuleNotFoundError):
+        main(["ingest", "--adapter", "nowhere.debates", "--dry-run"])
+
+
+def test_exit_code_for_unimplemented_commands_is_distinct() -> None:
+    assert EXIT_NOT_IMPLEMENTED == 2

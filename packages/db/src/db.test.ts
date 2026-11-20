@@ -10,8 +10,14 @@ import { createDb } from "./client.ts";
 import { loadEnv } from "./env.ts";
 import { runMigrations } from "./migrate.ts";
 import * as schema from "./schema/index.ts";
-import { getJurisdiction, listJurisdictions, projectsGeoJSON } from "./queries.ts";
-import { DEMO_PROJECTS_PER_JURISDICTION, loadJurisdictionFiles, seed } from "./seed.ts";
+import { getJurisdiction, listJurisdictions, listProjects, projectsGeoJSON } from "./queries.ts";
+import {
+  DEMO_PROJECTS_PER_JURISDICTION,
+  loadJurisdictionFiles,
+  removeDemoProjects,
+  seed,
+  upsertJurisdictions,
+} from "./seed.ts";
 
 /** Drizzle wraps driver errors; the Postgres error is the cause. 23505 = unique_violation. */
 const UNIQUE_VIOLATION = { cause: { code: "23505" } };
@@ -201,6 +207,42 @@ describe.skipIf(!adminUrl)("database (PostGIS)", () => {
       const fc = await projectsGeoJSON(handle.db, slug);
       expect(fc!.features.map((f) => f.properties.slug)).not.toContain("demo-1");
       await sql`update project set review_state = 'auto_published' where slug = 'demo-1'`;
+    });
+  });
+  describe("project list and demo data", () => {
+    it("lists projects without a location too, with their latest event", async () => {
+      const slug = loadJurisdictionFiles()[0]!.slug;
+      const [j] = await sql`select id from jurisdiction where slug = ${slug}`;
+      const [p] = await sql`
+        insert into project (jurisdiction_id, slug, kind, status, title, review_state)
+        values (${j!.id}, 'real-no-location', 'pud', 'approved', 'PUD fără locație', 'auto_published')
+        returning id`;
+      await sql`
+        insert into project_event (jurisdiction_id, project_id, event_date, event_type, title,
+          details, confidence, review_state)
+        values (${j!.id}, ${p!.id}, '2025-05-01', 'consultation_opened', 'Publicat',
+          ${sql.json({ source_url: "https://x.test/l", documents: [{ label: "A", url: "https://x.test/a.pdf", size_bytes: 1 }] })},
+          'high', 'auto_published')`;
+      const list = (await listProjects(handle.db, slug))!;
+      const item = list.find((x) => x.slug === "real-no-location")!;
+      expect(item.hasLocation).toBe(false);
+      expect(item.eventDate).toBe("2025-05-01");
+      expect(item.sourceUrl).toBe("https://x.test/l");
+      expect(item.documents).toEqual([{ label: "A", url: "https://x.test/a.pdf", size_bytes: 1 }]);
+      expect(list.length).toBe(DEMO_PROJECTS_PER_JURISDICTION + 1);
+      // The map only gets located projects.
+      const fc = (await projectsGeoJSON(handle.db, slug))!;
+      expect(fc.features.map((f) => f.properties.slug)).not.toContain("real-no-location");
+      expect(await listProjects(handle.db, "no-such-city")).toBeNull();
+    });
+
+    it("removes only demo projects and keeps jurisdictions", async () => {
+      const removed = await removeDemoProjects(handle.db);
+      expect(removed).toBe(DEMO_PROJECTS_PER_JURISDICTION * loadJurisdictionFiles().length);
+      const [row] = await sql`select count(*)::int as n from project`;
+      expect(row!.n).toBe(1); // the real-looking project from the previous test
+      const ids = await upsertJurisdictions(handle.db);
+      expect(ids.size).toBe(loadJurisdictionFiles().length);
     });
   });
 });

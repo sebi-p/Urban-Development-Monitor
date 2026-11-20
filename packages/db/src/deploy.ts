@@ -1,12 +1,11 @@
 /**
- * Vercel build step (`pnpm db:deploy`): apply pending migrations, then seed the demo projects.
- * There is one environment: every push to `main` deploys to production and must be testable
- * live, so production gets the clearly marked [DEMO] projects until real data arrives
- * (ADR 0003). Set MDU_DEMO_DATA=off to stop seeding; the first real adapter turns it off for good.
+ * Vercel build step (`pnpm db:deploy`): apply pending migrations and upsert the jurisdictions from
+ * config/jurisdictions/*.yaml. Real data now comes from the pipeline, so the [DEMO] projects are
+ * deleted on every deploy; set MDU_DEMO_DATA=on to seed them instead (ADR 0003).
  */
 import { createDb } from "./client.ts";
 import { runMigrations } from "./migrate.ts";
-import { seed } from "./seed.ts";
+import { removeDemoProjects, seed, upsertJurisdictions } from "./seed.ts";
 
 const env = process.env.VERCEL_ENV; // "production" | "preview" | "development" | undefined
 // Migrations need a direct connection; the pooled URL is for app traffic.
@@ -26,13 +25,17 @@ if (!url) {
 await runMigrations(url);
 console.log(`db:deploy: migrations applied (${env ?? "local"})`);
 
-if (process.env.MDU_DEMO_DATA !== "off") {
-  const { db, client } = createDb(url, { max: 1, onnotice: () => {} });
-  try {
+const { db, client } = createDb(url, { max: 1, onnotice: () => {} });
+try {
+  if (process.env.MDU_DEMO_DATA === "on") {
     await seed(db);
-  } finally {
-    await client.end();
+  } else {
+    const ids = await upsertJurisdictions(db);
+    const removed = await removeDemoProjects(db);
+    console.log(
+      `db:deploy: ${ids.size} jurisdiction(s) upserted, ${removed} demo project(s) removed`,
+    );
   }
-} else {
-  console.log("db:deploy: MDU_DEMO_DATA=off, demo seed skipped");
+} finally {
+  await client.end();
 }

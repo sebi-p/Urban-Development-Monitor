@@ -8,7 +8,12 @@
     "title": "Urban development in {city}",
     "mapLabel": "Project map",
     "listHeading": "{count, plural, =0 {No projects} one {# project} other {# projects}}",
-    "empty": "No published projects yet."
+    "empty": "No published projects yet.",
+    "noAddress": "No address identified",
+    "approximateLocation": "approximate location (street)",
+    "notOnMap": "not on the map (address not located)",
+    "documents": "{count, plural, =0 {Source} one {# document} other {# documents}}",
+    "source": "Official source:"
   },
   "Status": {
     "announced": "Announced",

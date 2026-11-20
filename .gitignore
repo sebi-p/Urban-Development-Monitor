@@ -36,3 +36,6 @@ pipeline/tests/fixtures/*/files/
 
 # Private inventory rows (URLs can contain personal names); summaries go to docs/inventory/
 pipeline/.inventory/
+
+# Local caches (street index etc.); the R2 copy is the shared one
+pipeline/.cache/

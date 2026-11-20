@@ -8,7 +8,12 @@
     "title": "Dezvoltare urbană în {city}",
     "mapLabel": "Harta proiectelor",
     "listHeading": "{count, plural, =0 {Niciun proiect} one {# proiect} few {# proiecte} other {# de proiecte}}",
-    "empty": "Nu există încă proiecte publicate."
+    "empty": "Nu există încă proiecte publicate.",
+    "noAddress": "Fără adresă identificată",
+    "approximateLocation": "locație aproximativă (strada)",
+    "notOnMap": "nu apare pe hartă (adresă nelocalizată)",
+    "documents": "{count, plural, =0 {Sursă} one {# document} few {# documente} other {# de documente}}",
+    "source": "Sursa oficială:"
   },
   "Status": {
     "announced": "Anunțat",

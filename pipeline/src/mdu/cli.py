@@ -1,14 +1,20 @@
 """`mdu` command-line entry point."""
 
 import argparse
+import os
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
+from urllib.parse import urlsplit
 
 from mdu import __version__
 from mdu.core.env import load_env
 from mdu.core.http import HttpError, PoliteClient
 from mdu.core.jurisdiction import load_jurisdiction
+
+if TYPE_CHECKING:
+    from mdu.core.streets import StreetIndex
 
 EXIT_NOT_IMPLEMENTED = 2
 EXIT_FAILED = 1
@@ -19,11 +25,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"mdu {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    ingest = sub.add_parser("ingest", help="run ingestion stages for an adapter")
+    ingest = sub.add_parser("ingest", help="ingest an adapter's listing into Postgres")
     ingest.add_argument(
         "--adapter", required=True, help='adapter key, e.g. "brasov.council_debates"'
     )
-    ingest.add_argument("--dry-run", action="store_true", help="discover only; write nothing")
+    ingest.add_argument("--dry-run", action="store_true", help="fetch and parse; write nothing")
+
+    streets = sub.add_parser("streets", help="build and cache a city's street index (OSM tiles)")
+    streets.add_argument("--city", required=True)
 
     inv = sub.add_parser("inventory", help="discover-only survey of a city's sources (M0.2)")
     inv.add_argument("--city", required=True)
@@ -141,6 +150,89 @@ def _inventory(args: argparse.Namespace) -> int:
     return 0
 
 
+def _street_index(city: str, client: PoliteClient, *, refresh: bool = False) -> "StreetIndex":
+    """Local cache, then R2, then the OpenFreeMap street tiles (which refresh both caches)."""
+    from mdu.core.env import REPO_ROOT  # noqa: PLC0415
+    from mdu.core.storage import ObjectStore, StorageNotConfigured  # noqa: PLC0415
+    from mdu.core.streets import StreetIndex, fetch_street_index  # noqa: PLC0415
+
+    cache = REPO_ROOT / "pipeline" / ".cache" / f"streets-{city}.json"
+    key = f"cache/streets/{city}.json"
+    try:
+        store: ObjectStore | None = ObjectStore.from_env()
+    except StorageNotConfigured:
+        store = None
+    if not refresh:
+        if cache.is_file():
+            return StreetIndex.from_json(cache.read_text(encoding="utf-8"))
+        if store and store.exists(key):
+            text = store.get(key).decode("utf-8")
+            cache.parent.mkdir(parents=True, exist_ok=True)
+            cache.write_text(text, encoding="utf-8")
+            return StreetIndex.from_json(text)
+    index = fetch_street_index(client, load_jurisdiction(city).bbox, log=print)  # bbox centre
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_text(index.to_json(), encoding="utf-8")
+    if store:
+        store.put(key, index.to_json().encode("utf-8"), "application/json")
+    return index
+
+
+def _streets(args: argparse.Namespace) -> int:
+    with _client(args.city) as c:
+        index = _street_index(args.city, c, refresh=True)
+    print(f"{len(index)} named streets cached for {args.city}")
+    return 0
+
+
+def _ingest(args: argparse.Namespace) -> int:
+    import importlib  # noqa: PLC0415
+
+    import psycopg  # noqa: PLC0415
+
+    from mdu.core.storage import ObjectStore  # noqa: PLC0415
+    from mdu.ingest import IngestStats, write_records  # noqa: PLC0415
+
+    city = args.adapter.split(".", 1)[0]
+    adapters = importlib.import_module(f"mdu.adapters.{city}.ingest").ADAPTERS
+    if args.adapter not in adapters:
+        print(f"unknown adapter {args.adapter}; known: {', '.join(adapters)}", file=sys.stderr)
+        return EXIT_FAILED
+    base_url, build = adapters[args.adapter]
+    stats = IngestStats()
+    with _client(city) as client:
+        streets = _street_index(city, client)
+        records = build(client, streets, stats)
+    for r in records:
+        where = r.address_text or "(no street match)"
+        print(f"{r.event_date} {r.kind:3} {r.status:22} {where[:40]:40} {r.title[:70]}")
+    print(
+        f"{len(records)} projects, {sum(r.street is not None for r in records)} located; "
+        f"skipped: {stats.skipped_personal} for privacy (names or a single home), "
+        f"{stats.skipped_other}"
+    )
+    if args.dry_run:
+        return 0
+    url = os.environ.get("DATABASE_URL_UNPOOLED") or os.environ.get("DATABASE_URL")
+    if not url:
+        print("DATABASE_URL is not set", file=sys.stderr)
+        return EXIT_FAILED
+    store = ObjectStore.from_env()
+    with psycopg.connect(url) as conn:
+        write_records(
+            conn,
+            city=city,
+            adapter=args.adapter,
+            base_url=base_url,
+            records=records,
+            upload=store.put,
+            stats=IngestStats(skipped_personal=stats.skipped_personal,
+                              skipped_other=stats.skipped_other),
+        )  # fmt: skip
+    print(f"written to {urlsplit(url).hostname}")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     load_env()
     args = build_parser().parse_args(argv)
@@ -150,6 +242,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _fixtures(args)
     if args.command == "inventory":
         return _inventory(args)
+    if args.command == "streets":
+        return _streets(args)
+    if args.command == "ingest":
+        return _ingest(args)
     print(f"mdu {args.command}: not implemented yet", file=sys.stderr)
     return EXIT_NOT_IMPLEMENTED
 

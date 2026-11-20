@@ -43,3 +43,15 @@ body {
   font-size: 0.875rem;
   margin-left: 1.25rem;
 }
+.project-list .docs {
+  margin: 0.25rem 0 0 1.25rem;
+  font-size: 0.875rem;
+}
+.project-list .docs ul {
+  margin: 0.25rem 0;
+  padding-left: 1.25rem;
+}
+.project-list .source {
+  margin: 0.25rem 0 0;
+  color: #4b5563;
+}

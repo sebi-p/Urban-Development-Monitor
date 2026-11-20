@@ -100,7 +100,12 @@ const SAMPLES: { kind: ProjectKind; status: ProjectStatus; what: string; event: 
   { kind: "puz", status: "completed", what: "PUZ parc și locuri de joacă", event: "completed" },
 ];
 
-export async function seed(db: Db, files = loadJurisdictionFiles()): Promise<void> {
+/** Creates or updates every jurisdiction from config/jurisdictions/*.yaml. Returns slug -> id. */
+export async function upsertJurisdictions(
+  db: Db,
+  files = loadJurisdictionFiles(),
+): Promise<Map<string, number>> {
+  const ids = new Map<string, number>();
   for (const file of files) {
     const [minLon, minLat, maxLon, maxLat] = file.bbox;
     const bboxWkt = `POLYGON((${minLon} ${minLat},${maxLon} ${minLat},${maxLon} ${maxLat},${minLon} ${maxLat},${minLon} ${minLat}))`;
@@ -119,6 +124,26 @@ export async function seed(db: Db, files = loadJurisdictionFiles()): Promise<voi
       .onConflictDoUpdate({ target: jurisdiction.slug, set: values })
       .returning({ id: jurisdiction.id });
     if (!j) throw new Error(`could not upsert jurisdiction ${file.slug}`);
+    ids.set(file.slug, j.id);
+  }
+  return ids;
+}
+
+/** Deletes every demo project (slug `demo-%`); their events, identifiers and consultations cascade. */
+export async function removeDemoProjects(db: Db): Promise<number> {
+  const deleted = await db
+    .delete(project)
+    .where(like(project.slug, "demo-%"))
+    .returning({ id: project.id });
+  return deleted.length;
+}
+
+/** Jurisdictions plus 10 [DEMO] projects each, for local development and tests. */
+export async function seed(db: Db, files = loadJurisdictionFiles()): Promise<void> {
+  const ids = await upsertJurisdictions(db, files);
+  for (const file of files) {
+    const [minLon, minLat, maxLon, maxLat] = file.bbox;
+    const j = { id: ids.get(file.slug)! };
 
     await db.transaction(async (tx) => {
       // Children cascade; only demo rows are touched.
