@@ -14,5 +14,6 @@ export const STATUS_COLOURS: Record<ProjectStatus, string> = {
   rejected: "#6b7280",
   withdrawn: "#6b7280",
   annulled: "#6b7280",
+  expired: "#6b7280",
   contested: "#dc2626",
 };

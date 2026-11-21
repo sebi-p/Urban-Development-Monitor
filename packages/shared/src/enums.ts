@@ -29,6 +29,7 @@ export const PROJECT_STATUSES = [
   "completed",
   "contested",
   "annulled",
+  "expired",
 ] as const;
 
 export const GEOM_PRECISIONS = ["parcel", "address", "street", "neighbourhood", "manual"] as const;

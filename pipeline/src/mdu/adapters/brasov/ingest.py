@@ -24,11 +24,12 @@ DEBATE_STATUS: dict[str, ProjectStatus] = {
     "În dezbatere publică": "in_public_consultation",
     "Retras de pe ordinea de zi": "withdrawn",
     "Respins": "rejected",
-    # "Termen expirat conform legii" has no matching status yet; those debates are skipped.
+    # The legal deadline passed without a council vote; the draft lapsed (it may come back later).
+    "Termen expirat conform legii": "expired",
 }
 _DEBATE_PREFIX = re.compile(
     r"^Proiect(?:ul)?\s+(?:de\s+hot[ăa]r[âa]re\s+)?"
-    r"(?:a\s+Consiliului\s+Local(?:\s+al\s+Municipiului\s+Brașov)?\s+)?(?:pentru|privind)\s*:?\s+"
+    r"(?:al?\s+Consiliului\s+Local(?:\s+al\s+Municipiului\s+Brașov)?\s+)?(?:pentru|privind)\s*:?\s+"
     r"(?:aprobarea\s+documenta[țţt]iei\s+de\s+urbanism\s+)?",
     re.I,
 )

@@ -12,6 +12,7 @@ ProjectStatus = Literal[
     "approved",
     "rejected",
     "withdrawn",
+    "expired",
 ]
 EventType = Literal["notice_published", "consultation_opened", "council_vote", "other"]
 GeomPrecision = Literal["street", "address", "neighbourhood", "manual", "parcel"]

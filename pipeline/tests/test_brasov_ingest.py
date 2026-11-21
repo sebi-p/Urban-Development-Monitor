@@ -1,5 +1,7 @@
+import re
+
 from mdu.adapters.brasov.ingest import debate_records
-from mdu.core.streets import StreetIndex, StreetPoint
+from mdu.core.streets import StreetIndex, StreetPoint, fold
 from mdu.fixtures import fixture_bytes
 from mdu.ingest import IngestStats, SourceDoc, looks_personal, looks_private_home, slug_for
 
@@ -23,7 +25,10 @@ def test_only_urban_plans_with_mapped_statuses_become_projects() -> None:
         "in_public_consultation",
         "withdrawn",
         "rejected",
+        "expired",
     }
+    assert any(r.status == "expired" for r in records)
+    assert not any(k.startswith("status without a mapping") for k in stats.skipped_other)
     assert stats.skipped_other.get("not an urban plan (PUZ/PUD)", 0) > 50
     for r in records:
         assert not r.title.lower().startswith("proiect")
@@ -40,8 +45,16 @@ def test_slugs_are_stable_unique_and_free_of_folder_names() -> None:
     assert len(set(slugs)) == len(slugs)
     assert slugs == [r.slug for r in debate_records(listing(), StreetIndex({}), IngestStats())]
     for r in records:
+        # Only words from the public title, plus a hash: a folder name (which can hold an
+        # applicant's name) can only appear when the title itself says the same thing.
+        words, _, digest = r.slug.rpartition("-")
+        assert len(digest) == 6
+        title_words = set(re.sub(r"[^a-z0-9]+", " ", fold(r.title)).split())
+        *whole, last = words.split("-")  # the last word may be cut at 60 characters
+        assert set(whole) <= title_words, r.slug
+        assert any(w.startswith(last) for w in title_words), r.slug
         folder = r.private_key.split(":", 1)[1].lower()
-        assert folder not in r.slug
+        assert folder not in r.slug or fold(folder) in fold(r.title)
 
 
 def test_streets_in_titles_are_located() -> None:

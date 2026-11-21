@@ -120,7 +120,7 @@ The core idea: a **project** is a real-world development (a site, a road, a plan
 | `correction` | project, field, proposed value, evidence URL, contact (optional), state | Public “report an error” form (v2) |
 | `audit_log` | actor, entity, before/after | Every human edit |
 
-**Enums (extensible per legal regime).** `kind`: PUG, PUZ, PUD, CU, AC, AD (demolition), certificate of completion, public infrastructure, regulation, other council decision. `status`: announced → in preparation → in public consultation → under committee review → on council agenda → approved / rejected / withdrawn → permitted → under construction → completed; plus `contested` and `annulled` (court). Map CATUC terminology onto the same enums through `jurisdiction.config.legal_regime`.
+**Enums (extensible per legal regime).** `kind`: PUG, PUZ, PUD, CU, AC, AD (demolition), certificate of completion, public infrastructure, regulation, other council decision. `status`: announced → in preparation → in public consultation → under committee review → on council agenda → approved / rejected / withdrawn → permitted → under construction → completed; plus `contested` and `annulled` (court), and `expired` (the legal deadline passed without a council vote). Map CATUC terminology onto the same enums through `jurisdiction.config.legal_regime`.
 
 **`indicators` keys** (all optional, each with `source_document_id` and `confidence`): site area m², POT %, CUT, max height m, regime of height (e.g. P+4+R), main functions, number of dwellings, parking spaces, green space %, setbacks.
 

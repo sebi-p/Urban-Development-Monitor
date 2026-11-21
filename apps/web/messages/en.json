@@ -28,7 +28,8 @@
     "under_construction": "Under construction",
     "completed": "Completed",
     "contested": "Contested",
-    "annulled": "Annulled"
+    "annulled": "Annulled",
+    "expired": "Lapsed"
   },
   "Kind": {
     "pug": "General urban plan (PUG)",

@@ -28,7 +28,8 @@
     "under_construction": "În construcție",
     "completed": "Finalizat",
     "contested": "Contestat",
-    "annulled": "Anulat"
+    "annulled": "Anulat",
+    "expired": "Termen expirat"
   },
   "Kind": {
     "pug": "PUG",
