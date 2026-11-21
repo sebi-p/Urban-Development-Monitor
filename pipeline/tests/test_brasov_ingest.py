@@ -95,3 +95,22 @@ def test_single_private_homes_are_recognised() -> None:
     assert not looks_private_home("PUZ Lotizare locuinte individuale")
     assert not looks_private_home("P.U.D. Construire sediu birouri cu parter comercial P+2")
     assert not looks_private_home("PUD Casa de cultură a sindicatelor")
+
+
+def test_house_numbers_come_only_from_right_after_the_street() -> None:
+    from mdu.adapters.brasov.ingest import _address  # noqa: PLC0415
+
+    index = StreetIndex(
+        {
+            "nicolae labis": StreetPoint("Strada Nicolae Labiș", 25.6, 45.6),
+            "feldioarei": StreetPoint("Calea Feldioarei", 25.6, 45.6),
+        }
+    )
+    cu = "PUZ locuințe în baza CU nr 2456/08.09.2022, în mun. Brașov, str. Nicolae Labiș f.n."
+    assert _address(index, cu)[0] == "Strada Nicolae Labiș"
+    assert _address(index, "Întocmire PUZ - Calea Feldioarei nr. 35a")[0] == (
+        "Calea Feldioarei nr. 35A"
+    )
+    assert _address(index, "PUZ Calea Feldioarei, nr.7 și HCL nr. 198")[0] == (
+        "Calea Feldioarei nr. 7"
+    )

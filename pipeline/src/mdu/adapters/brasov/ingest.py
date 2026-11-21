@@ -5,7 +5,7 @@ import re
 from mdu.adapters.brasov import council_debates, notices
 from mdu.core.enums import ProjectKind, ProjectStatus
 from mdu.core.http import HttpError, PoliteClient
-from mdu.core.streets import StreetIndex, StreetPoint, fold
+from mdu.core.streets import StreetIndex, StreetPoint, fold, normalize
 from mdu.ingest import (
     DocumentLink,
     IngestStats,
@@ -16,7 +16,9 @@ from mdu.ingest import (
 )
 
 _KIND = re.compile(r"\bP\.?\s?U\.?\s?([ZD])\b\.?")
-_NUMBER = re.compile(r"\bnr\.?\s*(\d+[a-z]?)\b")
+# A house number directly after the street name ("str. Lungă nr. 5", "Calea X, nr. 35A"); other
+# numbers in a title ("CU nr 2456/2022", "HCL nr. 198") are not addresses.
+_NUMBER_AFTER_STREET = re.compile(r"\s*,?\s*(?:nr\.?|numarul)\s*(\d+[a-z]?)\b")
 
 DEBATE_STATUS: dict[str, ProjectStatus] = {
     "Aprobat prin HCL": "approved",
@@ -56,8 +58,14 @@ def _address(streets: StreetIndex, title: str) -> tuple[str | None, StreetPoint 
     street = streets.match(title)
     if street is None:
         return None, None
-    m = _NUMBER.search(fold(title))
-    return (f"{street.name} nr. {m.group(1)}" if m else street.name), street
+    folded = fold(title)
+    last_word = normalize(street.name).split()[-1]
+    m = None
+    for hit in re.finditer(rf"\b{re.escape(last_word)}\b", folded):
+        m = _NUMBER_AFTER_STREET.match(folded, hit.end())
+        if m:
+            break
+    return (f"{street.name} nr. {m.group(1).upper()}" if m else street.name), street
 
 
 def debates(client: PoliteClient, streets: StreetIndex, stats: IngestStats) -> list[ProjectRecord]:
