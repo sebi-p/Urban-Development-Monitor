@@ -31,11 +31,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ingest.add_argument("--dry-run", action="store_true", help="fetch and parse; write nothing")
 
-    run = sub.add_parser("run", help="run a pipeline stage (discover, fetch) against Postgres")
-    run.add_argument("--stage", required=True, choices=["discover", "fetch"])
+    run = sub.add_parser("run", help="run a pipeline stage against Postgres")
+    run.add_argument("--stage", required=True, choices=["discover", "fetch", "extract"])
     run.add_argument("--city", required=True)
     run.add_argument("--adapter", help='e.g. "brasov.council_debates" (required for discover)')
-    run.add_argument("--limit", type=int, default=100, help="fetch: max URLs this run")
+    run.add_argument("--limit", type=int, default=100, help="fetch/extract: max items this run")
     run.add_argument("--max-mb", type=int, default=30, help="fetch: skip larger files")
     run.add_argument("--all", action="store_true", help="discover: not only PUZ/PUD (back-fill)")
     run.add_argument(
@@ -259,6 +259,14 @@ def _run(args: argparse.Namespace) -> int:
     if not url:
         print("DATABASE_URL is not set", file=sys.stderr)
         return EXIT_FAILED
+    if args.stage == "extract":  # reads R2 only: no HTTP client, no requests to the sites
+        with psycopg.connect(url) as conn:
+            result = stages.extract(
+                conn, ObjectStore.from_env(), city=args.city, limit=args.limit, log=print
+            )
+        print(f"extract: {dict(result.counts)}")
+        print(f"database: {urlsplit(url).hostname}")
+        return 0
     with psycopg.connect(url) as conn, _client(args.city) as client:
         if args.stage == "discover":
             if not args.adapter:

@@ -1,4 +1,4 @@
-"""Pipeline stages 1–2: discover and fetch (PLAN §7, M2.2).
+"""Pipeline stages 1–3: discover, fetch and extract (PLAN §7, M2.2–M2.3).
 
 Every stage reads and writes database state, so a crashed run resumes where it stopped and
 re-running a stage with nothing new to do changes nothing:
@@ -9,6 +9,11 @@ re-running a stage with nothing new to do changes nothing:
 - `fetch` works through pending rows one at a time, each in its own transaction. It sends the
   previous ETag / Last-Modified, records 304s as `unchanged`, stores new bytes once per SHA-256
   (`mdu.core.documents`), and skips files over `max_bytes` (PLAN §5).
+- `extract` reads stored PDFs from R2 (no requests to the source sites), writes their text page by
+  page to R2 under a key that names the extractor version, and fills `raw_document.text_r2_key`,
+  `text_head`, `page_count` and `ocr_used`. Documents already extracted by the current version are
+  skipped; a new version processes everything again. Unreadable PDFs get a text file holding the
+  error, so they aren't retried until the version changes.
 """
 
 from __future__ import annotations
@@ -18,11 +23,12 @@ from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Protocol
 from zoneinfo import ZoneInfo
 
 import psycopg
 
+from mdu.core import extract as extractor
 from mdu.core.documents import Upload, store_raw_document
 from mdu.core.http import HttpError, PoliteClient, TooLarge
 
@@ -220,3 +226,73 @@ def _fetch_one(  # noqa: PLR0913
     )
     status = "fetched" if created or str(doc_id) != str(prev_doc) else "unchanged"
     return finish(status, raw_document_id=doc_id, **meta)
+
+
+class TextStore(Protocol):
+    def get(self, key: str) -> bytes: ...
+    def put(self, key: str, data: bytes, content_type: str | None = None) -> None: ...
+
+
+def extract(  # noqa: PLR0913
+    conn: psycopg.Connection[Any],
+    store: TextStore,
+    *,
+    city: str,
+    limit: int = 100,
+    ocr: bool = True,
+    log: Callable[[str], None] = lambda _: None,
+) -> StageResult:
+    result = StageResult()
+    version = extractor.EXTRACTOR_VERSION
+    current = f"%.v{version}.json"
+    with conn.cursor() as cur:
+        cur.execute("select id from jurisdiction where slug = %s", (city,))
+        j = cur.fetchone()
+        if not j:
+            raise RuntimeError(f"jurisdiction {city} missing")
+        jid = int(j[0])
+    for n in range(limit):
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute(
+                """select id, sha256, r2_key from raw_document
+                   where jurisdiction_id = %s and mime like 'application/pdf%%'
+                     and r2_key is not null
+                     and (text_r2_key is null or text_r2_key not like %s)
+                   order by created_at, id
+                   limit 1 for update skip locked""",
+                (jid, current),
+            )
+            row = cur.fetchone()
+            if row is None:
+                break
+            doc_id, sha, key = row
+            text_key = extractor.text_r2_key(city, sha, version)
+            try:
+                text = extractor.extract_pdf(store.get(key), ocr=ocr)
+            except extractor.ExtractionError as exc:
+                error = {"version": version, "error": str(exc), "pages": []}
+                store.put(text_key, json.dumps(error).encode(), "application/json")
+                cur.execute(
+                    """update raw_document set text_r2_key = %s, text_head = null,
+                       ocr_used = false where id = %s""",
+                    (text_key, doc_id),
+                )
+                result.counts["unreadable"] += 1
+                log(f"extract: {sha[:12]} unreadable ({exc})")
+                continue
+            store.put(text_key, text.to_json(), "application/json")
+            cur.execute(
+                """update raw_document set text_r2_key = %s, text_head = %s, page_count = %s,
+                   ocr_used = %s where id = %s""",
+                (text_key, text.head(), len(text.pages), text.ocr_used, doc_id),
+            )
+            result.counts["extracted"] += 1
+            result.counts["pages"] += len(text.pages)
+            result.counts["ocr_pages"] += text.ocr_pages
+            for note, count in text.skipped_pages.items():
+                result.counts[f"pages skipped: {note}"] += count
+        if (n + 1) % 10 == 0:
+            log(f"extract: {n + 1} done ({dict(result.counts)})")
+    with conn.transaction(), conn.cursor() as cur:
+        _log_run(cur, jid, None, "extract", result)
+    return result

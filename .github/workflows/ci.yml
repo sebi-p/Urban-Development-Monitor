@@ -84,6 +84,8 @@ jobs:
         with:
           working-directory: pipeline
           enable-cache: true
+      - name: Install Tesseract with Romanian data (ADR 0006)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-ron
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run ruff format --check .

@@ -9,6 +9,7 @@ dependencies = [
     "httpx[http2]>=0.28.1",
     "mapbox-vector-tile>=2.2.0",
     "psycopg[binary]>=3.3.8",
+    "pymupdf>=1.28.2,<2",
     "pypdf>=7.0.0",
     "pyyaml>=6.0.3",
     "selectolax>=1.0.2",
@@ -61,6 +62,13 @@ mypy_path = "src"
 module = "mapbox_vector_tile.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+# PyMuPDF's inline annotations are partial (untyped constructors and helpers).
+module = "mdu.core.extract"
+disallow_untyped_calls = false
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--strict-markers", "-ra"]
+# PyMuPDF's SWIG bindings warn on import under Python 3.12.
+filterwarnings = ["ignore:builtin type (SwigPy|swigvarlink).*:DeprecationWarning"]
