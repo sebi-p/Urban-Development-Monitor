@@ -1,6 +1,7 @@
 name: Ingest daily
 
-# PLAN §7: debates, notices, agendas and the urbanism hub every morning, then fetch and extract.
+# PLAN §7: debates, notices, agendas and the urbanism hub every morning, then fetch, extract and
+# classify.
 # 04:30 UTC is 06:30 in Bucharest in winter and 07:30 in summer (GitHub cron is UTC only).
 on:
   schedule:
@@ -28,6 +29,9 @@ jobs:
       R2_BUCKET: ${{ secrets.R2_BUCKET }}
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      # Classifier LLM fallback (ADR 0008); without the secret the classifier uses rules only.
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      MDU_LLM_MONTHLY_USD: "2"
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3; no moving major tag

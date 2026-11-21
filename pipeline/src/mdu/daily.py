@@ -1,10 +1,10 @@
 """`mdu daily`: the scheduled run (PLAN §7 schedules; workflow `ingest-daily.yml`).
 
 For each adapter in order: write listing projects, add listing events, queue documents. Then
-fetch everything pending for the city and extract text from what was stored. A failing adapter
-is logged as a failed `pipeline_run` and the others still run; the command then exits non-zero
-so the workflow shows red. Every step is idempotent, so a second run the same day does nothing
-but re-read the listings.
+fetch everything pending for the city, extract text from what was stored and classify it. A
+failing adapter is logged as a failed `pipeline_run` and the others still run; the command then
+exits non-zero so the workflow shows red. Every step is idempotent, so a second run the same
+day does nothing but re-read the listings.
 """
 
 from __future__ import annotations
@@ -58,6 +58,8 @@ def run(  # noqa: PLR0913
     fetch_limit: int = 300,
     max_bytes: int = stages.DEFAULT_MAX_BYTES,
     extract_limit: int = 1000,
+    llm: Any = None,
+    llm_monthly_usd: float = 2.0,
     log: Callable[[str], None] = lambda _: None,
 ) -> DailyResult:
     result = DailyResult()
@@ -131,4 +133,10 @@ def run(  # noqa: PLR0913
         return dict(counts)
 
     step("extract", None, "extract", extract_all)
+
+    def classify_all() -> dict[str, Any]:
+        r = stages.classify(conn, store, city=city, llm=llm, monthly_usd=llm_monthly_usd, log=log)
+        return dict(r.counts)
+
+    step("classify", None, "classify", classify_all)
     return result

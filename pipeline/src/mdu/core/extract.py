@@ -55,6 +55,7 @@ class DocumentText:
     version: int = EXTRACTOR_VERSION
     ocr_pages: int = 0
     skipped_pages: dict[str, int] = field(default_factory=dict)
+    total_pages: int | None = None  # pages in the file (more than `pages` when max_pages was set)
 
     @property
     def ocr_used(self) -> bool:
@@ -119,8 +120,14 @@ def _needs_ocr(page: pymupdf.Page, text: str) -> bool:
 
 
 def extract_pdf(
-    data: bytes, *, ocr: bool = True, max_ocr_pages: int = MAX_OCR_PAGES
+    data: bytes,
+    *,
+    ocr: bool = True,
+    max_ocr_pages: int = MAX_OCR_PAGES,
+    max_pages: int | None = None,
 ) -> DocumentText:
+    """`max_pages` reads only the first pages (the classifier needs no more); `total_pages`
+    still counts them all."""
     if b"%PDF-" not in data[:1024]:  # MuPDF would happily open HTML or images instead
         raise ExtractionError("not a PDF (no %PDF header)")
     try:
@@ -135,7 +142,8 @@ def extract_pdf(
     raw: list[tuple[str, Method, str | None]] = []
     ocr_pages = 0
     with doc:
-        for page in (doc[i] for i in range(doc.page_count)):
+        total_pages = doc.page_count
+        for page in (doc[i] for i in range(min(total_pages, max_pages or total_pages))):
             text = page.get_text()
             method: Method = "text"
             note = None
@@ -164,7 +172,11 @@ def extract_pdf(
         for i, (t, (_, m, note)) in enumerate(zip(texts, raw, strict=True), start=1)
     ]
     return DocumentText(
-        pages=pages, version=EXTRACTOR_VERSION, ocr_pages=ocr_pages, skipped_pages=dict(skipped)
+        pages=pages,
+        version=EXTRACTOR_VERSION,
+        ocr_pages=ocr_pages,
+        skipped_pages=dict(skipped),
+        total_pages=total_pages,
     )
 
 

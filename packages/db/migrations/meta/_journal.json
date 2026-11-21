@@ -29,6 +29,13 @@
       "when": 1795240849321,
       "tag": "0003_project_status_expired",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795252622295,
+      "tag": "0004_document_roles",
+      "breakpoints": true
     }
   ]
 }

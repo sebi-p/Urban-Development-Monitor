@@ -65,6 +65,14 @@ export const DOCUMENT_ROLES = [
   "aviz",
   "raport_consultare",
   "other",
+  "anunt",
+  "referat_aprobare",
+  "plansa", // drawing sheets other than the regulations sheet (situation, context, networks)
+  "registru_opinii", // lists residents who commented: recognised, never mirrored
+  "certificat_urbanism",
+  "studiu", // geotechnical, topographic and other supporting studies
+  "ordine_zi_comisie",
+  "hotarari_comisie",
 ] as const;
 
 export const REVIEW_STATES = ["auto_published", "pending_review", "approved", "rejected"] as const;

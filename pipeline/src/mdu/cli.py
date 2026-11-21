@@ -34,12 +34,13 @@ def build_parser() -> argparse.ArgumentParser:
     ingest.add_argument("--dry-run", action="store_true", help="fetch and parse; write nothing")
 
     run = sub.add_parser("run", help="run a pipeline stage against Postgres")
-    run.add_argument("--stage", required=True, choices=["discover", "fetch", "extract"])
+    run.add_argument("--stage", required=True, choices=["discover", "fetch", "extract", "classify"])
     run.add_argument("--city", required=True)
     run.add_argument("--adapter", help='e.g. "brasov.council_debates" (required for discover)')
     run.add_argument("--limit", type=int, default=100, help="fetch/extract: max items this run")
     run.add_argument("--max-mb", type=int, default=30, help="fetch: skip larger files")
     run.add_argument("--all", action="store_true", help="discover: not only PUZ/PUD (back-fill)")
+    run.add_argument("--no-llm", action="store_true", help="classify: rules only")
     run.add_argument(
         "--night-only", action="store_true", help="refuse to run outside 22:00–06:00 Bucharest"
     )
@@ -99,6 +100,17 @@ def _database_url() -> str | None:
     if not url:
         print("DATABASE_URL is not set", file=sys.stderr)
     return url
+
+
+def _llm(disabled: bool = False) -> tuple[object | None, float]:
+    """The classifier's LLM fallback when ANTHROPIC_API_KEY is set (ADR 0008), and the monthly
+    budget in USD (MDU_LLM_MONTHLY_USD, default 2)."""
+    budget = float(os.environ.get("MDU_LLM_MONTHLY_USD") or 2)
+    if disabled or not os.environ.get("ANTHROPIC_API_KEY"):
+        return None, budget
+    from mdu.core.llm import ClaudeClassifier  # noqa: PLC0415
+
+    return ClaudeClassifier(), budget
 
 
 def _client(city: str) -> PoliteClient:
@@ -280,12 +292,20 @@ def _run(args: argparse.Namespace) -> int:
     url = _database_url()
     if not url:
         return EXIT_FAILED
-    if args.stage == "extract":  # reads R2 only: no HTTP client, no requests to the sites
+    if args.stage in ("extract", "classify"):  # R2 only: no requests to the source sites
         with psycopg.connect(url) as conn:
-            result = stages.extract(
-                conn, ObjectStore.from_env(), city=args.city, limit=args.limit, log=print
-            )
-        print(f"extract: {dict(result.counts)}")
+            if args.stage == "extract":
+                result = stages.extract(
+                    conn, ObjectStore.from_env(), city=args.city, limit=args.limit, log=print
+                )
+            else:
+                llm, budget = _llm(disabled=args.no_llm)
+                print(f"classify: LLM {'on' if llm else 'off'}, budget ${budget:.2f}/month")
+                result = stages.classify(
+                    conn, ObjectStore.from_env(), city=args.city, llm=llm, monthly_usd=budget,
+                    limit=args.limit, log=print,
+                )  # fmt: skip
+        print(f"{args.stage}: {dict(result.counts)}")
         print(f"database: {urlsplit(url).hostname}")
         return 0
     with psycopg.connect(url) as conn, _client(args.city) as client:
@@ -330,6 +350,7 @@ def _daily(args: argparse.Namespace) -> int:
     store = ObjectStore.from_env()
     with psycopg.connect(url) as conn, _client(args.city) as client:
         streets = _street_index(args.city, client)
+        llm, budget = _llm()
         result = daily.run(
             conn,
             client,
@@ -337,6 +358,8 @@ def _daily(args: argparse.Namespace) -> int:
             streets,
             [adapters[k] for k in order],
             city=args.city,
+            llm=llm,
+            llm_monthly_usd=budget,
             fetch_limit=args.fetch_limit,
             max_bytes=args.max_mb * 1024 * 1024,
             log=lambda m: print(m, flush=True),

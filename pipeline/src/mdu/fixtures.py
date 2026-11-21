@@ -17,7 +17,7 @@ import os
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from mdu.core.env import REPO_ROOT
 
@@ -91,6 +91,11 @@ class FixtureSet:
     def meta_path(self, fixture: Fixture) -> Path:
         """Private sidecar with the source URL and headers. Never committed."""
         return self.files_dir / f"{fixture.sha256}.meta.json"
+
+    def private_meta(self, fixture: Fixture) -> dict[str, Any]:
+        """The private sidecar (URL, listing label); empty when it isn't cached locally."""
+        path = self.meta_path(fixture)
+        return dict(json.loads(path.read_text(encoding="utf-8"))) if path.is_file() else {}
 
     def source_url(self, fixture: Fixture) -> str | None:
         path = self.meta_path(fixture)
