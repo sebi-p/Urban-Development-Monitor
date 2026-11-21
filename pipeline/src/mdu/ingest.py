@@ -47,6 +47,22 @@ _ORGANISATION = re.compile(
 )
 
 
+# Words found in company names without a legal form ("DECENT REAL ESTATE"). Used only on a name
+# on its own (an extracted initiator), never on titles, where "construire" etc. are common.
+_COMPANY_WORDS = re.compile(
+    r"\b(real estate|imobiliar\w*|invest|investment\w*|development\w*|developer|holding|"
+    r"group|grup|properties|park|logistic\w*|constructii|construct)\b",
+    re.I,
+)
+
+
+def looks_like_organisation(name: str) -> bool:
+    """A company or public body (SRL, SA, municipality, parish...), not a private person.
+    A name that also names a person acting for it ("X reprezentant Y SRL") still counts."""
+    folded = fold(name)
+    return bool(_ORGANISATION.search(folded) or _COMPANY_WORDS.search(folded))
+
+
 def looks_personal(text: str) -> bool:
     """True when the text may name a private individual; such items are skipped, not published."""
     folded = fold(text)

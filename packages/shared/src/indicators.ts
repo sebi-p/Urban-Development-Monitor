@@ -6,6 +6,8 @@ export interface Sourced<T> {
   source_document_id: string;
   page: number;
   confidence: Confidence;
+  /** The city's copy of the document, for a link to the page (`#page=N`). */
+  source_url?: string;
 }
 
 /** `project.indicators` jsonb (PLAN §6). All keys optional. */

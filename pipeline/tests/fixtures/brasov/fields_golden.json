@@ -1,0 +1,379 @@
+{
+  "note": "M3.2 golden set: proposed values per project from its documents (public facts, checked for personal data). Fields not listed aren't scored (they differ by zone or are ambiguous); null means the documents don't state it.",
+  "projects": {
+    "cu-scopul-construire-locuinte-colective-si-spatii-comerciale-80c7a3": {
+      "documents": [
+        {
+          "doc_type": "memoriu",
+          "fixture": "fields/cu-scopul-construire-locuinte-colective--1"
+        }
+      ],
+      "expected": {
+        "cut": 2.2,
+        "green_space_percent": 20,
+        "height_regime": "2S+P+6E",
+        "max_height_m": 24.5,
+        "pot_percent": 55
+      }
+    },
+    "intocmire-puz-calea-feldioarei-nr-35a-e255f1": {
+      "documents": [
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/intocmire-puz-calea-feldioarei-nr-35a-e2-1"
+        },
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/intocmire-puz-calea-feldioarei-nr-35a-e2-2"
+        },
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/intocmire-puz-calea-feldioarei-nr-35a-e2-3"
+        },
+        {
+          "doc_type": "rlu",
+          "fixture": "fields/intocmire-puz-calea-feldioarei-nr-35a-e2-4"
+        },
+        {
+          "doc_type": "memoriu",
+          "fixture": "fields/intocmire-puz-calea-feldioarei-nr-35a-e2-5"
+        }
+      ],
+      "expected": {
+        "cut": 1.2,
+        "dwellings": null,
+        "green_space_percent": 20,
+        "height_regime": "P+2+M",
+        "initiator": "Kronstadt Car Service SRL",
+        "pot_percent": 40
+      }
+    },
+    "intocmire-puz-construire-ansamblu-de-locuinte-colective-func-1fe181": {
+      "documents": [
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/intocmire-puz-construire-ansamblu-de-loc-1"
+        },
+        {
+          "doc_type": "rlu",
+          "fixture": "fields/intocmire-puz-construire-ansamblu-de-loc-2"
+        },
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/intocmire-puz-construire-ansamblu-de-loc-3"
+        },
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/intocmire-puz-construire-ansamblu-de-loc-4"
+        }
+      ],
+      "expected": {
+        "height_regime": "P+3+M",
+        "initiator": "DECENT REAL ESTATE",
+        "max_height_m": 17
+      }
+    },
+    "intocmire-puz-construire-hale-depozitare-comert-productie-pr-5e392d": {
+      "documents": [
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/intocmire-puz-construire-hale-depozitare-1"
+        },
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/intocmire-puz-construire-hale-depozitare-2"
+        },
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/intocmire-puz-construire-hale-depozitare-3"
+        },
+        {
+          "doc_type": "memoriu",
+          "fixture": "fields/intocmire-puz-construire-hale-depozitare-4"
+        }
+      ],
+      "expected": {
+        "cut": 2.4,
+        "dwellings": null,
+        "green_space_percent": 20,
+        "height_regime": "P+2E",
+        "initiator": "SC MADEX SRL",
+        "max_height_m": 18,
+        "pot_percent": 70
+      }
+    },
+    "modificare-puz-aprobat-cu-hcl-198-2015-si-prelungit-prin-hcl-57fe20": {
+      "documents": [
+        {
+          "doc_type": "rlu",
+          "fixture": "fields/modificare-puz-aprobat-cu-hcl-198-2015-s-1"
+        },
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/modificare-puz-aprobat-cu-hcl-198-2015-s-2"
+        },
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/modificare-puz-aprobat-cu-hcl-198-2015-s-3"
+        },
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/modificare-puz-aprobat-cu-hcl-198-2015-s-4"
+        },
+        {
+          "doc_type": "memoriu",
+          "fixture": "fields/modificare-puz-aprobat-cu-hcl-198-2015-s-5"
+        }
+      ],
+      "expected": {
+        "dwellings": null,
+        "green_space_percent": 20,
+        "initiator": "CTPARK BRASOV SRL",
+        "max_height_m": 15,
+        "pot_percent": 60
+      }
+    },
+    "puz-actualizare-puz-aprobat-cu-hcl-339-2013-municipiul-braso-6686d1": {
+      "documents": [
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/puz-actualizare-puz-aprobat-cu-hcl-339-2-1"
+        },
+        {
+          "doc_type": "rlu",
+          "fixture": "fields/puz-actualizare-puz-aprobat-cu-hcl-339-2-2"
+        },
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/puz-actualizare-puz-aprobat-cu-hcl-339-2-3"
+        },
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/puz-actualizare-puz-aprobat-cu-hcl-339-2-4"
+        }
+      ],
+      "expected": {
+        "cut": 1.0,
+        "green_space_percent": 35,
+        "height_regime": "P+2",
+        "initiator": "persoană fizică",
+        "pot_percent": 40
+      }
+    },
+    "puz-construire-locuinte-colective-cu-pastrarea-avizelor-obti-3c9021": {
+      "documents": [
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/puz-construire-locuinte-colective-cu-pas-1"
+        },
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/puz-construire-locuinte-colective-cu-pas-2"
+        },
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/puz-construire-locuinte-colective-cu-pas-3"
+        },
+        {
+          "doc_type": "memoriu",
+          "fixture": "fields/puz-construire-locuinte-colective-cu-pas-4"
+        }
+      ],
+      "expected": {
+        "designer": "MLOAD STUDIO SRL",
+        "initiator": "VICTORY SUNRISE TOWERS SRL"
+      }
+    },
+    "puz-construire-locuinte-colective-municipiul-brasov-str-ioan-a0b8b6": {
+      "documents": [
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/puz-construire-locuinte-colective-munici-1"
+        },
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/puz-construire-locuinte-colective-munici-2"
+        },
+        {
+          "doc_type": "memoriu",
+          "fixture": "fields/puz-construire-locuinte-colective-munici-3"
+        },
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/puz-construire-locuinte-colective-munici-4"
+        }
+      ],
+      "expected": {
+        "cut": 2,
+        "initiator": "INSIGRA SRL",
+        "max_height_m": 30.9,
+        "pot_percent": 35
+      }
+    },
+    "puz-dezvoltare-zona-servicii-comert-depozitare-si-micsorare-c7b417": {
+      "documents": [
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/puz-dezvoltare-zona-servicii-comert-depo-1"
+        },
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/puz-dezvoltare-zona-servicii-comert-depo-2"
+        },
+        {
+          "doc_type": "memoriu",
+          "fixture": "fields/puz-dezvoltare-zona-servicii-comert-depo-3"
+        },
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/puz-dezvoltare-zona-servicii-comert-depo-4"
+        }
+      ],
+      "expected": {
+        "designer": "TOP-FORM SRL",
+        "green_space_percent": 25,
+        "height_regime": "S+P+2E",
+        "initiator": "persoană fizică",
+        "max_height_m": 10
+      }
+    },
+    "puz-investitie-functiuni-mixte-locuinte-colective-servicii-c-8c68ef": {
+      "documents": [
+        {
+          "doc_type": "memoriu",
+          "fixture": "fields/puz-investitie-functiuni-mixte-locuinte--1"
+        },
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/puz-investitie-functiuni-mixte-locuinte--2"
+        },
+        {
+          "doc_type": "rlu",
+          "fixture": "fields/puz-investitie-functiuni-mixte-locuinte--3"
+        },
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/puz-investitie-functiuni-mixte-locuinte--4"
+        },
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/puz-investitie-functiuni-mixte-locuinte--5"
+        }
+      ],
+      "expected": {
+        "initiator": "SC West Garden Brașov"
+      }
+    },
+    "puz-lotizare-locuinte-individuale-si-micsorare-zona-protecti-3af142": {
+      "documents": [
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/puz-lotizare-locuinte-individuale-si-mic-1"
+        },
+        {
+          "doc_type": "rlu",
+          "fixture": "fields/puz-lotizare-locuinte-individuale-si-mic-2"
+        },
+        {
+          "doc_type": "memoriu",
+          "fixture": "fields/puz-lotizare-locuinte-individuale-si-mic-3"
+        },
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/puz-lotizare-locuinte-individuale-si-mic-4"
+        },
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/puz-lotizare-locuinte-individuale-si-mic-5"
+        }
+      ],
+      "expected": {
+        "cut": 0.8,
+        "height_regime": "S+P+E+M/R",
+        "max_height_m": 9.5,
+        "pot_percent": 35,
+        "site_area_m2": 14487
+      }
+    },
+    "puz-str-jepilor-nr-14a-421ec2": {
+      "documents": [
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/puz-str-jepilor-nr-14a-421ec2-1"
+        },
+        {
+          "doc_type": "rlu",
+          "fixture": "fields/puz-str-jepilor-nr-14a-421ec2-2"
+        },
+        {
+          "doc_type": "rlu",
+          "fixture": "fields/puz-str-jepilor-nr-14a-421ec2-3"
+        },
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/puz-str-jepilor-nr-14a-421ec2-4"
+        },
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/puz-str-jepilor-nr-14a-421ec2-5"
+        }
+      ],
+      "expected": {
+        "green_space_percent": 30,
+        "height_regime": "S+P+8E+R",
+        "initiator": "Jepilor Proiect SRL",
+        "max_height_m": 32,
+        "site_area_m2": 1855
+      }
+    },
+    "puz-zona-de-locuinte-individuale-cu-modificarea-tramei-strad-b22377": {
+      "documents": [
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/puz-zona-de-locuinte-individuale-cu-modi-1"
+        },
+        {
+          "doc_type": "memoriu",
+          "fixture": "fields/puz-zona-de-locuinte-individuale-cu-modi-2"
+        },
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/puz-zona-de-locuinte-individuale-cu-modi-3"
+        },
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/puz-zona-de-locuinte-individuale-cu-modi-4"
+        }
+      ],
+      "expected": {
+        "initiator": "persoană fizică",
+        "parking_spaces": null
+      }
+    },
+    "puz-zona-de-locuinte-mixte-si-colective-cu-pastrarea-avizelo-bde316": {
+      "documents": [
+        {
+          "doc_type": "referat_aprobare",
+          "fixture": "fields/puz-zona-de-locuinte-mixte-si-colective--1"
+        },
+        {
+          "doc_type": "proiect_hcl",
+          "fixture": "fields/puz-zona-de-locuinte-mixte-si-colective--2"
+        },
+        {
+          "doc_type": "memoriu",
+          "fixture": "fields/puz-zona-de-locuinte-mixte-si-colective--3"
+        },
+        {
+          "doc_type": "raport_specialitate",
+          "fixture": "fields/puz-zona-de-locuinte-mixte-si-colective--4"
+        }
+      ],
+      "expected": {
+        "height_regime": "S+P+2E+M",
+        "initiator": "SC INSIGRA SRL",
+        "max_height_m": 14.5
+      }
+    }
+  }
+}

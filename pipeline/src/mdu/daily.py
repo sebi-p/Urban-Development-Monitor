@@ -1,7 +1,7 @@
 """`mdu daily`: the scheduled run (PLAN §7 schedules; workflow `ingest-daily.yml`).
 
 For each adapter in order: write listing projects, add listing events, queue documents. Then
-fetch everything pending for the city, extract text from what was stored and classify it. A
+fetch everything pending for the city, extract text, classify it and extract project fields. A
 failing adapter is logged as a failed `pipeline_run` and the others still run; the command then
 exits non-zero so the workflow shows red. Every step is idempotent, so a second run the same
 day does nothing but re-read the listings.
@@ -59,6 +59,7 @@ def run(  # noqa: PLR0913
     max_bytes: int = stages.DEFAULT_MAX_BYTES,
     extract_limit: int = 1000,
     llm: Any = None,
+    field_extractor: Any = None,
     llm_monthly_usd: float = 2.0,
     log: Callable[[str], None] = lambda _: None,
 ) -> DailyResult:
@@ -139,4 +140,15 @@ def run(  # noqa: PLR0913
         return dict(r.counts)
 
     step("classify", None, "classify", classify_all)
+
+    def fields_all() -> dict[str, Any]:
+        from mdu.project_fields import extract_fields  # noqa: PLC0415
+
+        r = extract_fields(
+            conn, store, city=city, extractor=field_extractor, monthly_usd=llm_monthly_usd,
+            log=log,
+        )  # fmt: skip
+        return dict(r.counts)
+
+    step("fields", None, "extract_fields", fields_all)
     return result

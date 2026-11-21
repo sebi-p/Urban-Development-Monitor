@@ -25,6 +25,8 @@ const item = (
   documents: [
     { label: "Proiect de hotărâre", url: `https://example.test/${n}.pdf`, size_bytes: 1000 },
   ],
+  initiator: null,
+  indicators: {},
   ...extra,
 });
 
@@ -81,5 +83,57 @@ describe("messages", () => {
       expect(Object.keys(m.Status).sort()).toEqual([...PROJECT_STATUSES].sort());
       expect(Object.keys(m.Kind).sort()).toEqual([...PROJECT_KINDS].sort());
     }
+  });
+
+  it("shows extracted indicators linked to their page, the initiator and document types", () => {
+    const source = "https://example.test/memoriu.pdf";
+    renderRo(
+      <ProjectList
+        projects={[
+          item(3, "approved", {
+            initiator: "SC ALFA SRL",
+            indicators: {
+              height_regime: {
+                value: "P+4E",
+                source_document_id: "d",
+                page: 2,
+                confidence: "medium",
+                source_url: source,
+              },
+              cut: {
+                value: 1.8,
+                source_document_id: "d",
+                page: 3,
+                confidence: "medium",
+                source_url: source,
+              },
+            },
+            documents: [
+              { label: "05. Memoriu", url: source, size_bytes: 1, role: "memoriu" },
+              {
+                label: "09. Altele",
+                url: "https://example.test/x.pdf",
+                size_bytes: 1,
+                role: "other",
+              },
+            ],
+          }),
+        ]}
+      />,
+    );
+    const cut = screen.getByRole("link", { name: /CUT 1,8 \(pagina 3/ });
+    expect(cut).toHaveAttribute("href", `${source}#page=3`);
+    expect(screen.getByRole("link", { name: /regim de înălțime P\+4E/ })).toHaveAttribute(
+      "href",
+      `${source}#page=2`,
+    );
+    expect(screen.getByText(/Inițiator: SC ALFA SRL/)).toBeInTheDocument();
+    expect(screen.getByText("· Memoriu")).toBeInTheDocument();
+    expect(screen.queryByText("· Document")).not.toBeInTheDocument();
+  });
+
+  it("shows no indicator line when nothing was extracted", () => {
+    const { container } = renderRo(<ProjectList projects={[item(4, "approved")]} />);
+    expect(container.querySelector(".indicators")).toBeNull();
   });
 });

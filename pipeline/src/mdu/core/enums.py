@@ -28,6 +28,7 @@ Confidence = Literal["low", "medium", "high"]
 LegalRegime = Literal["pre_catuc", "catuc"]
 PipelineRunStatus = Literal["running", "succeeded", "failed", "budget_exhausted"]
 FetchStatus = Literal["pending", "fetched", "unchanged", "failed", "skipped"]
+IdentifierScheme = Literal["cu", "ac", "hcl", "cf", "nr_cadastral", "puz_code"]
 DocumentRole = Literal[
     "memoriu",
     "rlu",
@@ -60,4 +61,5 @@ SHARED_NAMES = {
     "PIPELINE_RUN_STATUSES": get_args(PipelineRunStatus),
     "FETCH_STATUSES": get_args(FetchStatus),
     "DOCUMENT_ROLES": get_args(DocumentRole),
+    "IDENTIFIER_SCHEMES": get_args(IdentifierScheme),
 }

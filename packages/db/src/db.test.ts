@@ -228,7 +228,9 @@ describe.skipIf(!adminUrl)("database (PostGIS)", () => {
       expect(item.hasLocation).toBe(false);
       expect(item.eventDate).toBe("2025-05-01");
       expect(item.sourceUrl).toBe("https://x.test/l");
-      expect(item.documents).toEqual([{ label: "A", url: "https://x.test/a.pdf", size_bytes: 1 }]);
+      expect(item.documents).toEqual([
+        { label: "A", url: "https://x.test/a.pdf", size_bytes: 1, role: null },
+      ]);
       expect(list.length).toBe(DEMO_PROJECTS_PER_JURISDICTION + 1);
       // A later event without files (a council agenda) becomes the latest event, but the
       // document links still come from the listing event.

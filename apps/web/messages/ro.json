@@ -42,5 +42,37 @@
     "public_infrastructure": "Infrastructură publică",
     "regulation": "Regulament",
     "other_council_decision": "Altă hotărâre de consiliu"
+  },
+  "Indicators": {
+    "height_regime": "regim de înălțime {value}",
+    "max_height_m": "H max {value} m",
+    "pot_percent": "POT {value}%",
+    "cut": "CUT {value}",
+    "dwellings": "{value} locuințe",
+    "parking_spaces": "{value} locuri de parcare",
+    "green_space_percent": "spații verzi min. {value}%",
+    "site_area_m2": "teren {value} m²",
+    "initiator": "Inițiator: {value}",
+    "auto": "Valori extrase automat din documentele proiectului; fiecare trimite la pagina din care provine.",
+    "pageLink": "{label} (pagina {page} din documentul sursă)"
+  },
+  "DocType": {
+    "memoriu": "Memoriu",
+    "rlu": "Regulament local de urbanism",
+    "plansa_reglementari": "Planșă reglementări urbanistice",
+    "plansa": "Planșă",
+    "raport_specialitate": "Raport de specialitate",
+    "proiect_hcl": "Proiect de hotărâre",
+    "hcl": "Hotărâre a consiliului local",
+    "aviz": "Aviz",
+    "raport_consultare": "Raport de consultare",
+    "other": "Document",
+    "anunt": "Anunț",
+    "referat_aprobare": "Referat de aprobare",
+    "registru_opinii": "Registru de opinii",
+    "certificat_urbanism": "Certificat de urbanism",
+    "studiu": "Studiu",
+    "ordine_zi_comisie": "Ordinea de zi a comisiei",
+    "hotarari_comisie": "Hotărârile comisiei"
   }
 }

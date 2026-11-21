@@ -1,5 +1,5 @@
 /** Read-only queries used by the web app. The web app never writes (CLAUDE.md). */
-import type { ProjectKind, ProjectStatus } from "@mdu/shared";
+import type { DocumentRole, ProjectIndicators, ProjectKind, ProjectStatus } from "@mdu/shared";
 import { and, asc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import type { Db } from "./client.ts";
 import { jurisdiction, project } from "./schema/index.ts";
@@ -121,6 +121,8 @@ export interface ProjectDocumentLink {
   label: string;
   url: string;
   size_bytes: number | null;
+  /** Classified document type, when the file has been fetched and classified. */
+  role?: DocumentRole | null;
 }
 
 export interface ProjectListItem {
@@ -136,6 +138,9 @@ export interface ProjectListItem {
   eventTitle: string | null;
   sourceUrl: string | null;
   documents: ProjectDocumentLink[];
+  /** Companies and public bodies only, or "persoană fizică". */
+  initiator: string | null;
+  indicators: ProjectIndicators;
 }
 
 /**
@@ -161,8 +166,11 @@ export async function listProjects(db: Db, slug: string): Promise<ProjectListIte
     event_title: string | null;
     details: { source_url?: string } | null;
     documents: ProjectDocumentLink[] | null;
+    initiator: string | null;
+    indicators: ProjectIndicators | null;
   }>(sql`
     select p.id, p.slug, p.title, p.kind, p.status, p.address_text as address,
+           p.initiator, p.indicators,
            p.geom_precision, p.geom is not null as has_location,
            e.event_date::text as event_date, e.title as event_title, e.details,
            d.documents
@@ -183,6 +191,18 @@ export async function listProjects(db: Db, slug: string): Promise<ProjectListIte
     where p.jurisdiction_id = ${j.id}
       and p.review_state in ('auto_published', 'approved')
     order by e.event_date desc nulls last, p.title`);
+  // Document types from the classifier, by URL (a file is fetched once, its type stored once).
+  const urls = [...new Set(rows.flatMap((r) => (r.documents ?? []).map((d) => d.url)))];
+  const roles = new Map<string, DocumentRole>();
+  if (urls.length > 0) {
+    const typed = await db.execute<{ url: string; doc_type: DocumentRole }>(sql`
+      select distinct on (f.url) f.url, d.doc_type
+      from "fetch" f join raw_document d on d.id = f.raw_document_id
+      where f.url in ${urls} and d.doc_type is not null
+        and d.doc_type <> 'registru_opinii'
+      order by f.url, f.fetched_at desc nulls last`);
+    for (const t of typed) roles.set(t.url, t.doc_type);
+  }
   return rows.map((r) => ({
     id: r.id,
     slug: r.slug,
@@ -195,6 +215,8 @@ export async function listProjects(db: Db, slug: string): Promise<ProjectListIte
     eventDate: r.event_date,
     eventTitle: r.event_title,
     sourceUrl: r.details?.source_url ?? null,
-    documents: r.documents ?? [],
+    documents: (r.documents ?? []).map((d) => ({ ...d, role: roles.get(d.url) ?? null })),
+    initiator: r.initiator,
+    indicators: r.indicators ?? {},
   }));
 }

@@ -37,6 +37,18 @@ body {
   border-radius: 50%;
   margin-right: 0.5rem;
 }
+.project-list .indicators {
+  margin: 0.25rem 0 0 1.25rem;
+  font-size: 0.875rem;
+}
+.project-list .indicators a {
+  color: inherit;
+  text-decoration: underline dotted;
+}
+.project-list .doc-type {
+  color: #6b7280;
+  font-size: 0.8125rem;
+}
 .project-list .meta {
   display: block;
   color: #4b5563;

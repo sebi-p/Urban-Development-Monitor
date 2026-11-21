@@ -34,7 +34,9 @@ def build_parser() -> argparse.ArgumentParser:
     ingest.add_argument("--dry-run", action="store_true", help="fetch and parse; write nothing")
 
     run = sub.add_parser("run", help="run a pipeline stage against Postgres")
-    run.add_argument("--stage", required=True, choices=["discover", "fetch", "extract", "classify"])
+    run.add_argument(
+        "--stage", required=True, choices=["discover", "fetch", "extract", "classify", "fields"]
+    )
     run.add_argument("--city", required=True)
     run.add_argument("--adapter", help='e.g. "brasov.council_debates" (required for discover)')
     run.add_argument("--limit", type=int, default=100, help="fetch/extract: max items this run")
@@ -49,6 +51,12 @@ def build_parser() -> argparse.ArgumentParser:
     daily.add_argument("--city", required=True)
     daily.add_argument("--fetch-limit", type=int, default=300, help="max documents to fetch")
     daily.add_argument("--max-mb", type=int, default=30, help="skip larger files")
+
+    ev = sub.add_parser("eval", help="score field extraction on the golden set (calls the model)")
+    ev.add_argument("what", choices=["fields"])
+    ev.add_argument("--city", default="brasov")
+    ev.add_argument("--model", default=None, help="default: the configured fields model")
+    ev.add_argument("--record", action="store_true", help="save answers as private fixtures")
 
     streets = sub.add_parser("streets", help="build and cache a city's street index (OSM tiles)")
     streets.add_argument("--city", required=True)
@@ -111,6 +119,16 @@ def _llm(disabled: bool = False) -> tuple[object | None, float]:
     from mdu.core.llm import ClaudeClassifier  # noqa: PLC0415
 
     return ClaudeClassifier(), budget
+
+
+def _field_extractor(disabled: bool = False) -> tuple[object | None, float]:
+    """The field extractor (Claude Sonnet, ADR 0009) when ANTHROPIC_API_KEY is set."""
+    budget = float(os.environ.get("MDU_LLM_MONTHLY_USD") or 2)
+    if disabled or not os.environ.get("ANTHROPIC_API_KEY"):
+        return None, budget
+    from mdu.core.llm import ClaudeFieldExtractor  # noqa: PLC0415
+
+    return ClaudeFieldExtractor(), budget
 
 
 def _client(city: str) -> PoliteClient:
@@ -292,9 +310,18 @@ def _run(args: argparse.Namespace) -> int:
     url = _database_url()
     if not url:
         return EXIT_FAILED
-    if args.stage in ("extract", "classify"):  # R2 only: no requests to the source sites
+    if args.stage in ("extract", "classify", "fields"):  # R2 only: no requests to the sites
         with psycopg.connect(url) as conn:
-            if args.stage == "extract":
+            if args.stage == "fields":
+                from mdu.project_fields import extract_fields  # noqa: PLC0415
+
+                extractor, budget = _field_extractor(disabled=args.no_llm)
+                print(f"fields: LLM {'on' if extractor else 'off'}, budget ${budget:.2f}/month")
+                result = extract_fields(
+                    conn, ObjectStore.from_env(), city=args.city, extractor=extractor,
+                    monthly_usd=budget, log=print,
+                )  # fmt: skip
+            elif args.stage == "extract":
                 result = stages.extract(
                     conn, ObjectStore.from_env(), city=args.city, limit=args.limit, log=print
                 )
@@ -351,6 +378,7 @@ def _daily(args: argparse.Namespace) -> int:
     with psycopg.connect(url) as conn, _client(args.city) as client:
         streets = _street_index(args.city, client)
         llm, budget = _llm()
+        extractor, _ = _field_extractor()
         result = daily.run(
             conn,
             client,
@@ -359,6 +387,7 @@ def _daily(args: argparse.Namespace) -> int:
             [adapters[k] for k in order],
             city=args.city,
             llm=llm,
+            field_extractor=extractor,
             llm_monthly_usd=budget,
             fetch_limit=args.fetch_limit,
             max_bytes=args.max_mb * 1024 * 1024,
@@ -370,11 +399,37 @@ def _daily(args: argparse.Namespace) -> int:
     return 0 if result.ok else EXIT_FAILED
 
 
+def _eval(args: argparse.Namespace) -> int:
+    from mdu import evals  # noqa: PLC0415
+    from mdu.core.llm import FIELDS_MODEL, ClaudeFieldExtractor  # noqa: PLC0415
+    from mdu.fixtures import FixtureSet  # noqa: PLC0415
+
+    extractor = ClaudeFieldExtractor(model=args.model or FIELDS_MODEL)
+
+    def live(slug: str, pages_text: str) -> tuple[dict[str, object], float]:
+        answer = extractor(pages_text)
+        print(f"  {slug[:50]}: {answer.input_tokens} in / {answer.output_tokens} out", flush=True)
+        return answer.data, answer.cost_usd
+
+    result = evals.run(FixtureSet(args.city), live, model=extractor.model, record=args.record)
+    for p in result.projects:
+        for name, (want, got) in p.wrong.items():
+            why = f" ({p.dropped[name]})" if name in p.dropped else ""
+            print(f"WRONG {p.slug[:40]} {name}: expected {want!r}, got {got!r}{why}")
+    print(
+        f"{extractor.model}: {result.accuracy:.1%} of {result.scored} fields correct; "
+        f"${result.cost_usd:.4f}"
+        + ("; answers recorded, run `mdu fixtures push`" if args.record else "")
+    )
+    return 0 if result.accuracy >= evals.REQUIRED_ACCURACY else EXIT_FAILED
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     load_env()
     args = build_parser().parse_args(argv)
     commands: dict[str, Callable[[argparse.Namespace], int]] = {
         "daily": _daily,
+        "eval": _eval,
         "fetch": _fetch,
         "fixtures": _fixtures,
         "inventory": _inventory,

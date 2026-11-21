@@ -42,5 +42,37 @@
     "public_infrastructure": "Public infrastructure",
     "regulation": "Regulation",
     "other_council_decision": "Other council decision"
+  },
+  "Indicators": {
+    "height_regime": "height {value}",
+    "max_height_m": "max height {value} m",
+    "pot_percent": "site coverage (POT) {value}%",
+    "cut": "floor area ratio (CUT) {value}",
+    "dwellings": "{value} homes",
+    "parking_spaces": "{value} parking spaces",
+    "green_space_percent": "green space min. {value}%",
+    "site_area_m2": "site {value} m²",
+    "initiator": "Initiator: {value}",
+    "auto": "Values extracted automatically from the project's documents; each links to the page it comes from.",
+    "pageLink": "{label} (page {page} of the source document)"
+  },
+  "DocType": {
+    "memoriu": "Explanatory report",
+    "rlu": "Local planning regulations",
+    "plansa_reglementari": "Zoning regulations sheet",
+    "plansa": "Drawing",
+    "raport_specialitate": "Technical report",
+    "proiect_hcl": "Draft council decision",
+    "hcl": "Council decision",
+    "aviz": "Official opinion",
+    "raport_consultare": "Consultation report",
+    "other": "Document",
+    "anunt": "Announcement",
+    "referat_aprobare": "Approval note",
+    "registru_opinii": "Register of comments",
+    "certificat_urbanism": "Planning certificate",
+    "studiu": "Study",
+    "ordine_zi_comisie": "Committee agenda",
+    "hotarari_comisie": "Committee decisions"
   }
 }
