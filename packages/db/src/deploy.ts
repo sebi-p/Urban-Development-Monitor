@@ -1,24 +1,25 @@
 /**
- * Vercel build step (`pnpm db:deploy`): apply pending migrations and upsert the jurisdictions from
- * config/jurisdictions/*.yaml. Real data now comes from the pipeline, so the [DEMO] projects are
- * deleted on every deploy; set MDU_DEMO_DATA=on to seed them instead (ADR 0003).
+ * Production database step (`pnpm db:deploy`), run by the CI `migrate` job after every check
+ * passed: apply pending migrations and upsert the jurisdictions from config/jurisdictions/*.yaml.
+ * Real data comes from the pipeline, so the [DEMO] projects are deleted on every run; set
+ * MDU_DEMO_DATA=on to seed them instead (ADR 0003).
  */
 import { createDb } from "./client.ts";
 import { runMigrations } from "./migrate.ts";
 import { removeDemoProjects, seed, upsertJurisdictions } from "./seed.ts";
 
-const env = process.env.VERCEL_ENV; // "production" | "preview" | "development" | undefined
+const env = process.env.GITHUB_ACTIONS ? "ci" : undefined;
 // Migrations need a direct connection; the pooled URL is for app traffic.
 const url = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
 
 if (!url) {
   if (env) {
     console.error(
-      `db:deploy: no DATABASE_URL on Vercel (${env}). Is the Neon integration connected?`,
+      "db:deploy: no database URL in CI. Add the DATABASE_URL_UNPOOLED repository secret.",
     );
     process.exit(1);
   }
-  console.log("db:deploy: no DATABASE_URL, skipping (not on Vercel)");
+  console.log("db:deploy: no DATABASE_URL, skipping");
   process.exit(0);
 }
 

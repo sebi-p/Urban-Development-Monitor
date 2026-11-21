@@ -27,7 +27,7 @@ DB (repo root, `cp .env.example .env` first): `pnpm db:up` (local PostGIS in Doc
 
 Python (run inside `pipeline/`): `uv sync`, `uv run pytest`, `uv run ruff check .`, `uv run ruff format .`, `uv run mypy`, `uv run mdu ingest --adapter brasov.council_debates --dry-run`, `uv run mdu inventory --city brasov` (discover-only survey, about 25 min), `uv run mdu streets --city brasov` (street index), `DATABASE_URL=… uv run mdu ingest --adapter brasov.council_debates` (writes projects; ADR 0005), `DATABASE_URL=… uv run mdu run --stage discover|fetch --city brasov --adapter …` (queue and store documents; re-runs are no-ops). Code lives in `pipeline/src/mdu/` (`mdu.core`, `mdu.adapters.<city>`), see ADR 0001.
 
-Deploy (ADR 0003): one environment. Every push to `main` deploys to production on Vercel, which runs `vercel-build` (`db:deploy` = migrate, then seed the [DEMO] projects unless `MDU_DEMO_DATA=off`; then `next build`). Run every check locally before pushing: there is no staging.
+Deploy (ADR 0003): one environment. Every push to `main` deploys to production. After CI passes, its `migrate` job runs `pnpm db:deploy` (migrate, upsert jurisdictions, delete [DEMO] projects unless `MDU_DEMO_DATA=on`); Vercel only runs `next build` and goes live once CI and the migration pass. Run every check locally before pushing: there is no staging.
 
 CI (`.github/workflows/ci.yml`) runs every check above. Run them before you commit.
 

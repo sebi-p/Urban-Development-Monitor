@@ -8,8 +8,7 @@
     "build": "node scripts/copy-maplibre-worker.mjs && next build",
     "start": "next start",
     "test": "vitest run",
-    "typecheck": "next typegen && tsc --noEmit",
-    "vercel-build": "pnpm --filter @mdu/db db:deploy && pnpm run build"
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",

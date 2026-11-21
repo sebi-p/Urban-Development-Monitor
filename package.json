@@ -15,6 +15,7 @@
     "format:check": "prettier --check .",
     "db:generate": "pnpm --filter @mdu/db db:generate",
     "db:migrate": "pnpm --filter @mdu/db db:migrate",
+    "db:deploy": "pnpm --filter @mdu/db db:deploy",
     "db:seed": "pnpm --filter @mdu/db db:seed",
     "db:studio": "pnpm --filter @mdu/db db:studio",
     "db:up": "docker compose up -d --wait"

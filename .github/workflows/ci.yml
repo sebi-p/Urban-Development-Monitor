@@ -11,7 +11,9 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Pushes to main queue instead of cancelling each other, so the migrate job is never stopped
+  # halfway. Pull requests still cancel superseded runs.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   web:
@@ -92,3 +94,22 @@ jobs:
             uv run mdu fixtures pull --city "$(basename "$city")"
           done
       - run: uv run pytest
+
+  migrate:
+    name: Migrate database
+    # The production database changes only after every check passed (ADR 0003). Vercel's
+    # Deployment Checks wait for this job too, so new code goes live after its migration.
+    needs: [web, pipeline]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --filter @mdu/db...
+      - run: pnpm db:deploy
