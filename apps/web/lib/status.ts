@@ -7,6 +7,7 @@ export const STATUS_COLOURS: Record<ProjectStatus, string> = {
   under_committee_review: "#7c3aed",
   in_public_consultation: "#ea580c",
   on_council_agenda: "#ca8a04",
+  expired: "#ca8a04", // public debate closed; the draft goes on to the council
   approved: "#16a34a",
   permitted: "#16a34a",
   under_construction: "#2563eb",
@@ -14,6 +15,5 @@ export const STATUS_COLOURS: Record<ProjectStatus, string> = {
   rejected: "#6b7280",
   withdrawn: "#6b7280",
   annulled: "#6b7280",
-  expired: "#6b7280",
   contested: "#dc2626",
 };

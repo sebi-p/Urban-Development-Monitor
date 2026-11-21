@@ -1,0 +1,40 @@
+name: Ingest daily
+
+# PLAN §7: debates, notices, agendas and the urbanism hub every morning, then fetch and extract.
+# 04:30 UTC is 06:30 in Bucharest in winter and 07:30 in summer (GitHub cron is UTC only).
+on:
+  schedule:
+    - cron: "30 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ingest-daily
+  cancel-in-progress: false # never stop a run halfway; a second one waits
+
+jobs:
+  daily:
+    name: Daily ingest (Brașov)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: pipeline
+    env:
+      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3; no moving major tag
+        with:
+          working-directory: pipeline
+          enable-cache: true
+      - name: Install Tesseract with Romanian data (ADR 0006)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-ron
+      - run: uv sync --locked --no-dev
+      - run: uv run --no-dev mdu daily --city brasov

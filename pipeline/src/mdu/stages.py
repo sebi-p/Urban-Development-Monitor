@@ -8,7 +8,8 @@ re-running a stage with nothing new to do changes nothing:
   this up). Failed URLs are queued again, so the next run retries them.
 - `fetch` works through pending rows one at a time, each in its own transaction. It sends the
   previous ETag / Last-Modified, records 304s as `unchanged`, stores new bytes once per SHA-256
-  (`mdu.core.documents`), and skips files over `max_bytes` (PLAN §5).
+  (`mdu.core.documents`), and skips files over `max_bytes` (PLAN §5) and files an adapter marks
+  `never_mirror` (personal data, PLAN §11) without requesting them.
 - `extract` reads stored PDFs from R2 (no requests to the source sites), writes their text page by
   page to R2 under a key that names the extractor version, and fills `raw_document.text_r2_key`,
   `text_head`, `page_count` and `ocr_used`. Documents already extracted by the current version are
@@ -164,6 +165,7 @@ def fetch(  # noqa: PLR0913
                 source_id=source_id,
                 url=url,
                 listed_size=(hints or {}).get("size_bytes"),
+                never_mirror=(hints or {}).get("never_mirror"),
                 upload=upload,
                 max_bytes=max_bytes,
             )
@@ -176,7 +178,7 @@ def fetch(  # noqa: PLR0913
     return result
 
 
-def _fetch_one(  # noqa: PLR0913
+def _fetch_one(  # noqa: PLR0911, PLR0913
     cur: psycopg.Cursor[Any],
     client: PoliteClient,
     *,
@@ -188,6 +190,7 @@ def _fetch_one(  # noqa: PLR0913
     listed_size: int | None,
     upload: Upload | None,
     max_bytes: int,
+    never_mirror: str | None = None,
 ) -> str:
     previous = _previous(cur, source_id, url)
     etag, last_modified, prev_doc = previous if previous else (None, None, None)
@@ -199,6 +202,8 @@ def _fetch_one(  # noqa: PLR0913
         cur.execute(f'update "fetch" set {sets} where id = %(id)s', {**cols, "id": fetch_id})
         return status
 
+    if never_mirror:  # personal data by its listing label (PLAN §11): never requested
+        return finish("skipped", error=f"never mirrored: {never_mirror}")
     if listed_size and listed_size > max_bytes:  # known from the listing: no request needed
         return finish("skipped", error=f"listed size {listed_size} > {max_bytes} bytes")
     client.max_bytes = max_bytes

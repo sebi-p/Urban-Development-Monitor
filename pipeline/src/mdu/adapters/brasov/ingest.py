@@ -1,7 +1,6 @@
 """Brașov listing ingestion: public debates and urbanism notices -> ProjectRecords."""
 
 import re
-from collections.abc import Callable
 
 from mdu.adapters.brasov import council_debates, notices
 from mdu.core.enums import ProjectKind, ProjectStatus
@@ -24,7 +23,8 @@ DEBATE_STATUS: dict[str, ProjectStatus] = {
     "În dezbatere publică": "in_public_consultation",
     "Retras de pe ordinea de zi": "withdrawn",
     "Respins": "rejected",
-    # The legal deadline passed without a council vote; the draft lapsed (it may come back later).
+    # The public-debate period has ended; the draft goes on to the council (it appears on later
+    # agendas, e.g. session 470), so this isn't a lapsed draft.
     "Termen expirat conform legii": "expired",
 }
 _DEBATE_PREFIX = re.compile(
@@ -148,11 +148,3 @@ def urbanism_notices(
             )
         )
     return out
-
-
-ADAPTERS: dict[
-    str, tuple[str, Callable[[PoliteClient, StreetIndex, IngestStats], list[ProjectRecord]]]
-] = {
-    "brasov.council_debates": (council_debates.LISTING_URL, debates),
-    "brasov.notices": (notices.LISTING_URL, urbanism_notices),
-}

@@ -29,7 +29,7 @@
     "completed": "Completed",
     "contested": "Contested",
     "annulled": "Annulled",
-    "expired": "Lapsed"
+    "expired": "Debate closed"
   },
   "Kind": {
     "pug": "General urban plan (PUG)",

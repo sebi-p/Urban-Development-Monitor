@@ -22,7 +22,8 @@ Placeholders such as `<project folder>` stand for real path segments. Real folde
 - **Files:** `/file-zone/proiecte/hotarare/<CODE>/<NN>. <document title>.pdf`. `<CODE>` is a short folder code, such as `PUZ<year>` or a street abbreviation plus year. `<NN>` orders the documents: announcement, draft decision (_proiect de hotărâre_), _referat de aprobare_, _raport de specialitate_, then for urban plans the _memoriu_, regulations and plan sheets (_planșe_), the register of opinions, and the Law 52/2003 consultation report.
 - **Link text ends with the file size,** e.g. `[86.94 KB]`. Inventory can read sizes from the listing, without requesting the files.
 - **PDFs have a text layer.** All seven sampled had one.
-- **Privacy:** the _registru opinii_ (register of opinions) lists the residents who submitted comments. Never mirror it, and extract only counts from it. Plan sheets can reach 10–25 MB; record them by size and don't mirror them (PLAN §5).
+- **Statuses:** "Termen expirat conform legii" means the public-debate period has ended; the draft then goes to the council (both such debates seen on 2026-11-20 were on that day's agenda, items 33 and 34). It maps to `expired` ("Dezbatere încheiată").
+- **Privacy:** the _registru opinii_ (register of opinions) and _registru propuneri-sugestii_ list the residents who submitted comments. Never mirror them (the adapter's never-mirror rule skips them without a request), and extract only counts from them. Plan sheets can reach 10–25 MB; record them by size and don't mirror them (PLAN §5).
 
 ### urbanism_hub: urbanism and construction page (P0)
 
@@ -43,6 +44,8 @@ Placeholders such as `<project folder>` stand for real path segments. Real folde
 
 - **URL:** `https://www.brasovcity.ro/consiliu/proiect-al-ordinii-de-zi/<id>`. The old `/ro/consiliu/proiect_al_ordinii_de_zi/<id>` redirects here. ID 470 is the ordinary session of 2026-11-20.
 - **The agenda is plain numbered text** in the page body. Every page on the site also has a sidebar widget with the current session's agenda, so the parser must read only the main content.
+- **No other page links to the session ID.** The daily adapter probes IDs upwards from the newest agenda it has stored.
+- **Agenda items name drafts in different wording from the debate listing** ("Proiect de hotărâre pentru … P.U.Z. … în mun. Brașov …, inițiator X" against "PROIECT DE HOTĂRÂRE AL CONSILIULUI LOCAL pentru … PUZ … în municipiul Brașov …"), so matching uses a normalised title key (ADR 0007).
 - **Old IDs don't keep their agendas.** IDs 400 and 300 return HTTP 200 with the page template and no agenda (fixture `council_agendas/session-400`). PLAN §2's assumption that sequential IDs allow a full back-fill doesn't hold. M0.2 measures the range of IDs that still have content.
 
 ### council_drafts: draft decisions for sessions (metadata only)

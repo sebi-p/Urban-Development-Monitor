@@ -230,6 +230,19 @@ describe.skipIf(!adminUrl)("database (PostGIS)", () => {
       expect(item.sourceUrl).toBe("https://x.test/l");
       expect(item.documents).toEqual([{ label: "A", url: "https://x.test/a.pdf", size_bytes: 1 }]);
       expect(list.length).toBe(DEMO_PROJECTS_PER_JURISDICTION + 1);
+      // A later event without files (a council agenda) becomes the latest event, but the
+      // document links still come from the listing event.
+      await sql`
+        insert into project_event (jurisdiction_id, project_id, event_date, event_type, title,
+          details, confidence, review_state)
+        values (${j!.id}, ${p!.id}, '2025-06-01', 'council_agenda', 'Pe ordinea de zi',
+          ${sql.json({ source_url: "https://x.test/agenda" })}, 'high', 'auto_published')`;
+      const later = (await listProjects(handle.db, slug))!.find(
+        (x) => x.slug === "real-no-location",
+      )!;
+      expect(later.eventDate).toBe("2025-06-01");
+      expect(later.eventTitle).toBe("Pe ordinea de zi");
+      expect(later.documents).toEqual(item.documents);
       // The map only gets located projects.
       const fc = (await projectsGeoJSON(handle.db, slug))!;
       expect(fc.features.map((f) => f.properties.slug)).not.toContain("real-no-location");

@@ -14,7 +14,14 @@ ProjectStatus = Literal[
     "withdrawn",
     "expired",
 ]
-EventType = Literal["notice_published", "consultation_opened", "council_vote", "other"]
+EventType = Literal[
+    "notice_published",
+    "consultation_opened",
+    "consultation_closed",
+    "council_agenda",
+    "council_vote",
+    "other",
+]
 GeomPrecision = Literal["street", "address", "neighbourhood", "manual", "parcel"]
 ReviewState = Literal["auto_published", "pending_review"]
 Confidence = Literal["low", "medium", "high"]

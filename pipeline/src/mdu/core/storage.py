@@ -48,5 +48,17 @@ class ObjectStore:
         extra = {"ContentType": content_type} if content_type else {}
         self.client.put_object(Bucket=self.bucket, Key=key, Body=data, **extra)  # type: ignore[arg-type]
 
+    def age_days(self, key: str) -> float | None:
+        """Days since the object was last written; None when it doesn't exist."""
+        from datetime import UTC, datetime  # noqa: PLC0415
+
+        try:
+            head = self.client.head_object(Bucket=self.bucket, Key=key)
+        except ClientError as exc:
+            if exc.response.get("Error", {}).get("Code") in ("404", "NoSuchKey", "NotFound"):
+                return None
+            raise
+        return (datetime.now(UTC) - head["LastModified"]).total_seconds() / 86400
+
     def get(self, key: str) -> bytes:
         return self.client.get_object(Bucket=self.bucket, Key=key)["Body"].read()

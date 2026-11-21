@@ -1,8 +1,8 @@
 """Brașov discover (PLAN §7 stage 1): which document URLs to fetch, with listing hints."""
 
-from collections.abc import Callable
+import hashlib
 
-from mdu.adapters.brasov import council_debates, notices
+from mdu.adapters.brasov import council_debates, notices, urbanism_hub
 from mdu.adapters.brasov.ingest import kind_of
 from mdu.core.http import HttpError, PoliteClient
 from mdu.stages import DiscoveredItem
@@ -61,7 +61,23 @@ def notice_attachments(client: PoliteClient, *, include_all: bool = False) -> li
     return items
 
 
-DISCOVER: dict[str, tuple[str, Callable[..., list[DiscoveredItem]]]] = {
-    "brasov.council_debates": (council_debates.LISTING_URL, debate_documents),
-    "brasov.notices": (notices.LISTING_URL, notice_attachments),
-}
+def hub_documents(client: PoliteClient, *, include_all: bool = False) -> list[DiscoveredItem]:
+    """PUD/PUZ files and technical urbanism committee (CTATU) agendas and decisions on the hub
+    page. Folder names can name private applicants, so hints keep only a hash of the folder
+    (to group a project's files) and never the name. Traffic committee files are out of scope."""
+    del include_all  # the page lists everything it has
+    resp = client.get(urbanism_hub.PAGE_URL)
+    if resp.status != 200:  # noqa: PLR2004
+        raise HttpError(f"hub page returned HTTP {resp.status}")
+    items = []
+    for f in urbanism_hub.parse_page(resp.content):
+        if f.kind not in ("pud", "puz", "ctatu"):
+            continue
+        group = hashlib.sha1(f.group.encode(), usedforsecurity=False).hexdigest()[:10]
+        items.append(
+            DiscoveredItem(
+                f.url,
+                {"label": f.label, "size_bytes": f.size_bytes, "kind": f.kind, "group": group},
+            )
+        )
+    return items

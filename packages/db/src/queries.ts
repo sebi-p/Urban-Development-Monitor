@@ -159,17 +159,27 @@ export async function listProjects(db: Db, slug: string): Promise<ProjectListIte
     has_location: boolean;
     event_date: string | null;
     event_title: string | null;
-    details: { source_url?: string; documents?: ProjectDocumentLink[] } | null;
+    details: { source_url?: string } | null;
+    documents: ProjectDocumentLink[] | null;
   }>(sql`
     select p.id, p.slug, p.title, p.kind, p.status, p.address_text as address,
            p.geom_precision, p.geom is not null as has_location,
-           e.event_date::text as event_date, e.title as event_title, e.details
+           e.event_date::text as event_date, e.title as event_title, e.details,
+           d.documents
     from project p
     left join lateral (
       select event_date, title, details from project_event
       where project_id = p.id and review_state in ('auto_published', 'approved')
-      order by event_date desc limit 1
+      order by event_date desc, created_at desc limit 1
     ) e on true
+    -- Agenda and status-change events carry no files: documents come from the newest event
+    -- that lists them (the source listing).
+    left join lateral (
+      select details->'documents' as documents from project_event
+      where project_id = p.id and review_state in ('auto_published', 'approved')
+        and jsonb_typeof(details->'documents') = 'array'
+      order by event_date desc, created_at desc limit 1
+    ) d on true
     where p.jurisdiction_id = ${j.id}
       and p.review_state in ('auto_published', 'approved')
     order by e.event_date desc nulls last, p.title`);
@@ -185,6 +195,6 @@ export async function listProjects(db: Db, slug: string): Promise<ProjectListIte
     eventDate: r.event_date,
     eventTitle: r.event_title,
     sourceUrl: r.details?.source_url ?? null,
-    documents: r.details?.documents ?? [],
+    documents: r.documents ?? [],
   }));
 }

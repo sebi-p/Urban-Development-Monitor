@@ -4,6 +4,10 @@ Adapters turn source pages into `ProjectRecord`s; `write_records` stores the sou
 R2 (`raw/<city>/<yyyy>/<sha256>.<ext>`, private), records it as a `raw_document`, and upserts
 projects, their timeline event (citing that snapshot) and any consultation window. Re-running
 with the same input changes nothing but timestamps. Only the pipeline writes (ADR 0003).
+
+A status that differs from the stored one adds a `status_change` event dated the day it was first
+seen, so the timeline keeps the history. `write_events` adds events to existing projects from
+other sources (a council agenda naming a project), idempotent per (project, source, group).
 """
 
 from __future__ import annotations
@@ -15,6 +19,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import psycopg
 
@@ -134,23 +139,11 @@ def write_records(  # noqa: PLR0913
     records: list[ProjectRecord],
     upload: Callable[[str, bytes, str | None], None] | None,
     stats: IngestStats,
+    seen_on: date | None = None,
 ) -> None:
     with conn.transaction(), conn.cursor() as cur:
-        cur.execute("select id from jurisdiction where slug = %s", (city,))
-        j = cur.fetchone()
-        if not j:
-            raise RuntimeError(f"jurisdiction {city} missing; deploy runs db:deploy to create it")
-        jid = j[0]
-        cur.execute(
-            """insert into source (jurisdiction_id, adapter, base_url, last_success_at)
-               values (%s, %s, %s, now())
-               on conflict (jurisdiction_id, adapter)
-               do update set last_success_at = now(), base_url = excluded.base_url
-               returning id""",
-            (jid, adapter, base_url),
-        )
-        source = cur.fetchone()
-        assert source
+        jid, source_id = _source(cur, city, adapter, base_url)
+        source = (source_id,)
         doc_ids: dict[str, str] = {}
         for rec in records:
             sha = rec.source.sha256
@@ -173,7 +166,7 @@ def write_records(  # noqa: PLR0913
                     (jid, source[0], rec.source.url, rec.source.fetched_at, rec.source.status,
                      doc_ids[sha]),
                 )  # fmt: skip
-            _upsert_project(cur, jid, adapter, rec, doc_ids[sha])
+            _upsert_project(cur, jid, adapter, rec, doc_ids[sha], seen_on=seen_on)
             stats.projects += 1
             stats.with_location += rec.street is not None
         cur.execute(
@@ -184,9 +177,35 @@ def write_records(  # noqa: PLR0913
         )
 
 
-def _upsert_project(
-    cur: psycopg.Cursor[Any], jid: int, adapter: str, rec: ProjectRecord, doc_id: str
+# Event type for the day a listing first shows a new status.
+STATUS_EVENT: dict[str, EventType] = {
+    "in_public_consultation": "consultation_opened",
+    "expired": "consultation_closed",
+    "on_council_agenda": "council_agenda",
+    "approved": "council_vote",
+    "rejected": "council_vote",
+    "withdrawn": "council_vote",
+}
+
+
+def today(tz: str = "Europe/Bucharest") -> date:
+    return datetime.now(UTC).astimezone(ZoneInfo(tz)).date()
+
+
+def _upsert_project(  # noqa: PLR0913
+    cur: psycopg.Cursor[Any],
+    jid: int,
+    adapter: str,
+    rec: ProjectRecord,
+    doc_id: str,
+    *,
+    seen_on: date | None = None,
 ) -> None:
+    cur.execute(
+        "select status from project where jurisdiction_id = %s and slug = %s", (jid, rec.slug)
+    )
+    before = cur.fetchone()
+    old_status = before[0] if before else None
     geom = "ST_SetSRID(ST_MakePoint(%(lon)s, %(lat)s), 4326)" if rec.street is not None else "NULL"
     params: dict[str, object] = {
         "jid": jid,
@@ -218,13 +237,15 @@ def _upsert_project(
     pid = row[0]
     details = {
         "source": adapter,
+        "kind": "listing",
         "source_url": rec.source.url,
         "official_title": rec.official_title,
         "status_text": rec.status_text,
         "documents": [d.__dict__ for d in rec.documents],
     }
     cur.execute(
-        "delete from project_event where project_id = %s and details->>'source' = %s",
+        """delete from project_event where project_id = %s and details->>'source' = %s
+             and coalesce(details->>'kind', 'listing') = 'listing'""",
         (pid, adapter),
     )
     cur.execute(
@@ -233,6 +254,22 @@ def _upsert_project(
            values (%s, %s, %s, %s, %s, %s, %s, 'high', 'auto_published')""",
         (jid, pid, rec.event_date, rec.event_type, doc_id, rec.event_title, json.dumps(details)),
     )
+    if old_status is not None and old_status != rec.status:
+        change = {
+            "source": adapter,
+            "kind": "status_change",
+            "from": old_status,
+            "to": rec.status,
+            "status_text": rec.status_text,
+            "source_url": rec.source.url,
+        }
+        cur.execute(
+            """insert into project_event (jurisdiction_id, project_id, event_date, event_type,
+                   raw_document_id, title, details, confidence, review_state)
+               values (%s, %s, %s, %s, %s, %s, %s, 'high', 'auto_published')""",
+            (jid, pid, seen_on or today(), STATUS_EVENT.get(rec.status, "other"), doc_id,
+             rec.status_text or rec.status, json.dumps(change)),
+        )  # fmt: skip
     # Each project is written by exactly one adapter so far (linking sources is M3.3).
     cur.execute("delete from consultation where project_id = %s", (pid,))
     if rec.consultation:
@@ -243,3 +280,97 @@ def _upsert_project(
             (jid, pid, rec.consultation[0], rec.consultation[1],
              "Conform anunțului de dezbatere publică (vezi documentele).", doc_id),
         )  # fmt: skip
+
+
+def _source(cur: psycopg.Cursor[Any], city: str, adapter: str, base_url: str) -> tuple[int, str]:
+    cur.execute("select id from jurisdiction where slug = %s", (city,))
+    j = cur.fetchone()
+    if not j:
+        raise RuntimeError(f"jurisdiction {city} missing; the CI migrate job creates it")
+    cur.execute(
+        """insert into source (jurisdiction_id, adapter, base_url, last_success_at)
+           values (%s, %s, %s, now())
+           on conflict (jurisdiction_id, adapter)
+           do update set last_success_at = now(), base_url = excluded.base_url
+           returning id""",
+        (j[0], adapter, base_url),
+    )
+    s = cur.fetchone()
+    assert s
+    return int(j[0]), str(s[0])
+
+
+def project_titles(conn: psycopg.Connection[Any], city: str) -> list[tuple[str, str]]:
+    """(project id, official title) for every project whose source listing gave one."""
+    rows = conn.execute(
+        """select distinct e.project_id::text, e.details->>'official_title'
+           from project_event e join jurisdiction j on j.id = e.jurisdiction_id
+           where j.slug = %s and e.details ? 'official_title'""",
+        (city,),
+    ).fetchall()
+    return [(r[0], r[1]) for r in rows if r[1]]
+
+
+@dataclass(frozen=True)
+class EventRecord:
+    project_id: str
+    event_date: date
+    event_type: EventType
+    title: str
+    details: dict[str, Any] = field(default_factory=dict)
+
+
+def write_events(  # noqa: PLR0913
+    conn: psycopg.Connection[Any],
+    *,
+    city: str,
+    adapter: str,
+    base_url: str,
+    source: SourceDoc,
+    doc_type: str,
+    group: str,
+    events: list[EventRecord],
+    upload: Callable[[str, bytes, str | None], None] | None,
+) -> None:
+    """Stores the source page once per SHA-256 and replaces this adapter's events for `group`
+    (e.g. one council session) on each project, so re-running changes nothing."""
+    with conn.transaction(), conn.cursor() as cur:
+        jid, source_id = _source(cur, city, adapter, base_url)
+        doc_id, _ = store_raw_document(
+            cur,
+            jurisdiction_id=jid,
+            city=city,
+            url=source.url,
+            content=source.content,
+            content_type=source.content_type,
+            fetched_at=source.fetched_at,
+            upload=upload,
+            doc_type=doc_type,
+        )
+        cur.execute(
+            """insert into "fetch" (jurisdiction_id, source_id, url, status, fetched_at,
+                   http_status, raw_document_id)
+               values (%s, %s, %s, 'fetched', %s, %s, %s)""",
+            (jid, source_id, source.url, source.fetched_at, source.status, doc_id),
+        )
+        cur.execute(
+            """delete from project_event where jurisdiction_id = %s
+                 and details->>'source' = %s and details->>'group' = %s""",
+            (jid, adapter, group),
+        )
+        for ev in events:
+            details = {**ev.details, "source": adapter, "kind": "event", "group": group,
+                       "source_url": source.url}  # fmt: skip
+            cur.execute(
+                """insert into project_event (jurisdiction_id, project_id, event_date,
+                       event_type, raw_document_id, title, details, confidence, review_state)
+                   values (%s, %s, %s, %s, %s, %s, %s, 'high', 'auto_published')""",
+                (jid, ev.project_id, ev.event_date, ev.event_type, doc_id, ev.title,
+                 json.dumps(details)),
+            )  # fmt: skip
+        cur.execute(
+            """insert into pipeline_run
+                   (jurisdiction_id, adapter, stage, status, finished_at, stats)
+               values (%s, %s, 'events', 'succeeded', now(), %s)""",
+            (jid, adapter, json.dumps({"events": len(events), "group": group})),
+        )

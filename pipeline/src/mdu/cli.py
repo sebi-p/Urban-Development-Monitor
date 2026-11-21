@@ -14,8 +14,10 @@ from mdu.core.http import HttpError, PoliteClient
 from mdu.core.jurisdiction import load_jurisdiction
 
 if TYPE_CHECKING:
+    from mdu.core.adapter import Adapter
     from mdu.core.streets import StreetIndex
 
+STREETS_MAX_AGE_DAYS = 30
 EXIT_NOT_IMPLEMENTED = 2
 EXIT_FAILED = 1
 
@@ -41,6 +43,11 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument(
         "--night-only", action="store_true", help="refuse to run outside 22:00–06:00 Bucharest"
     )
+
+    daily = sub.add_parser("daily", help="scheduled run: every daily adapter, fetch, extract")
+    daily.add_argument("--city", required=True)
+    daily.add_argument("--fetch-limit", type=int, default=300, help="max documents to fetch")
+    daily.add_argument("--max-mb", type=int, default=30, help="skip larger files")
 
     streets = sub.add_parser("streets", help="build and cache a city's street index (OSM tiles)")
     streets.add_argument("--city", required=True)
@@ -78,6 +85,20 @@ def build_parser() -> argparse.ArgumentParser:
         p = fx_sub.add_parser(name, help=help_text)
         p.add_argument("--city", required=True)
     return parser
+
+
+def _registry(city: str) -> tuple[dict[str, "Adapter"], list[str]]:
+    import importlib  # noqa: PLC0415
+
+    module = importlib.import_module(f"mdu.adapters.{city}.registry")
+    return module.ADAPTERS, module.DAILY
+
+
+def _database_url() -> str | None:
+    url = os.environ.get("DATABASE_URL_UNPOOLED") or os.environ.get("DATABASE_URL")
+    if not url:
+        print("DATABASE_URL is not set", file=sys.stderr)
+    return url
 
 
 def _client(city: str) -> PoliteClient:
@@ -162,7 +183,10 @@ def _inventory(args: argparse.Namespace) -> int:
 
 
 def _street_index(city: str, client: PoliteClient, *, refresh: bool = False) -> "StreetIndex":
-    """Local cache, then R2, then the OpenFreeMap street tiles (which refresh both caches)."""
+    """Local cache, then R2, then the OpenFreeMap street tiles (which refresh both caches).
+    Copies older than STREETS_MAX_AGE_DAYS are rebuilt (about 60 tile requests)."""
+    import time  # noqa: PLC0415
+
     from mdu.core.env import REPO_ROOT  # noqa: PLC0415
     from mdu.core.storage import ObjectStore, StorageNotConfigured  # noqa: PLC0415
     from mdu.core.streets import StreetIndex, fetch_street_index  # noqa: PLC0415
@@ -174,9 +198,10 @@ def _street_index(city: str, client: PoliteClient, *, refresh: bool = False) -> 
     except StorageNotConfigured:
         store = None
     if not refresh:
-        if cache.is_file():
+        if cache.is_file() and time.time() - cache.stat().st_mtime < STREETS_MAX_AGE_DAYS * 86400:
             return StreetIndex.from_json(cache.read_text(encoding="utf-8"))
-        if store and store.exists(key):
+        age = store.age_days(key) if store else None
+        if store and age is not None and age < STREETS_MAX_AGE_DAYS:
             text = store.get(key).decode("utf-8")
             cache.parent.mkdir(parents=True, exist_ok=True)
             cache.write_text(text, encoding="utf-8")
@@ -197,19 +222,19 @@ def _streets(args: argparse.Namespace) -> int:
 
 
 def _ingest(args: argparse.Namespace) -> int:
-    import importlib  # noqa: PLC0415
-
     import psycopg  # noqa: PLC0415
 
     from mdu.core.storage import ObjectStore  # noqa: PLC0415
     from mdu.ingest import IngestStats, write_records  # noqa: PLC0415
 
     city = args.adapter.split(".", 1)[0]
-    adapters = importlib.import_module(f"mdu.adapters.{city}.ingest").ADAPTERS
-    if args.adapter not in adapters:
-        print(f"unknown adapter {args.adapter}; known: {', '.join(adapters)}", file=sys.stderr)
+    adapters, _ = _registry(city)
+    adapter = adapters.get(args.adapter)
+    if adapter is None or adapter.projects is None:
+        known = ", ".join(k for k, a in adapters.items() if a.projects)
+        print(f"{args.adapter} doesn't list projects; these do: {known}", file=sys.stderr)
         return EXIT_FAILED
-    base_url, build = adapters[args.adapter]
+    base_url, build = adapter.base_url, adapter.projects
     stats = IngestStats()
     with _client(city) as client:
         streets = _street_index(city, client)
@@ -224,9 +249,8 @@ def _ingest(args: argparse.Namespace) -> int:
     )
     if args.dry_run:
         return 0
-    url = os.environ.get("DATABASE_URL_UNPOOLED") or os.environ.get("DATABASE_URL")
+    url = _database_url()
     if not url:
-        print("DATABASE_URL is not set", file=sys.stderr)
         return EXIT_FAILED
     store = ObjectStore.from_env()
     with psycopg.connect(url) as conn:
@@ -245,8 +269,6 @@ def _ingest(args: argparse.Namespace) -> int:
 
 
 def _run(args: argparse.Namespace) -> int:
-    import importlib  # noqa: PLC0415
-
     import psycopg  # noqa: PLC0415
 
     from mdu import stages  # noqa: PLC0415
@@ -255,9 +277,8 @@ def _run(args: argparse.Namespace) -> int:
     if args.night_only and not stages.is_night():
         print("outside the 22:00–06:00 Bucharest window (PLAN §7); not running", file=sys.stderr)
         return EXIT_FAILED
-    url = os.environ.get("DATABASE_URL_UNPOOLED") or os.environ.get("DATABASE_URL")
+    url = _database_url()
     if not url:
-        print("DATABASE_URL is not set", file=sys.stderr)
         return EXIT_FAILED
     if args.stage == "extract":  # reads R2 only: no HTTP client, no requests to the sites
         with psycopg.connect(url) as conn:
@@ -272,11 +293,13 @@ def _run(args: argparse.Namespace) -> int:
             if not args.adapter:
                 print("--adapter is required for discover", file=sys.stderr)
                 return EXIT_FAILED
-            registry = importlib.import_module(f"mdu.adapters.{args.city}.discover").DISCOVER
-            base_url, find = registry[args.adapter]
-            items = find(client, include_all=args.all)
+            adapter = _registry(args.city)[0].get(args.adapter)
+            if adapter is None or adapter.discover is None:
+                print(f"{args.adapter} has no discover step", file=sys.stderr)
+                return EXIT_FAILED
+            items = adapter.mark_never_mirror(adapter.discover(client, include_all=args.all))
             result = stages.discover(
-                conn, city=args.city, adapter=args.adapter, base_url=base_url, items=items
+                conn, city=args.city, adapter=args.adapter, base_url=adapter.base_url, items=items
             )
         else:
             result = stages.fetch(
@@ -294,10 +317,41 @@ def _run(args: argparse.Namespace) -> int:
     return 0
 
 
+def _daily(args: argparse.Namespace) -> int:
+    import psycopg  # noqa: PLC0415
+
+    from mdu import daily  # noqa: PLC0415
+    from mdu.core.storage import ObjectStore  # noqa: PLC0415
+
+    url = _database_url()
+    if not url:
+        return EXIT_FAILED
+    adapters, order = _registry(args.city)
+    store = ObjectStore.from_env()
+    with psycopg.connect(url) as conn, _client(args.city) as client:
+        streets = _street_index(args.city, client)
+        result = daily.run(
+            conn,
+            client,
+            store,
+            streets,
+            [adapters[k] for k in order],
+            city=args.city,
+            fetch_limit=args.fetch_limit,
+            max_bytes=args.max_mb * 1024 * 1024,
+            log=lambda m: print(m, flush=True),
+        )
+        requests = client.requests_sent
+    print(f"daily: {len(result.steps)} steps, {len(result.failed)} failed; {requests} requests")
+    print(f"database: {urlsplit(url).hostname}")
+    return 0 if result.ok else EXIT_FAILED
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     load_env()
     args = build_parser().parse_args(argv)
     commands: dict[str, Callable[[argparse.Namespace], int]] = {
+        "daily": _daily,
         "fetch": _fetch,
         "fixtures": _fixtures,
         "inventory": _inventory,

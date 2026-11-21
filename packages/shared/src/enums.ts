@@ -29,7 +29,7 @@ export const PROJECT_STATUSES = [
   "completed",
   "contested",
   "annulled",
-  "expired",
+  "expired", // the public-debate period has ended; the draft goes on to the council
 ] as const;
 
 export const GEOM_PRECISIONS = ["parcel", "address", "street", "neighbourhood", "manual"] as const;
