@@ -1,12 +1,17 @@
 """Object storage on Cloudflare R2 through its S3 API (PLAN §4)."""
 
+from __future__ import annotations
+
 import os
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
-from mypy_boto3_s3 import S3Client
+
+if TYPE_CHECKING:  # type stubs are a dev dependency; the daily run installs without them
+    from mypy_boto3_s3 import S3Client
 
 ENV_VARS = ("R2_ENDPOINT", "R2_BUCKET", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY")
 
@@ -21,7 +26,7 @@ class ObjectStore:
     client: S3Client
 
     @classmethod
-    def from_env(cls) -> "ObjectStore":
+    def from_env(cls) -> ObjectStore:
         missing = [v for v in ENV_VARS if not os.environ.get(v)]
         if missing:
             raise StorageNotConfigured(f"set {', '.join(missing)} (see .env.example)")

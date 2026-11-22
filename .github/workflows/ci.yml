@@ -96,6 +96,11 @@ jobs:
             uv run mdu fixtures pull --city "$(basename "$city")"
           done
       - run: uv run pytest
+      - name: Imports work without dev dependencies (as ingest-daily installs)
+        run: |
+          uv sync --locked --no-dev
+          uv run --no-dev python -c "import importlib, pkgutil, mdu; [importlib.import_module(m.name) for m in pkgutil.walk_packages(mdu.__path__, 'mdu.')]"
+          uv run --no-dev mdu --version
 
   migrate:
     name: Migrate database
