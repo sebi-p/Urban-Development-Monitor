@@ -24,18 +24,39 @@ function parseBBox(raw: string | null): BBox | undefined | "invalid" {
   return [minLon, minLat, maxLon, maxLat];
 }
 
-/** GET /api/{city}/projects.geojson?bbox=&kind=&status= (PLAN §8). */
+function parseYear(raw: string | null): number | undefined | "invalid" {
+  if (!raw) return undefined;
+  const n = Number(raw);
+  return Number.isInteger(n) && n >= 1990 && n <= 2100 ? n : "invalid";
+}
+
+/** GET /api/{city}/projects.geojson?bbox=&kind=&status=&from=&to=&open=1 (PLAN §8). */
 export async function GET(request: Request, { params }: { params: Promise<{ city: string }> }) {
   const { city } = await params;
   const q = new URL(request.url).searchParams;
   const bbox = parseBBox(q.get("bbox"));
   const kinds = parseList<ProjectKind>(q.get("kind"), PROJECT_KINDS);
   const statuses = parseList<ProjectStatus>(q.get("status"), PROJECT_STATUSES);
-  if (bbox === "invalid" || kinds === "invalid" || statuses === "invalid") {
-    return Response.json({ error: "invalid bbox, kind or status" }, { status: 400 });
+  const yearFrom = parseYear(q.get("from"));
+  const yearTo = parseYear(q.get("to"));
+  if (
+    bbox === "invalid" ||
+    kinds === "invalid" ||
+    statuses === "invalid" ||
+    yearFrom === "invalid" ||
+    yearTo === "invalid"
+  ) {
+    return Response.json({ error: "invalid bbox, kind, status, from or to" }, { status: 400 });
   }
 
-  const fc = await projectsGeoJSON(getDb(), city, { bbox, kinds, statuses });
+  const fc = await projectsGeoJSON(getDb(), city, {
+    bbox,
+    kinds,
+    statuses,
+    yearFrom,
+    yearTo,
+    openConsultation: q.get("open") === "1",
+  });
   if (!fc) return Response.json({ error: "unknown city" }, { status: 404 });
 
   return Response.json(fc, {

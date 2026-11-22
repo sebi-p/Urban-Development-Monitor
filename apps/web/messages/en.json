@@ -116,5 +116,22 @@
     "open": "Open",
     "error": "Couldn't save: {message}",
     "notConfigured": "The admin area isn't configured yet (AUTH_SECRET and the GitHub OAuth app are missing)."
+  },
+  "Filters": {
+    "heading": "Filters",
+    "kind": "Type",
+    "status": "Status",
+    "years": "Years",
+    "from": "from",
+    "to": "to",
+    "any": "any",
+    "open": "Only with a public consultation open now",
+    "apply": "Apply",
+    "reset": "Reset filters",
+    "showing": "{count, plural, =0 {No projects for these filters} one {# project} other {# projects}}",
+    "tabs": "View",
+    "mapTab": "Map",
+    "listTab": "List",
+    "showOnList": "Show in the list"
   }
 }

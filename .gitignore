@@ -39,3 +39,7 @@ pipeline/.inventory/
 
 # Local caches (street index etc.); the R2 copy is the shared one
 pipeline/.cache/
+
+# Playwright
+apps/web/test-results/
+apps/web/playwright-report/

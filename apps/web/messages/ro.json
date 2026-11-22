@@ -116,5 +116,22 @@
     "open": "Deschide",
     "error": "Nu s-a putut salva: {message}",
     "notConfigured": "Administrarea nu este configurată încă (lipsesc AUTH_SECRET și aplicația OAuth GitHub)."
+  },
+  "Filters": {
+    "heading": "Filtre",
+    "kind": "Tip",
+    "status": "Stare",
+    "years": "Ani",
+    "from": "din",
+    "to": "până în",
+    "any": "oricare",
+    "open": "Doar cu consultare publică deschisă acum",
+    "apply": "Aplică",
+    "reset": "Resetează filtrele",
+    "showing": "{count, plural, =0 {Niciun proiect pentru aceste filtre} one {# proiect} few {# proiecte} other {# de proiecte}}",
+    "tabs": "Vizualizare",
+    "mapTab": "Hartă",
+    "listTab": "Listă",
+    "showOnList": "Vezi în listă"
   }
 }

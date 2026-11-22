@@ -1,8 +1,8 @@
-/** Read-only queries used by the web app. The web app never writes (CLAUDE.md). */
+/** Read-only queries for the public site (admin writes are in admin.ts, ADR 0012). */
 import type { DocumentRole, ProjectIndicators, ProjectKind, ProjectStatus } from "@mdu/shared";
-import { and, asc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
+import { asc, eq, sql, type SQL } from "drizzle-orm";
 import type { Db } from "./client.ts";
-import { jurisdiction, project } from "./schema/index.ts";
+import { jurisdiction } from "./schema/index.ts";
 
 export type BBox = [minLon: number, minLat: number, maxLon: number, maxLat: number];
 
@@ -43,6 +43,35 @@ export interface ProjectFilters {
   bbox?: BBox;
   kinds?: ProjectKind[];
   statuses?: ProjectStatus[];
+  /** Projects with an event (theirs or a merged project's) in these years, inclusive. */
+  yearFrom?: number;
+  yearTo?: number;
+  /** Only projects whose public consultation is open today (Bucharest date). */
+  openConsultation?: boolean;
+}
+
+/** SQL conditions on `project p` shared by the map and the list, so both show the same set. */
+function filterConditions(filters: ProjectFilters): SQL[] {
+  const out: SQL[] = [];
+  const family = sql`(select c.id from project c where c.id = p.id or c.merged_into_id = p.id)`;
+  if (filters.bbox) {
+    const [minLon, minLat, maxLon, maxLat] = filters.bbox;
+    out.push(sql`p.geom && ST_MakeEnvelope(${minLon}, ${minLat}, ${maxLon}, ${maxLat}, 4326)`);
+  }
+  if (filters.kinds?.length) out.push(sql`p.kind::text in ${filters.kinds}`);
+  if (filters.statuses?.length) out.push(sql`p.status::text in ${filters.statuses}`);
+  if (filters.yearFrom !== undefined || filters.yearTo !== undefined) {
+    const from = filters.yearFrom ?? 1900;
+    const to = filters.yearTo ?? 2999;
+    out.push(sql`exists (select 1 from project_event ev where ev.project_id in ${family}
+      and ev.review_state in ('auto_published', 'approved')
+      and extract(year from ev.event_date) between ${from} and ${to})`);
+  }
+  if (filters.openConsultation) {
+    out.push(sql`exists (select 1 from consultation co where co.project_id in ${family}
+      and (now() at time zone 'Europe/Bucharest')::date between co.opens_on and co.closes_on)`);
+  }
+  return out;
 }
 
 export interface ProjectFeature {
@@ -76,36 +105,25 @@ export async function projectsGeoJSON(
     .where(eq(jurisdiction.slug, slug));
   if (!j) return null;
 
-  const where: SQL[] = [
-    eq(project.jurisdictionId, j.id),
-    sql`${project.geom} is not null`,
-    // Only reviewed or high-confidence records are public (PLAN §7 stage 8).
-    inArray(project.reviewState, ["auto_published", "approved"]),
-    isNull(project.mergedIntoId), // merged projects show on the project they joined
-  ];
-  if (filters.bbox) {
-    const [minLon, minLat, maxLon, maxLat] = filters.bbox;
-    where.push(
-      sql`${project.geom} && ST_MakeEnvelope(${minLon}, ${minLat}, ${maxLon}, ${maxLat}, 4326)`,
-    );
-  }
-  if (filters.kinds?.length) where.push(inArray(project.kind, filters.kinds));
-  if (filters.statuses?.length) where.push(inArray(project.status, filters.statuses));
-
-  const rows = await db
-    .select({
-      id: project.id,
-      slug: project.slug,
-      title: project.title,
-      kind: project.kind,
-      status: project.status,
-      address: project.addressText,
-      geomPrecision: project.geomPrecision,
-      geometry: sql<string>`ST_AsGeoJSON(${project.geom}, 6)`,
-    })
-    .from(project)
-    .where(and(...where))
-    .orderBy(asc(project.title));
+  const rows = await db.execute<{
+    id: string;
+    slug: string;
+    title: string;
+    kind: ProjectKind;
+    status: ProjectStatus;
+    address: string | null;
+    geomPrecision: string | null;
+    geometry: string;
+  }>(sql`
+    select p.id, p.slug, p.title, p.kind, p.status, p.address_text as address,
+           p.geom_precision as "geomPrecision", ST_AsGeoJSON(p.geom, 6) as geometry
+    from project p
+    where p.jurisdiction_id = ${j.id} and p.geom is not null
+      -- Only reviewed or high-confidence records are public (PLAN §7 stage 8).
+      and p.review_state in ('auto_published', 'approved')
+      and p.merged_into_id is null -- merged projects show on the project they joined
+      ${sql.join(filterConditions(filters).map((c) => sql` and ${c}`))}
+    order by p.title`);
 
   return {
     type: "FeatureCollection",
@@ -151,7 +169,11 @@ export interface ProjectListItem {
  * A project the linker merged into another is not listed; its events and documents show on the
  * project it joined (M3.3).
  */
-export async function listProjects(db: Db, slug: string): Promise<ProjectListItem[] | null> {
+export async function listProjects(
+  db: Db,
+  slug: string,
+  filters: ProjectFilters = {},
+): Promise<ProjectListItem[] | null> {
   const [j] = await db
     .select({ id: jurisdiction.id })
     .from(jurisdiction)
@@ -202,6 +224,7 @@ export async function listProjects(db: Db, slug: string): Promise<ProjectListIte
     where p.jurisdiction_id = ${j.id}
       and p.review_state in ('auto_published', 'approved')
       and p.merged_into_id is null
+      ${sql.join(filterConditions(filters).map((c) => sql` and ${c}`))}
     order by e.event_date desc nulls last, p.title`);
   // Files the linker attached (e.g. from the urbanism page) that the listing doesn't name.
   const attached = await db.execute<{

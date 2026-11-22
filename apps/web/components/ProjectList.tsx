@@ -92,7 +92,7 @@ export function ProjectList({ projects }: { projects: ProjectListItem[] }) {
   return (
     <ul className="project-list">
       {projects.map((p) => (
-        <li key={p.id}>
+        <li key={p.id} id={`p-${p.slug}`}>
           <span className="dot" style={{ background: STATUS_COLOURS[p.status] }} aria-hidden />
           <strong>{p.title}</strong>
           <span className="meta">

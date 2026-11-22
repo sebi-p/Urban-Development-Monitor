@@ -21,7 +21,7 @@ docs/sources/<city>.md     URL patterns, quirks, sample files per source
 
 ## Commands
 
-TS (repo root): `pnpm install`, `pnpm dev`, `pnpm test` (Vitest), `pnpm lint`, `pnpm typecheck`, `pnpm format` / `pnpm format:check`, `pnpm build`. Playwright arrives in M4.1.
+TS (repo root): `pnpm install`, `pnpm dev`, `pnpm test` (Vitest), `pnpm lint`, `pnpm typecheck`, `pnpm format` / `pnpm format:check`, `pnpm build`, `pnpm e2e` (Playwright browser tests on a production build with the demo data; `pnpm db:seed` first; ADR 0013).
 
 DB (repo root, `cp .env.example .env` first): `pnpm db:up` (local PostGIS in Docker), `pnpm db:migrate`, `pnpm db:seed`, `pnpm db:generate` (after any schema change), `pnpm db:studio`. DB integration tests run when `TEST_DATABASE_URL` is set.
 

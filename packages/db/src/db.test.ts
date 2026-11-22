@@ -201,6 +201,36 @@ describe.skipIf(!adminUrl)("database (PostGIS)", () => {
       }
     });
 
+    it("filters the map and the list the same way (M4.1)", async () => {
+      const slug = loadJurisdictionFiles()[0]!.slug;
+      const year = new Date().getFullYear();
+      const cases = [
+        { kinds: ["puz" as const] },
+        { statuses: ["approved" as const, "rejected" as const] },
+        { yearFrom: year - 1, yearTo: year },
+        { yearFrom: 1990, yearTo: 1991 },
+        { openConsultation: true },
+      ];
+      for (const filters of cases) {
+        const map = (await projectsGeoJSON(handle.db, slug, filters))!.features.map(
+          (f) => f.properties.slug,
+        );
+        const list = (await listProjects(handle.db, slug, filters))!.map((p) => p.slug);
+        expect(new Set(map)).toEqual(new Set(list.filter((s) => map.includes(s))));
+        expect(map.every((s) => list.includes(s))).toBe(true);
+      }
+      const open = (await listProjects(handle.db, slug, { openConsultation: true }))!;
+      const [row] = await sql`
+        select count(distinct c.project_id)::int as n from consultation c
+        join project p on p.id = c.project_id and p.slug like 'demo-%'
+        where current_date between c.opens_on and c.closes_on`;
+      expect(open.length).toBe(row!.n);
+      expect((await listProjects(handle.db, slug, { yearFrom: 1990, yearTo: 1991 }))!).toEqual([]);
+      const puz = (await listProjects(handle.db, slug, { kinds: ["puz"] }))!;
+      expect(puz.length).toBeGreaterThan(0);
+      expect(puz.every((p) => p.kind === "puz")).toBe(true);
+    });
+
     it("hides projects that are still pending review", async () => {
       const slug = loadJurisdictionFiles()[0]!.slug;
       await sql`update project set review_state = 'pending_review' where slug = 'demo-1'`;

@@ -18,7 +18,8 @@
     "db:deploy": "pnpm --filter @mdu/db db:deploy",
     "db:seed": "pnpm --filter @mdu/db db:seed",
     "db:studio": "pnpm --filter @mdu/db db:studio",
-    "db:up": "docker compose up -d --wait"
+    "db:up": "docker compose up -d --wait",
+    "e2e": "pnpm --filter web e2e"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
