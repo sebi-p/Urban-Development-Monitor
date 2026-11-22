@@ -97,9 +97,9 @@ export function ProjectList({ projects }: { projects: ProjectListItem[] }) {
                 {p.documents.map((d) => (
                   <li key={d.url}>
                     <a href={d.url} rel="noopener noreferrer" target="_blank">
-                      {d.label}
+                      {d.label ?? docType(d.role ?? "other")}
                     </a>
-                    {d.role && d.role !== "other" && (
+                    {d.label && d.role && d.role !== "other" && (
                       <span className="doc-type"> · {docType(d.role)}</span>
                     )}
                   </li>

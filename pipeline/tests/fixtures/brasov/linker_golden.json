@@ -1,0 +1,1124 @@
+{
+  "expected": {
+    "group:3a342456c3": [
+      "new",
+      null
+    ],
+    "group:3e8c20820c": [
+      "new",
+      null
+    ],
+    "group:4f8c18fc02": [
+      "attach",
+      "project:intocmire-puz-calea-feldioarei-nr-35a-e255f1"
+    ],
+    "group:503da45c02": [
+      "new",
+      null
+    ],
+    "group:5536f146a3": [
+      "new",
+      null
+    ],
+    "group:8655ff465c": [
+      "new",
+      null
+    ],
+    "group:8b5af4caca": [
+      "new",
+      null
+    ],
+    "group:a1100fcd8a": [
+      "attach",
+      "project:intocmire-puz-construire-ansamblu-de-locuinte-colective-func-1fe181"
+    ],
+    "group:a7754e6bd9": [
+      "new",
+      null
+    ],
+    "group:bfa3d72aaf": [
+      "new",
+      null
+    ],
+    "group:cbdde44737": [
+      "new",
+      null
+    ],
+    "group:d365e6c5d4": [
+      "new",
+      null
+    ],
+    "group:df23be67e7": [
+      "new",
+      null
+    ],
+    "project:puz-lotizare-locuinte-individuale-si-micsorare-zona-protecti-3af142": [
+      "review",
+      "project:puz-dezvoltare-zona-servicii-comert-depozitare-si-micsorare-c7b417"
+    ]
+  },
+  "note": "M3.3 linker golden set: profiles of every project and hub folder on 2026-11-22 (identifiers hashed; titles and initiators are the privacy-checked values) and the expected decision for each subject. Subjects not listed must not be linked.",
+  "profiles": [
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "34b71fb0ec709e07",
+        "58a8c51898ec62d9",
+        "5d14d2be44dce276",
+        "670a65923c635760",
+        "696cc3ab77bd456a",
+        "6cb79c1da7b857a9",
+        "807c9e69fbc45b5a",
+        "a6a425cc36fc8a98",
+        "d5a33a1b20659481",
+        "d745a1c47f5cb3b2",
+        "e217ab7662ed23fc",
+        "e294837e326bd3cd",
+        "ead83cc4c1e6db33",
+        "fccd2f6123ea53b0",
+        "fd799d5ba67b8c07"
+      ],
+      "initiator": "PREMS – TECHNOLOGICAL PRODUCTS S.A",
+      "kind": "puz",
+      "number": "94",
+      "point": [
+        25.611,
+        45.668
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "13 decembrie",
+      "subject": "project:puz-construire-locuinte-colective-si-functiuni-complementare-a53bf7",
+      "title": "PROIECT DE HOTĂRÂRE pentru aprobarea documentației de urbanism PUZ ”Construire locuințe colective și funcțiuni complementare” str. 13 Decembrie nr. 94, având ca inițiator PREMS – TECHNOLOGICAL PRODUCTS S.A."
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "0096ad7a342b146c",
+        "0c3535cf2948b7e2",
+        "15cb20dc64b87525",
+        "186137f6297963c3",
+        "1ef412c568cc387c",
+        "26a20c18e80d9e54",
+        "3de54b733609ebeb",
+        "3f438e76882c03e9",
+        "4406b26137e15c8b",
+        "4a7d802baa95b3dc",
+        "4be6feca5dc0b068",
+        "4c132961d5a63de6",
+        "59bebd1dbbc3d751",
+        "6e7dae2d0852f0ee",
+        "743ea5a233ac8aba",
+        "7475dc5b6bfc2e2c",
+        "76bfd259b84c2cac",
+        "7af2c31fbd35715b",
+        "7ce02164ebcf43d5",
+        "88c70ae3c0fe3535",
+        "895428a66714a93f",
+        "93a827fc638ad57f",
+        "95ed74dc82fa370b",
+        "9a8c52c01e7bfc39",
+        "ad7c3ddd8b126db6",
+        "b00c1ece5981453b",
+        "b01965c02f5ce794",
+        "b89604a7348d5eb3",
+        "c04ea39736f774ce",
+        "c0a95f300951c582",
+        "ce2b690210059927",
+        "e443b566c6a1ac42",
+        "f3b3133abde691bc",
+        "f9a7fe6cfca4e924",
+        "fc126700d2807060",
+        "fd18d517bc00625d"
+      ],
+      "initiator": "persoană fizică",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.57,
+        45.678
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "morarului",
+      "subject": "project:puz-zona-de-locuinte-individuale-cu-modificarea-tramei-strad-b22377",
+      "title": "PROIECT DE HOTĂRÂRE pentru aprobarea documentatiei de urbanism PUZ ”Zona de locuinte individuale cu modificarea tramei stradale, municipiul Brasov, str Morarului FN”,"
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "1ab1da950ca8d765",
+        "1e66a130814cae11",
+        "33b33f4015e6aa60",
+        "3f4f3ba16eb31d33",
+        "9185620ae03d9b87",
+        "97b6b75716cda275",
+        "a43850e1f9aa3ff4",
+        "b1634258e87cbaaf",
+        "b7d0038aebf6195e",
+        "be4daed6a133df0e",
+        "c8f5952165e25429",
+        "e4545e3562af19d3",
+        "f21c41618015e511",
+        "f6fec2243787a8e8",
+        "fee358aa528a3df1"
+      ],
+      "initiator": "DECENT REAL ESTATE",
+      "kind": "puz",
+      "number": "4",
+      "point": [
+        25.579,
+        45.699
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "targului",
+      "subject": "project:intocmire-puz-construire-ansamblu-de-locuinte-colective-func-1fe181",
+      "title": "PROIECT DE HOTĂRÂRE pentru aprobarea documentatiei de urbanism “Intocmire PUZ Construire ansamblu de locuinte colective, functiuni complementare, spatii comerciale, cai de circulatie si accese, bransamente la utilitati”, Municipiul Brasov, str Targului nr 4"
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "1b2d24b9d93dfa35",
+        "4b2571308459becb",
+        "5a365be297cbb527",
+        "dd73135a84932d7f",
+        "fd552713e5990ef4"
+      ],
+      "initiator": "Kronstadt Car Service S.R.L",
+      "kind": "puz",
+      "number": "35A",
+      "point": [
+        25.582,
+        45.685
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "feldioarei",
+      "subject": "project:intocmire-puz-calea-feldioarei-nr-35a-e255f1",
+      "title": "PROIECT DE HOTĂRÂRE privind aprobarea documentaţiei de urbanism \"Întocmire PUZ - Calea Feldioarei nr. 35A\""
+    },
+    {
+      "first_seen": "2026-11-20T16:38:14.574720+00:00",
+      "identifiers": [
+        "3058906f23ffbef8",
+        "97ce8f2e04eb41e3"
+      ],
+      "initiator": null,
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.592,
+        45.666
+      ],
+      "project": true,
+      "source": "brasov.notices",
+      "stage": 1,
+      "street": "grivitei",
+      "subject": "project:intocmire-puz-zona-comerciala-construire-hypermarket-si-cons-165128",
+      "title": "ANUNŢ INFORMARE ŞI CONSULTARE PUBLIC INTERESAT – ÎNTOCMIRE PUZ ZONĂ COMERCIALĂ, CONSTRUIRE HYPERMARKET ȘI CONSTRUCȚIIANEXE INTERIOARE ȘI EXTERIOARE, AMENAJARE ACCESE RUTIERE, PIETONALE ȘI RACORDURI LA DRUMURI PUBLICE – B-dul Griviței f.n."
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "101d1af6ea5cf59b",
+        "23176252ae063626",
+        "4129532bfd2557e7",
+        "808f9ff86a5a4f64"
+      ],
+      "initiator": "Mecodis Company S.R.L",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.637,
+        45.672
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "narciselor",
+      "subject": "project:puz-prestari-servicii-mica-industrie-birouri-spatii-cazare-l-606710",
+      "title": "PROIECT DE HOTĂRÂRE pentru aprobarea documentaţiei de urbanism “ PUZ prestari servicii, mica industrie, birouri, spatii cazare-locuinte de serviciu, statie de incarcare auto electrica, spalatorie auto”, Municipiul Brașov, str Narciselor FN"
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "345e5ac656f824e0",
+        "790b852b1254327f",
+        "8c8682950199d307",
+        "8d5ff8d2f2194708",
+        "9179ebd39790ae87",
+        "a11d6728442a944f",
+        "a926dba1f8a2d905",
+        "b46611c7ec1bdf03",
+        "bb0a9204479cfc73",
+        "c112c57748caf7a1",
+        "dd242bb82cc8fb51"
+      ],
+      "initiator": "persoană fizică",
+      "kind": "puz",
+      "number": "2",
+      "point": [
+        25.572,
+        45.682
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "plugarilor",
+      "subject": "project:puz-lotizare-locuinte-individuale-si-micsorare-zona-protecti-3af142",
+      "title": "PROIECT DE HOTĂRÂRE pentru aprobarea documentaţiei de urbanism \"PUZ- Lotizare locuinte individuale si micsorare zona protectie sanitara statie de epurare\", Str. Plugarilor nr 2"
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "a025d8cbc67f67d5",
+        "ab08998e6788dd8b",
+        "be49b4d03aab2fae",
+        "e0b219b0d7d8356f",
+        "e7b075fef0f42c9e",
+        "fb198738606756eb"
+      ],
+      "initiator": "persoană fizică",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.572,
+        45.697
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "merilor",
+      "subject": "project:puz-actualizare-puz-aprobat-cu-hcl-339-2013-municipiul-braso-6686d1",
+      "title": "PROIECT DE HOTĂRÂRE pentru aprobarea documentatiei de urbanism PUZ “Actualizare PUZ aprobat cu HCL 339/2013”, Municipiul Brasov, str Merilor FN"
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "43e28e6312f957fb",
+        "b33cb9b0f52de46a",
+        "b4fe19c00b269c1c"
+      ],
+      "initiator": "persoană fizică",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.572,
+        45.697
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "merilor",
+      "subject": "project:puz-parcelare-teren-pentru-construire-ansamblu-de-locuinte-s-995081",
+      "title": "PROIECT DE HOTĂRÂRE pentru aprobarea documentatiei de urbanism PUZ “Parcelare teren pentru construire ansamblu de locuinte S+P+2E”, Municipiul Brasov, str Merilor FN"
+    },
+    {
+      "first_seen": "2026-11-20T16:38:14.574720+00:00",
+      "identifiers": [
+        "3e2ae0213c888c69",
+        "998d1f0a2780a9f4"
+      ],
+      "initiator": "MASTERANGE IMOBILIARE s.r.l",
+      "kind": "pud",
+      "number": null,
+      "point": null,
+      "project": true,
+      "source": "brasov.notices",
+      "stage": 1,
+      "street": null,
+      "subject": "project:cu-scopul-construire-cladiri-cu-functiune-de-invatamant-educ-68776c",
+      "title": "ANUNŢ INFORMARE ŞI CONSULTARE PUBLIC INTERESAT – P.U.D. cu scopul:„ Construire clădiri cu funcțiune de învățământ, educație ( creșă / grădiniță ) și clădiri pentru servicii spitaliceşti”"
+    },
+    {
+      "first_seen": "2026-11-20T16:38:14.574720+00:00",
+      "identifiers": [
+        "45c6897e292d47a4"
+      ],
+      "initiator": null,
+      "kind": "pud",
+      "number": "14",
+      "point": [
+        25.591,
+        45.667
+      ],
+      "project": true,
+      "source": "brasov.notices",
+      "stage": 1,
+      "street": "grigore ureche",
+      "subject": "project:cu-scopul-construire-sediu-birouri-cu-parter-comercial-2-str-1e89a5",
+      "title": "ANUNŢ INFORMARE ŞI CONSULTARE PUBLIC INTERESAT – P.U.D. cu scopul: „Construire sediu birouri cu parter comercial P+2” – str. Grigore Ureche nr. 14"
+    },
+    {
+      "first_seen": "2026-11-21T06:24:16.631785+00:00",
+      "identifiers": [
+        "2a6cd4086e4480d0",
+        "3d4c33330ed515ee",
+        "9dafff079386eb17",
+        "a3615ca1c1438bc3",
+        "a7add64a25519629",
+        "b7a0c3eabc9deb93",
+        "cc8717af5dc0016f",
+        "e79ce1cf05214e4c"
+      ],
+      "initiator": "PAROHIA ORTODOXĂ ROMÂNĂ STUPINI 1",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.551,
+        45.693
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 3,
+      "street": "albinelor",
+      "subject": "project:puz-construire-biserica-si-infiintare-cimitir-parohial-in-mu-c9eea9",
+      "title": "PROIECT DE HOTĂRÂRE AL CONSILIULUI LOCAL pentru aprobarea documentației de urbanism PUZ ”Construire biserică și înființare cimitir parohial”, în municipiul Brașov, str. Albinelor f.n."
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "1c3ebff2d4c24e0b",
+        "2f87421d4f49f331",
+        "a6bc1bcb7c96c017",
+        "a6c5fe1401c30dd9",
+        "ad093c8214a100c9",
+        "f7a712373f3f4131"
+      ],
+      "initiator": "persoană fizică",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.572,
+        45.682
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "plugarilor",
+      "subject": "project:puz-dezvoltare-zona-servicii-comert-depozitare-si-micsorare-c7b417",
+      "title": "PROIECT DE HOTĂRÂRE pentru aprobarea documentaţiei de urbanism \"PUZ- Dezvoltare zona servicii, comert, depozitare si micsorare zona protectie sanitara statie de epurare\", Str. Plugarilor FN"
+    },
+    {
+      "first_seen": "2026-11-20T16:38:14.574720+00:00",
+      "identifiers": [
+        "24b2ae35e428994a",
+        "7effaa40f3de6429"
+      ],
+      "initiator": null,
+      "kind": "pud",
+      "number": "66",
+      "point": [
+        25.589,
+        45.657
+      ],
+      "project": true,
+      "source": "brasov.notices",
+      "stage": 1,
+      "street": "avram iancu",
+      "subject": "project:cu-scopul-construire-locuinte-colective-si-spatii-comerciale-80c7a3",
+      "title": "ANUNŢ INFORMARE ŞI CONSULTARE PUBLIC INTERESAT – P.U.D. cu scopul: „ Construire locuințe colective și spații comerciale” – str. Avram Iancu nr. 66"
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "6b7d846590d5e219",
+        "84fb9e1833044eaf",
+        "95f2def94a4b58ec",
+        "d4fafaceb8b965b7"
+      ],
+      "initiator": "Cernat-Fleancu Imobiliare S.R.L",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.556,
+        45.702
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "barsei",
+      "subject": "project:puz-construire-locuinte-si-dotari-complementare-municipiul-b-14bc3e",
+      "title": "Proiect de hotărâre pentru aprobarea documentaţiei de urbanism “ PUZ construire locuințe și dotări complementare”, Municipiul Brașov, str. Bârsei FN"
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "00d857d63c47f633",
+        "1ff48f2785717080",
+        "209fe290f530645f",
+        "37f2ec3e6f3d6fc7",
+        "41d36df777282bed",
+        "442ef2cb29f95878",
+        "44a54f7e113d48cf",
+        "510a8699389b86d1",
+        "6b4f8b855a20ff0d",
+        "73b860538c49ca64",
+        "826e6d11db5db585",
+        "9f40d782d9a4545e",
+        "c39d4e1bcb8f4d7c",
+        "c69d22fb7320f259",
+        "e87b94a904420f57"
+      ],
+      "initiator": "INSIGRA S.R.L",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.597,
+        45.676
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "ioan popasu",
+      "subject": "project:puz-construire-locuinte-colective-municipiul-brasov-str-ioan-a0b8b6",
+      "title": "PROIECT DE HOTĂRÂRE pentru aprobarea documentatiei de urbanism PUZ “Construire locuinte colective”, Municipiul Brasov, str Ioan Popasu FN"
+    },
+    {
+      "first_seen": "2026-11-21T06:24:16.631785+00:00",
+      "identifiers": [
+        "41e49e1a68c2c681",
+        "42ccb901bb706656",
+        "6d30761194969fe4",
+        "70c2fd07cd19eb47",
+        "722a19db13717c6c",
+        "7b8a10783b180024",
+        "a59111dbae748641",
+        "c8a6bff0cd242c81",
+        "c9258189f7b1ef84",
+        "e02a87501229eebe",
+        "e1c7303ed0154780",
+        "e66a5b8456d5890b"
+      ],
+      "initiator": "VICTORY SUNRISE TOWERS SRL",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.605,
+        45.68
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 3,
+      "street": "nicolae labis",
+      "subject": "project:puz-construire-locuinte-colective-cu-pastrarea-avizelor-obti-3c9021",
+      "title": "PROIECT DE HOTĂRÂRE pentru aprobarea documentației de urbanism PUZ Construire locuințe colective cu păstrarea avizelor obținute în baza CU nr 2456/08.09.2022 prelungit”, în mun. Brașov, str. Nicolae Labiș f.n.,"
+    },
+    {
+      "first_seen": "2026-11-20T16:38:14.574720+00:00",
+      "identifiers": [
+        "6c633d3c907f0326",
+        "a694287c42f8609d",
+        "c822442fe1b1822d"
+      ],
+      "initiator": "PROMAGTLSĂ POMANA MANAGEMENT S.C.S",
+      "kind": "pud",
+      "number": null,
+      "point": [
+        25.638,
+        45.669
+      ],
+      "project": true,
+      "source": "brasov.notices",
+      "stage": 1,
+      "street": "harmanului",
+      "subject": "project:cu-scopul-demolare-constructie-existenta-si-construire-cladi-0a0bfc",
+      "title": "ANUNŢ INFORMARE ŞI CONSULTARE PUBLIC INTERESAT – P.U.D. cu scopul: „Demolare construcție existentă și construire clădire comercială tip supermarket, gospădărie de apă și împrejmuire, racordare de utilități, amenajare parcare, amenajare acces, amplasare mijloace publicitare, organizare de șantier și deviere rețea de termoficare” – str. Hărmanului 47B"
+    },
+    {
+      "first_seen": "2026-11-20T16:38:14.574720+00:00",
+      "identifiers": [
+        "feeea2df3e59ead0"
+      ],
+      "initiator": "CĂPȘUNĂRIE REZIDENȚIAL S.R.L",
+      "kind": "pud",
+      "number": "2",
+      "point": [
+        25.607,
+        45.652
+      ],
+      "project": true,
+      "source": "brasov.notices",
+      "stage": 1,
+      "street": "miron costin",
+      "subject": "project:cu-scopul-demolare-constructii-existente-corp-a1-1-si-a1-2-s-2a6c09",
+      "title": "ANUNŢ INFORMARE ŞI CONSULTARE PUBLIC INTERESAT – P.U.D. cu scopul: „DEMOLARE CONSTRUCȚII EXISTENTE – CORP A1.1 ȘI A1.2 ȘI CONSTRUIRE APARTHOTEL”- str. Miron Costin nr. 2"
+    },
+    {
+      "first_seen": "2026-11-20T16:38:14.574720+00:00",
+      "identifiers": [
+        "04659265f47cbdad"
+      ],
+      "initiator": "GERES REAL ESTATE s.r.l",
+      "kind": "pud",
+      "number": "239",
+      "point": [
+        25.634,
+        45.634
+      ],
+      "project": true,
+      "source": "brasov.notices",
+      "stage": 1,
+      "street": "bucuresti",
+      "subject": "project:cu-scopul-intocmire-pentru-construire-ansamblu-showroom-auto-90dbf9",
+      "title": "ANUNŢ INFORMARE ŞI CONSULTARE PUBLIC INTERESAT – P.U.D. cu scopul:„ Întocmire P.U.D. pentru construire ansamblu showroom auto, amenajări exterioare , instalații aferente, parcaje circulații, împrejmuire, totemuri” – Brașov, Calea București nr. 239"
+    },
+    {
+      "first_seen": "2026-11-21T06:24:16.631785+00:00",
+      "identifiers": [
+        "0bc4209e082f980c",
+        "0e1f062f04aec791",
+        "65884f3098795819",
+        "68b7de7084108534",
+        "6e5ca759399bb613",
+        "98ad8d329bad4501",
+        "b22c81e52a2fdbb8",
+        "c321a57d1f6e8ed3",
+        "e43eb8989b24d437",
+        "f7503376f0dcdd96"
+      ],
+      "initiator": "S.C. Jepilor Proiect S.R.L",
+      "kind": "puz",
+      "number": "14A",
+      "point": [
+        25.61,
+        45.634
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 3,
+      "street": "jepilor",
+      "subject": "project:puz-str-jepilor-nr-14a-421ec2",
+      "title": "PROIECT DE HOTĂRÂRE pentru aprobarea documentaţiei de urbanism ”PUZ – Str. Jepilor, nr.14A”"
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "06249c53a91c62d7",
+        "075d299a2060c2ce",
+        "108c429585409481",
+        "280e97cd78a81a76",
+        "28e823e8995ff0d0",
+        "2926ce00a511f261",
+        "2db1a52201815ad2",
+        "36246004833ce348",
+        "3786128f3d502e5a",
+        "541627b69d1d51c1",
+        "55178fe8f3b7541e",
+        "560f4cc104a3281d",
+        "6cd65daa55da93e2",
+        "732936b79394fdb0",
+        "74cf2bc05250697a",
+        "7567bc5f9e3b22f6",
+        "7e84ad730a6c8689",
+        "8ba7ebc173ea1f2b",
+        "93d869ab5c9efc8f",
+        "9cb1a53fc339dab5",
+        "aa6ec72e0cc922e8",
+        "bec7f6c92e659186",
+        "c03e9419a0a7261e",
+        "c46f8992f1e1c790",
+        "cc401e4fc784027f",
+        "cf08f7c2fc37a8ed",
+        "d687d8480e4aa586",
+        "d934361a11538c04",
+        "e69ee9db77b4e33f",
+        "f11a74c26ef8adb6",
+        "f8a75031eba72eac",
+        "fea0d3e473fc7a83"
+      ],
+      "initiator": "SC INSIGRA SRL",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.57,
+        45.678
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "morarului",
+      "subject": "project:puz-zona-de-locuinte-mixte-si-colective-cu-pastrarea-avizelo-bde316",
+      "title": "PROIECT DE HOTĂRÂRE pentru aprobarea documentatiei de urbanism PUZ ”Zona de locuinte mixte si colective cu pastrarea avizelor din CU 1120/2022, municipiul Brasov, str Morarului FN”"
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [],
+      "initiator": "persoană fizică",
+      "kind": "puz",
+      "number": null,
+      "point": null,
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": null,
+      "subject": "project:puz-zona-de-locuinte-municipiul-brasov-str-ioan-hozan-fn-afd708",
+      "title": "PROIECT pentru aprobarea documentatiei de urbanism PUZ “Zona de locuinte”, Municipiul Brasov, str Ioan Hozan FN"
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "0a046b61dc33275e",
+        "174bb8fbdbe44d8c",
+        "355f840225ad861d",
+        "3aa19a46791244fd",
+        "4975ab597b0913ac",
+        "e93a62f72e50f03f",
+        "f173ae47a36926b1"
+      ],
+      "initiator": "SC West Garden Brașov, SC West Garden Bartolomeu",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.558,
+        45.662
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "institutului",
+      "subject": "project:puz-investitie-functiuni-mixte-locuinte-colective-servicii-c-8c68ef",
+      "title": "Proiect de hotarare pentru: aprobarea documentaţiei de urbanism “PUZ – Investiţie funcţiuni mixte: locuinţe colective, servicii comerţ şi birouri, amenajare teren, împrejmuire teren, sistematizare, alipire şi operaţiuni cadastrale, totem - signalistică luminoasă, organizare execuţie şi branşament utilităţi, str.Institutului fn Braşov”, beneficiari SC West Garden Braşov şi SC West Garden Bartolomeu"
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "34a4486c072fff10",
+        "d63a55562edab60b",
+        "da98907fff6949c9"
+      ],
+      "initiator": "CTPARK BRASOV S.R.L",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.592,
+        45.666
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "grivitei",
+      "subject": "project:modificare-puz-aprobat-cu-hcl-198-2015-si-prelungit-prin-hcl-57fe20",
+      "title": "PROIECT DE HOTĂRÂRE A CONSILIULUI LOCAL pentru aprobarea documentatiei de urbanism “Modificare PUZ aprobat cu HCL 198/2015 si prelungit prin HCL 378/2020”, Municipiul Brasov, bdul Grivitei nr. FN"
+    },
+    {
+      "first_seen": "2026-11-20T16:37:45.134603+00:00",
+      "identifiers": [
+        "2eab3e18b060321c",
+        "747f609127a798c3",
+        "cca959e9e5c942db",
+        "fa7213fc6d8d3cc0"
+      ],
+      "initiator": "SC MADEX S.R.L",
+      "kind": "puz",
+      "number": "6",
+      "point": [
+        25.562,
+        45.659
+      ],
+      "project": true,
+      "source": "brasov.council_debates",
+      "stage": 5,
+      "street": "caramidariei",
+      "subject": "project:intocmire-puz-construire-hale-depozitare-comert-productie-pr-5e392d",
+      "title": "Proiect de hotărâre pentru aprobarea documentaţiei de urbanism “Întocmire PUZ construire hale depozitare, comert productie, prestari servicii, spatii administrative si birouri”, Municipiul Brașov, str. Caramidariei nr. 6, inițiator SC MADEX S.R.L."
+    },
+    {
+      "first_seen": "2026-11-21T08:53:06.397795+00:00",
+      "identifiers": [
+        "00791448e67d3a84",
+        "014341aacd3f73a0",
+        "12b70ffd2902dd92",
+        "1b1ede11ce9f6302",
+        "21404f29376d7559",
+        "24b30edaf7b0e2a2",
+        "268785c5ee1a4db7",
+        "301e863c5ec6fad4",
+        "3666003de5773864",
+        "55d2a048f0cb763e",
+        "5a9563bb5cef36e3",
+        "6410c1a5a5a00d02",
+        "646548832bf906e5",
+        "883b80db5c7012e0",
+        "8c00c47c0b8b0ebe",
+        "98c0b8198dcbf63c",
+        "c64ea2e8d6852e54",
+        "d0893d50165068fe",
+        "da8dc0a77f4bc36c",
+        "fab4049bfb0f890f"
+      ],
+      "initiator": "CARPATEX S.A",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.603,
+        45.647
+      ],
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": "lucian blaga",
+      "subject": "group:bfa3d72aaf",
+      "title": "MODIFICARE P.U.Z. aprobat cu HCL nr. 822/2010"
+    },
+    {
+      "first_seen": "2026-11-21T08:53:12.158022+00:00",
+      "identifiers": [
+        "44aad8117f744c68",
+        "8d378a6d1572bf38",
+        "960f39f8912a9e4d",
+        "f12a6a314b317af2"
+      ],
+      "initiator": null,
+      "kind": "pud",
+      "number": null,
+      "point": [
+        25.57,
+        45.64
+      ],
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": "dupa iniste",
+      "subject": "group:503da45c02",
+      "title": "Construire locuinte colective"
+    },
+    {
+      "first_seen": "2026-11-21T08:53:16.668146+00:00",
+      "identifiers": [
+        "ae78bd396dd0b8b2"
+      ],
+      "initiator": "IOANIM CONSULTING S.R.L.",
+      "kind": "pud",
+      "number": null,
+      "point": [
+        25.61,
+        45.683
+      ],
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": "george bacovia",
+      "subject": "group:5536f146a3",
+      "title": "P.U.D. CONSTRUIRE IMOBIL LOCUINȚE COLECTIVE"
+    },
+    {
+      "first_seen": "2026-11-21T08:53:28.886167+00:00",
+      "identifiers": [
+        "2f565d7055b37bb2",
+        "a4948e798671659b",
+        "c3277360ebb7c4e0",
+        "f1a513fbfa01ffb4"
+      ],
+      "initiator": null,
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.612,
+        45.685
+      ],
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": "vasile goldis",
+      "subject": "group:8b5af4caca",
+      "title": "INTOCMIRE P.U.Z. -ANSAMBLU DE LOCUINTE COLECTIVE SI DOTARI COMPLEMENTARE; BRASOV, STR. VASILE GOLDIS, FN"
+    },
+    {
+      "first_seen": "2026-11-21T08:53:31.391418+00:00",
+      "identifiers": [
+        "01490273729ea9df",
+        "029bc6980bec4ceb",
+        "034d97cdceacd92e",
+        "08eb42ca341e8511",
+        "09544748cce5a0f3",
+        "096648da923151bf",
+        "0f6c77085654a1cb",
+        "158cbb3ac0b21fc0",
+        "161476ef17b43bba",
+        "1767ef37d94462e3",
+        "18e1e4d4fd45e32d",
+        "2332111ec42bc210",
+        "2676c3355ba2e239",
+        "27ad6dc95a8384ee",
+        "29c7c0d706de51da",
+        "2b8d105280637091",
+        "2eb73115b9ead887",
+        "2faace4c6f4c4849",
+        "32f0e0a2260e1c79",
+        "3683138a39f96800",
+        "3be0e3ede94bbc17",
+        "3ea51e36b9c6a14e",
+        "4063691ecd2ef897",
+        "42f740b1c0123d1b",
+        "44a54f7e113d48cf",
+        "4c10229cea1e4b89",
+        "4d1827c238f18cd0",
+        "4d5e7842e2ccaab5",
+        "4fd8e8880a3ecd47",
+        "52ffacb9e6a48a88",
+        "5486f178830ba173",
+        "594de985fad74f5b",
+        "5effc40c8398f566",
+        "5fa70409dac36c59",
+        "6614b4444fd6c148",
+        "666d969ee2ce79a7",
+        "666ee938497ecae1",
+        "6c71673601b85489",
+        "6e13a2db345bac2d",
+        "70b6a90009ec4d3a",
+        "738eab3a1e09930c",
+        "7691b602c38bb088",
+        "7802fa8275e2e0ce",
+        "7c0457761d7c6369",
+        "7dbdeb9be4c2781e",
+        "83bb4ac678559ddd",
+        "858d9cc33a2cee94",
+        "926fd513c88bf5a0",
+        "955b2b193ab31163",
+        "957aac6e4879f22c",
+        "97b7c853151c3aba",
+        "981ecee4b53f2b57",
+        "9fa5544bfaa3bb43",
+        "a0516c579f9b030e",
+        "a0cb51a0b75cb8a5",
+        "a2c870a23ab8d95b",
+        "ace16593e2cfb002",
+        "ae7d423458059e42",
+        "b0a2526f927ac614",
+        "b1942fa143b32f1a",
+        "b2a63f26ec8cb538",
+        "bcad01becdf09df0",
+        "bf10facf1fd2222c",
+        "c022607040b343d3",
+        "c135daf9da72d7d9",
+        "c5d4e2e89f9a80b6",
+        "c7cb6184f5d6fee5",
+        "cb0efd8b3d378357",
+        "ced795e87ac8725b",
+        "cf79d69d5d0149f7",
+        "d7795865550e6aa6",
+        "e29b3938bca647df",
+        "e40e7b49b3e6e591",
+        "e6b0de8df020fe4d",
+        "ea3bf9b69e1c0f7b",
+        "ea655ad0a17c8aa9",
+        "ecb4bcd5783db389",
+        "ef5f1f99ead1f9ab",
+        "f276027e64327a5c",
+        "f77f39bf955d0c4a",
+        "f8d0f46ecc22adc9",
+        "ff0829f2876df220"
+      ],
+      "initiator": "S.C. CEETRUS ROMANIA S.R.L., S.C. IMMO LODGIA ONE S.R.L.",
+      "kind": "puz",
+      "number": null,
+      "point": null,
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": null,
+      "subject": "group:d365e6c5d4",
+      "title": "INTOCMIRE P.U.Z., FAZA 2 Zona Industriala Tractorul (FAZA 1 aprobata cu HCL 453/2017)"
+    },
+    {
+      "first_seen": "2026-11-21T08:53:39.158109+00:00",
+      "identifiers": [
+        "1a9c97e6a3d48864",
+        "3e4e660c3aca8f76",
+        "430749bea3218807",
+        "512ec8b7cac82d1d",
+        "57041653ce6576d3",
+        "57e36be2f9881424",
+        "61ace6ea4ecc26e8",
+        "7ad66d5568144142",
+        "97c07e9f19ef8b60",
+        "a2871ec8b61a83ec",
+        "a2d99e7ab15b1525",
+        "ac08bce0bc80bff0",
+        "b7695d987477e029",
+        "c103080c49e50c9a",
+        "c7e6715658668fa5",
+        "c8c0ce4f8d21a30e",
+        "d32458ead12ed6e1",
+        "d6cbb107b36706e4",
+        "e9f19f93db0bba69",
+        "fbdf5b50011a628e"
+      ],
+      "initiator": "Sigmettrans SRL",
+      "kind": "pud",
+      "number": null,
+      "point": [
+        25.605,
+        45.68
+      ],
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": "nicolae labis",
+      "subject": "group:3a342456c3",
+      "title": "Construire locuinte colective cu functiuni conexe (spatii, comerciale cu alimentatie publica), imprejmuire si bransamente utilitati"
+    },
+    {
+      "first_seen": "2026-11-21T08:53:46.908306+00:00",
+      "identifiers": [
+        "1b2d24b9d93dfa35",
+        "5a365be297cbb527",
+        "dd73135a84932d7f"
+      ],
+      "initiator": "KRONSTADT CAR SERVICE SRL",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.582,
+        45.685
+      ],
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": "feldioarei",
+      "subject": "group:4f8c18fc02",
+      "title": "MODIFICARE PARȚIALĂ P.UzZ. APROBAT CU HCL NR. 219/2013"
+    },
+    {
+      "first_seen": "2026-11-21T08:53:59.109722+00:00",
+      "identifiers": [
+        "4aa97e5b8eeda19b",
+        "75200c2f02c3cdd2",
+        "90fcf719f39d2573"
+      ],
+      "initiator": "SC TOP IMOINVEST SRL",
+      "kind": "pud",
+      "number": null,
+      "point": [
+        25.552,
+        45.599
+      ],
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": "poiana ursului",
+      "subject": "group:a7754e6bd9",
+      "title": "PUD — CONSTRUIRE UNITATE DE CAZARE S+P+2E+M TURISTICA CU DOTARI AFERENTE, AMENAJARI SI IMPREJMUIRE TEREN"
+    },
+    {
+      "first_seen": "2026-11-21T08:54:04.688848+00:00",
+      "identifiers": [
+        "1ab1da950ca8d765",
+        "33b33f4015e6aa60",
+        "9185620ae03d9b87",
+        "97b6b75716cda275",
+        "a43850e1f9aa3ff4",
+        "b1634258e87cbaaf",
+        "be4daed6a133df0e",
+        "c8f5952165e25429",
+        "e4545e3562af19d3",
+        "f21c41618015e511",
+        "f6fec2243787a8e8",
+        "fee358aa528a3df1"
+      ],
+      "initiator": "S.C. DECENT REAL ESTATE S.R.L.",
+      "kind": "puz",
+      "number": "4",
+      "point": [
+        25.579,
+        45.699
+      ],
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": "targului",
+      "subject": "group:a1100fcd8a",
+      "title": "INTOCMIRE P.U.Z., CONSTRUIRE ANSAMBLU DE LOCUINTE COLECTIVE, FUNCTIUNI COMPLEMENTARE, SPATII COMERCIALE, CAI DE CIRCULATIE SI ACCESE, BRANSAMENTE LA UTILITATI"
+    },
+    {
+      "first_seen": "2026-11-21T08:54:11.471768+00:00",
+      "identifiers": [
+        "0d6beffff783b058",
+        "be3c074fef1574e0",
+        "d3887255eff0c09f",
+        "f01a67e9b5dda4b8"
+      ],
+      "initiator": "SC ADOM CREATIV SRL, SC ODIL CONSTRUCT GRUP SRL",
+      "kind": "puz",
+      "number": null,
+      "point": [
+        25.605,
+        45.68
+      ],
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": "nicolae labis",
+      "subject": "group:cbdde44737",
+      "title": "PUZ TRACTORUL VII – ZONA 1B"
+    },
+    {
+      "first_seen": "2026-11-21T08:54:26.463905+00:00",
+      "identifiers": [
+        "12a3f7394847ff35",
+        "1b90c57562276f65",
+        "c1a723118e683265"
+      ],
+      "initiator": null,
+      "kind": "pud",
+      "number": "71",
+      "point": [
+        25.582,
+        45.662
+      ],
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": "de mijloc",
+      "subject": "group:3e8c20820c",
+      "title": "P.U.D. CONSTRUIRE LOCUINȚE ÎNȘIRUITE ȘI ÎMPREJMUIRE"
+    },
+    {
+      "first_seen": "2026-11-21T08:54:44.039964+00:00",
+      "identifiers": [
+        "ca022f67877f0d64"
+      ],
+      "initiator": "COLOSEUM BUILDING SRL",
+      "kind": "pud",
+      "number": null,
+      "point": null,
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": null,
+      "subject": "group:df23be67e7",
+      "title": "PUD — CONSTRUIRE IMOBIL LOCUINTE COLECTIVE"
+    },
+    {
+      "first_seen": "2026-11-21T08:54:51.538838+00:00",
+      "identifiers": [
+        "731bab5b852b67fc",
+        "7d4f5614b06d9e96",
+        "7fc0e6a3b0b9b896",
+        "b6c9cae65c18d536",
+        "c32ed3fc6dcb7c9a",
+        "d61ca46fd98b3ab1",
+        "ed00d6c2268d9766"
+      ],
+      "initiator": null,
+      "kind": "pud",
+      "number": null,
+      "point": [
+        25.571,
+        45.691
+      ],
+      "project": false,
+      "source": "brasov.urbanism_hub",
+      "stage": 0,
+      "street": "malinului",
+      "subject": "group:8655ff465c",
+      "title": "Construire motel si imprejmuire teren"
+    }
+  ]
+}

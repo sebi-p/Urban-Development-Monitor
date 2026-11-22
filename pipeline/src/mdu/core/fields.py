@@ -25,6 +25,8 @@ MAX_PAGE_CHARS = 3_500
 # Document types worth reading, in order of how densely they state the facts.
 READ_ORDER = ("raport_specialitate", "proiect_hcl", "referat_aprobare", "memoriu", "rlu")
 ALWAYS_FIRST_PAGE = ("raport_specialitate", "proiect_hcl")
+GROUP_READ_ORDER = (*READ_ORDER, "anunt")
+GROUP_FIRST_PAGE = ("memoriu", "anunt", "rlu")
 
 _KEYWORDS = re.compile(
     r"\bp\.?\s?o\.?\s?t\b|\bc\.?\s?u\.?\s?t\b|regim\w* de inaltime|inaltime\w* maxim|\bh\s?max|"
@@ -75,10 +77,18 @@ class Selection:
         return "\n\n".join(parts)
 
 
-def select_pages(documents: Sequence[SourceDocument], max_chars: int = MAX_CHARS) -> Selection:
+def select_pages(
+    documents: Sequence[SourceDocument],
+    max_chars: int = MAX_CHARS,
+    *,
+    read_order: tuple[str, ...] = READ_ORDER,
+    first_page_of: tuple[str, ...] = ALWAYS_FIRST_PAGE,
+) -> Selection:
+    """Pages to send for one project. Document groups without a listing (hub folders) also read
+    announcements and always the memoriu's first page, which names the project."""
     docs = sorted(
-        (d for d in documents if d.doc_type in READ_ORDER),
-        key=lambda d: READ_ORDER.index(d.doc_type),
+        (d for d in documents if d.doc_type in read_order),
+        key=lambda d: read_order.index(d.doc_type),
     )
     selection = Selection(list(docs))
     chosen: set[tuple[int, int]] = set()
@@ -94,10 +104,10 @@ def select_pages(documents: Sequence[SourceDocument], max_chars: int = MAX_CHARS
         budget -= len(text)
 
     for i, d in enumerate(docs):
-        if d.doc_type in ALWAYS_FIRST_PAGE and d.pages:
+        if d.doc_type in first_page_of and d.pages:
             take(i, 1)
     scored = [
-        (len(_KEYWORDS.findall(fold(text))), -READ_ORDER.index(d.doc_type), i, n)
+        (len(_KEYWORDS.findall(fold(text))), -read_order.index(d.doc_type), i, n)
         for i, d in enumerate(docs)
         for n, text in enumerate(d.pages, start=1)
     ]
@@ -144,14 +154,21 @@ _NAME_SPLIT = re.compile(
 )
 
 
+_LEGAL_FORM_END = re.compile(r"(?:\bs\.?\s?r\.?\s?l\b|\bs\.?\s?a\b|\bs\.?\s?c\.?\s?s\b)\.?", re.I)
+
+
 def organisations_in(name: str) -> list[str]:
     """The parts of a name that are organisations: 'Cozma Calin reprezentant DECENT REAL
-    ESTATE' -> ['DECENT REAL ESTATE']; 'Ion Pop și alții' -> []. People's names are dropped."""
-    return [
-        part.strip(" .")
-        for part in _NAME_SPLIT.split(name)
-        if part and looks_like_organisation(part)
-    ]
+    ESTATE' -> ['DECENT REAL ESTATE']; 'Ion Pop și alții' -> []. People's names are dropped,
+    including one written after the legal form ('X S.R.L. ION POP' -> 'X S.R.L.')."""
+    out = []
+    for part in _NAME_SPLIT.split(name):
+        if not part or not looks_like_organisation(part):
+            continue
+        ends = list(_LEGAL_FORM_END.finditer(fold(part)))
+        kept = part[: ends[-1].end()] if ends else part
+        out.append(kept.strip(" ,;"))
+    return out
 
 
 def _norm(text: str) -> str:

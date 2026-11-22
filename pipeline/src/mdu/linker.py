@@ -4,11 +4,12 @@ Subjects are projects (from listings) and groups of documents that belong to no 
 hub folder, known only by a hash of its name). Each gets a profile: title, street and number,
 initiator, identifiers (CU, CF, cadastral) and location. Every pair is scored:
 
-- a shared identifier links them outright (score 1);
-- otherwise the same street (+0.45) and house number (+0.2; a different number -0.3), similar
-  titles (up to +0.3) and the same initiator (+0.2; a different company -0.2) add up; different
-  plan kinds (PUD vs PUZ) never match, and a different street or a distance over 1 km caps the
-  score below the review threshold.
+- a shared CU number (+0.6) or CF/cadastral number (+0.5), the same street (+0.45) and house
+  number (+0.2; a different number -0.3), similar titles (up to +0.3) and the same initiator
+  (+0.2; a different company -0.2) add up. An identifier alone isn't enough: documents also cite
+  other plans' certificates and neighbouring parcels;
+- different plan kinds (PUD vs PUZ) never match, and a different street or a distance over 1 km
+  caps the score below the review threshold.
 
 At `AUTO` and above the link is applied: a document group is attached to the project, and of two
 projects the one at the earlier procedure stage is merged into the other (`merged_into_id`; it
@@ -95,13 +96,17 @@ def _km(a: tuple[float, float], b: tuple[float, float]) -> float:
 
 
 def score(a: Profile, b: Profile) -> tuple[float, dict[str, Any]]:
-    shared = sorted(a.identifiers & b.identifiers)
-    if shared:
-        return 1.0, {"identifier": f"{shared[0][0]} {shared[0][1]}"}
     if a.kind and b.kind and a.kind != b.kind:
         return 0.0, {"kind": f"{a.kind} vs {b.kind}"}
     total = 0.0
     signals: dict[str, Any] = {}
+    # A shared identifier is strong evidence but not proof: documents also cite other plans'
+    # certificates and neighbouring parcels.
+    shared = sorted(a.identifiers & b.identifiers)
+    if shared:
+        cu = [v for s, v in shared if s == "cu"]
+        total += 0.6 if cu else 0.5
+        signals["identifier"] = f"cu {cu[0]}" if cu else f"{shared[0][0]} {shared[0][1]}"
     cap = 1.0
     if a.street and b.street:
         if a.street == b.street:
@@ -217,7 +222,9 @@ def unlinked_groups(conn: psycopg.Connection[Any], jid: int) -> dict[tuple[str, 
     """Documents discovered with a `group` hint (a hub folder) and a plan kind, by group."""
     rows = conn.execute(
         """select s.adapter, f.hints->>'group', f.hints->>'kind', d.id::text, d.doc_type,
-               d.text_r2_key, f.url, (f.hints->>'size_bytes')::bigint, f.fetched_at
+               d.text_r2_key, f.url, (f.hints->>'size_bytes')::bigint, f.fetched_at,
+               (select pd.project_id::text from project_document pd
+                where pd.raw_document_id = d.id limit 1)
            from "fetch" f join source s on s.id = f.source_id
            join raw_document d on d.id = f.raw_document_id
            where f.jurisdiction_id = %s and f.hints ? 'group'
@@ -231,6 +238,12 @@ def unlinked_groups(conn: psycopg.Connection[Any], jid: int) -> dict[tuple[str, 
     for adapter, group, *rest in rows:
         groups.setdefault((adapter, group), []).append(rest)
     return groups
+
+
+def _known_project(rows: list[Any]) -> str | None:
+    """The project a group's files already belong to (from an earlier run), if exactly one."""
+    projects = {r[-1] for r in rows if r[-1]}
+    return projects.pop() if len(projects) == 1 else None
 
 
 def group_profile(  # noqa: PLR0913
@@ -248,8 +261,8 @@ def group_profile(  # noqa: PLR0913
     log: Callable[[str], None],
 ) -> Profile | None:
     docs, seen_docs, documents = [], set(), []
-    kind, first_seen = rows[0][0], rows[0][-1]
-    for _kind, doc_id, doc_type, key, url, size, _seen in rows:
+    kind, first_seen = rows[0][0], rows[0][-2]
+    for _kind, doc_id, doc_type, key, url, size, _seen, _project in rows:
         documents.append((doc_id, doc_type, url, size))
         if doc_id in seen_docs:
             continue
@@ -257,7 +270,9 @@ def group_profile(  # noqa: PLR0913
         pages = json.loads(store.get(key)).get("pages") or []
         docs.append(fields.SourceDocument(doc_id, doc_type, [p["text"] for p in pages]))
     identifiers = frozenset((f.scheme, f.value) for d in docs for f in find_identifiers(d.pages))
-    selection = fields.select_pages(docs)
+    selection = fields.select_pages(
+        docs, read_order=fields.GROUP_READ_ORDER, first_page_of=fields.GROUP_FIRST_PAGE
+    )
     if not selection.pages or extractor is None:
         counts["groups: nothing to read" if extractor else "groups: LLM off"] += 1
         return None
@@ -361,7 +376,7 @@ def _new_project(cur: psycopg.Cursor[Any], jid: int, g: Profile) -> str:
     return pid
 
 
-def run(  # noqa: PLR0913
+def run(  # noqa: PLR0912, PLR0913, PLR0915
     conn: psycopg.Connection[Any],
     store: TextStore,
     *,
@@ -380,6 +395,12 @@ def run(  # noqa: PLR0913
     profiles = project_profiles(conn, jid, streets)
     with conn.transaction(), conn.cursor() as cur:
         for (adapter, group), rows in unlinked_groups(conn, jid).items():
+            known = _known_project(rows)
+            if known:  # linked before: new files in the folder join the same project
+                docs = [(r[1], r[2], r[4], r[5]) for r in rows if not r[-1]]
+                result.counts["documents attached"] += _attach(cur, jid, known, docs)
+                result.counts["groups already linked"] += 1
+                continue
             profile = group_profile(
                 cur, jid, adapter, group, rows, store=store, extractor=extractor,
                 streets=streets, budget=budget, counts=result.counts, log=log,

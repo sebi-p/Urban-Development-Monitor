@@ -151,4 +151,17 @@ def run(  # noqa: PLR0913
         return dict(r.counts)
 
     step("fields", None, "extract_fields", fields_all)
+
+    def link_all() -> dict[str, Any]:
+        from mdu import linker  # noqa: PLC0415
+
+        r = linker.run(
+            conn, store, city=city, streets=streets, extractor=field_extractor,
+            monthly_usd=llm_monthly_usd, log=log,
+        )  # fmt: skip
+        return dict(r.counts)
+
+    step("link", None, "link", link_all)
+    # Projects created or joined by the linker get their fields the same day (mostly cached).
+    step("fields after link", None, "extract_fields", fields_all)
     return result

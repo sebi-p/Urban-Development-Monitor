@@ -35,7 +35,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     run = sub.add_parser("run", help="run a pipeline stage against Postgres")
     run.add_argument(
-        "--stage", required=True, choices=["discover", "fetch", "extract", "classify", "fields"]
+        "--stage",
+        required=True,
+        choices=["discover", "fetch", "extract", "classify", "fields", "link"],
     )
     run.add_argument("--city", required=True)
     run.add_argument("--adapter", help='e.g. "brasov.council_debates" (required for discover)')
@@ -310,9 +312,19 @@ def _run(args: argparse.Namespace) -> int:
     url = _database_url()
     if not url:
         return EXIT_FAILED
-    if args.stage in ("extract", "classify", "fields"):  # R2 only: no requests to the sites
+    if args.stage in ("extract", "classify", "fields", "link"):  # R2 only, no site requests
         with psycopg.connect(url) as conn:
-            if args.stage == "fields":
+            if args.stage == "link":
+                from mdu import linker  # noqa: PLC0415
+
+                extractor, budget = _field_extractor(disabled=args.no_llm)
+                with _client(args.city) as client:  # street tiles only, cached in R2
+                    streets = _street_index(args.city, client)
+                result = linker.run(
+                    conn, ObjectStore.from_env(), city=args.city, streets=streets,
+                    extractor=extractor, monthly_usd=budget, log=print,
+                )  # fmt: skip
+            elif args.stage == "fields":
                 from mdu.project_fields import extract_fields  # noqa: PLC0415
 
                 extractor, budget = _field_extractor(disabled=args.no_llm)

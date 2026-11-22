@@ -1,6 +1,6 @@
 /** Read-only queries used by the web app. The web app never writes (CLAUDE.md). */
 import type { DocumentRole, ProjectIndicators, ProjectKind, ProjectStatus } from "@mdu/shared";
-import { and, asc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import type { Db } from "./client.ts";
 import { jurisdiction, project } from "./schema/index.ts";
 
@@ -81,6 +81,7 @@ export async function projectsGeoJSON(
     sql`${project.geom} is not null`,
     // Only reviewed or high-confidence records are public (PLAN §7 stage 8).
     inArray(project.reviewState, ["auto_published", "approved"]),
+    isNull(project.mergedIntoId), // merged projects show on the project they joined
   ];
   if (filters.bbox) {
     const [minLon, minLat, maxLon, maxLat] = filters.bbox;
@@ -118,7 +119,8 @@ export async function projectsGeoJSON(
 }
 
 export interface ProjectDocumentLink {
-  label: string;
+  /** The city's link text; null for files known only by their type (shown as the type). */
+  label: string | null;
   url: string;
   size_bytes: number | null;
   /** Classified document type, when the file has been fetched and classified. */
@@ -146,6 +148,8 @@ export interface ProjectListItem {
 /**
  * Every published project of a jurisdiction, with its latest event, newest first. Unlike the
  * GeoJSON, this includes projects without a location, so the list shows everything (PLAN §8).
+ * A project the linker merged into another is not listed; its events and documents show on the
+ * project it joined (M3.3).
  */
 export async function listProjects(db: Db, slug: string): Promise<ProjectListItem[] | null> {
   const [j] = await db
@@ -175,22 +179,51 @@ export async function listProjects(db: Db, slug: string): Promise<ProjectListIte
            e.event_date::text as event_date, e.title as event_title, e.details,
            d.documents
     from project p
+    cross join lateral (
+      select array_agg(c.id) as ids from project c where c.id = p.id or c.merged_into_id = p.id
+    ) fam
     left join lateral (
       select event_date, title, details from project_event
-      where project_id = p.id and review_state in ('auto_published', 'approved')
+      where project_id = any(fam.ids) and review_state in ('auto_published', 'approved')
       order by event_date desc, created_at desc limit 1
     ) e on true
-    -- Agenda and status-change events carry no files: documents come from the newest event
-    -- that lists them (the source listing).
+    -- Agenda and status-change events carry no files: documents come from the events that list
+    -- them (the source listings), once per URL.
     left join lateral (
-      select details->'documents' as documents from project_event
-      where project_id = p.id and review_state in ('auto_published', 'approved')
-        and jsonb_typeof(details->'documents') = 'array'
-      order by event_date desc, created_at desc limit 1
+      select jsonb_agg(x.doc) as documents from (
+        select distinct on (doc->>'url') doc
+        from project_event ev, jsonb_array_elements(ev.details->'documents') doc
+        where ev.project_id = any(fam.ids)
+          and ev.review_state in ('auto_published', 'approved')
+          and jsonb_typeof(ev.details->'documents') = 'array'
+        order by doc->>'url', ev.event_date desc
+      ) x
     ) d on true
     where p.jurisdiction_id = ${j.id}
       and p.review_state in ('auto_published', 'approved')
+      and p.merged_into_id is null
     order by e.event_date desc nulls last, p.title`);
+  // Files the linker attached (e.g. from the urbanism page) that the listing doesn't name.
+  const attached = await db.execute<{
+    root: string;
+    url: string;
+    doc_type: DocumentRole;
+    size_bytes: number | null;
+  }>(sql`
+    select coalesce(c.merged_into_id, c.id) as root, f.url, d.doc_type, d.size_bytes
+    from project_document pd
+    join project c on c.id = pd.project_id
+    join raw_document d on d.id = pd.raw_document_id
+    join lateral (
+      select url from "fetch" where raw_document_id = d.id order by fetched_at desc nulls last limit 1
+    ) f on true
+    where c.jurisdiction_id = ${j.id} and d.doc_type <> 'registru_opinii'`);
+  const extra = new Map<string, ProjectDocumentLink[]>();
+  for (const a of attached) {
+    const list = extra.get(a.root) ?? [];
+    list.push({ label: null, url: a.url, size_bytes: a.size_bytes, role: a.doc_type });
+    extra.set(a.root, list);
+  }
   // Document types from the classifier, by URL (a file is fetched once, its type stored once).
   const urls = [...new Set(rows.flatMap((r) => (r.documents ?? []).map((d) => d.url)))];
   const roles = new Map<string, DocumentRole>();
@@ -215,8 +248,23 @@ export async function listProjects(db: Db, slug: string): Promise<ProjectListIte
     eventDate: r.event_date,
     eventTitle: r.event_title,
     sourceUrl: r.details?.source_url ?? null,
-    documents: (r.documents ?? []).map((d) => ({ ...d, role: roles.get(d.url) ?? null })),
+    documents: withAttached(
+      (r.documents ?? []).map((d) => ({ ...d, role: roles.get(d.url) ?? d.role ?? null })),
+      extra.get(r.id) ?? [],
+    ),
     initiator: r.initiator,
     indicators: r.indicators ?? {},
   }));
+}
+
+/** Listing documents in the city's order ("01. …", "02. …"), then attached files not listed. */
+function withAttached(
+  listed: ProjectDocumentLink[],
+  attached: ProjectDocumentLink[],
+): ProjectDocumentLink[] {
+  const sorted = [...listed].sort((a, b) =>
+    (a.label ?? "").localeCompare(b.label ?? "", "ro", { numeric: true }),
+  );
+  const seen = new Set(sorted.map((d) => d.url));
+  return [...sorted, ...attached.filter((d) => !seen.has(d.url) && seen.add(d.url))];
 }

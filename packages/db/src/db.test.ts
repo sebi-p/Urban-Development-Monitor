@@ -245,6 +245,79 @@ describe.skipIf(!adminUrl)("database (PostGIS)", () => {
       expect(later.eventDate).toBe("2025-06-01");
       expect(later.eventTitle).toBe("Pe ordinea de zi");
       expect(later.documents).toEqual(item.documents);
+      expect(later.initiator).toBeNull();
+      expect(later.indicators).toEqual({});
+
+      // A fetched, classified file gets its type; a register of comments never shows one.
+      const [doc] = await sql`
+        insert into raw_document (jurisdiction_id, url, fetched_at, sha256, mime, size_bytes,
+          doc_type)
+        values (${j!.id}, 'https://x.test/a.pdf', now(), ${"e".repeat(64)}, 'application/pdf', 1,
+          'memoriu')
+        returning id`;
+      const [src] = await sql`
+        insert into source (jurisdiction_id, adapter, base_url)
+        values (${j!.id}, 'test.docs', 'https://x.test') returning id`;
+      await sql`
+        insert into "fetch" (jurisdiction_id, source_id, url, status, raw_document_id, fetched_at)
+        values (${j!.id}, ${src!.id}, 'https://x.test/a.pdf', 'fetched', ${doc!.id}, now())`;
+      const indicators = {
+        pot_percent: {
+          value: 35,
+          source_document_id: doc!.id,
+          page: 2,
+          confidence: "medium",
+          source_url: "https://x.test/a.pdf",
+        },
+      };
+      await sql`
+        update project set initiator = 'SC ALFA SRL', indicators = ${sql.json(indicators)}
+        where id = ${p!.id}`;
+      const typed = (await listProjects(handle.db, slug))!.find(
+        (x) => x.slug === "real-no-location",
+      )!;
+      expect(typed.documents[0]!.role).toBe("memoriu");
+      expect(typed.initiator).toBe("SC ALFA SRL");
+      expect(typed.indicators.pot_percent?.page).toBe(2);
+
+      // The linker merged a notice into this project: the notice is hidden, its newer event and
+      // its files show here, and a file attached from the urbanism page is listed by its type.
+      const [b] = await sql`
+        insert into project (jurisdiction_id, slug, kind, status, title, review_state,
+          merged_into_id, geom)
+        values (${j!.id}, 'merged-notice', 'pud', 'in_preparation', 'Anunț', 'auto_published',
+          ${p!.id}, ST_SetSRID(ST_MakePoint(25.6, 45.65), 4326))
+        returning id`;
+      await sql`
+        insert into project_event (jurisdiction_id, project_id, event_date, event_type, title,
+          details, confidence, review_state)
+        values (${j!.id}, ${b!.id}, '2025-07-01', 'notice_published', 'Anunț publicat',
+          ${sql.json({ documents: [{ label: "00. Anunt", url: "https://x.test/n.pdf", size_bytes: 2 }] })},
+          'high', 'auto_published')`;
+      const [hub] = await sql`
+        insert into raw_document (jurisdiction_id, url, fetched_at, sha256, mime, size_bytes,
+          doc_type)
+        values (${j!.id}, 'https://x.test/hub.pdf', now(), ${"f".repeat(64)}, 'application/pdf',
+          3, 'rlu')
+        returning id`;
+      await sql`
+        insert into "fetch" (jurisdiction_id, source_id, url, status, raw_document_id, fetched_at)
+        values (${j!.id}, ${src!.id}, 'https://x.test/hub.pdf', 'fetched', ${hub!.id}, now())`;
+      await sql`
+        insert into project_document (jurisdiction_id, project_id, raw_document_id, role)
+        values (${j!.id}, ${b!.id}, ${hub!.id}, 'rlu')`;
+      const all = (await listProjects(handle.db, slug))!;
+      expect(all.map((x) => x.slug)).not.toContain("merged-notice");
+      const root = all.find((x) => x.slug === "real-no-location")!;
+      expect(root.eventTitle).toBe("Anunț publicat");
+      expect(root.documents.map((d) => d.url)).toEqual([
+        "https://x.test/n.pdf",
+        "https://x.test/a.pdf",
+        "https://x.test/hub.pdf",
+      ]);
+      expect(root.documents[2]).toMatchObject({ label: null, role: "rlu" });
+      const merged = (await projectsGeoJSON(handle.db, slug))!;
+      expect(merged.features.map((f) => f.properties.slug)).not.toContain("merged-notice");
       // The map only gets located projects.
       const fc = (await projectsGeoJSON(handle.db, slug))!;
       expect(fc.features.map((f) => f.properties.slug)).not.toContain("real-no-location");
@@ -255,7 +328,7 @@ describe.skipIf(!adminUrl)("database (PostGIS)", () => {
       const removed = await removeDemoProjects(handle.db);
       expect(removed).toBe(DEMO_PROJECTS_PER_JURISDICTION * loadJurisdictionFiles().length);
       const [row] = await sql`select count(*)::int as n from project`;
-      expect(row!.n).toBe(1); // the real-looking project from the previous test
+      expect(row!.n).toBe(2); // the two real-looking projects from the previous test
       const ids = await upsertJurisdictions(handle.db);
       expect(ids.size).toBe(loadJurisdictionFiles().length);
     });
