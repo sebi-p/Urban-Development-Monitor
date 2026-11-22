@@ -71,11 +71,19 @@ export function LocationEditor({
   };
 
   return (
-    <div className="location-editor">
-      <p className="meta">{t("dragHint")}</p>
-      <div ref={container} className="editor-map" />
-      <p>
-        <button type="button" onClick={save} disabled={!lngLat || pending}>
+    <div className="space-y-2">
+      <p className="text-sm text-slate-600">{t("dragHint")}</p>
+      <div
+        ref={container}
+        className="h-[420px] overflow-hidden rounded-[var(--radius-card)] border border-slate-200"
+      />
+      <p className="flex flex-wrap items-center gap-3 text-sm">
+        <button
+          type="button"
+          onClick={save}
+          disabled={!lngLat || pending}
+          className="inline-flex min-h-11 items-center rounded-full bg-accent-700 px-4 text-sm font-medium text-white hover:bg-accent-800 disabled:opacity-50"
+        >
           {t("saveLocation")}
         </button>{" "}
         {lngLat ? `${lngLat[1].toFixed(6)}, ${lngLat[0].toFixed(6)}` : null}{" "}

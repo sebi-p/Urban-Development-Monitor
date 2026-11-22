@@ -13,8 +13,8 @@ export default async function AdminProjects() {
   const projects = await listAdminProjects(getDb(), CITY);
   return (
     <>
-      <h2>{t("projects")}</h2>
-      <table className="admin-table">
+      <h2 className="mt-2 mb-3 text-xl font-semibold">{t("projects")}</h2>
+      <table className="w-full border-collapse overflow-hidden rounded-[var(--radius-card)] bg-white text-sm shadow-[var(--shadow-card)] [&_td]:border-b [&_td]:border-slate-100 [&_td]:px-3 [&_td]:py-2 [&_td]:align-top [&_th]:bg-slate-50 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-medium [&_th]:text-slate-600">
         <thead>
           <tr>
             <th>{t("projects")}</th>
@@ -25,7 +25,7 @@ export default async function AdminProjects() {
         </thead>
         <tbody>
           {projects.map((p) => (
-            <tr key={p.id} className={p.merged_into_id ? "muted" : undefined}>
+            <tr key={p.id} className={p.merged_into_id ? "text-slate-400" : undefined}>
               <td>
                 <Link href={`/admin/projects/${p.id}`}>{p.title}</Link>
                 {p.merged_into_id ? ` (${t("merged")})` : ""}

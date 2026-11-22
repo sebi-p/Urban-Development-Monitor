@@ -168,7 +168,7 @@ export function ProjectMap({ bbox, projects }: { bbox: BBox | null; projects: Pr
   return (
     <div
       ref={container}
-      className="map"
+      className="map h-full w-full"
       role="region"
       aria-label={t("mapLabel")}
       data-count={projects.features.length}

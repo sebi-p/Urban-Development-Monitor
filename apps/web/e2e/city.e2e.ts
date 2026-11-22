@@ -60,19 +60,42 @@ test("nearby projects are clustered and a cluster click zooms in", async ({ page
   await expect.poll(async () => Number(await map.getAttribute("data-zoom"))).toBeGreaterThan(zoom);
 });
 
-test("on a phone the map and list are tabs and nothing scrolls sideways", async ({
+test("on a phone the list is a sheet over the map: button, drag, no sideways scroll", async ({
   page,
   city,
 }, info) => {
   test.skip(info.project.name !== "phone", "phone layout");
   await page.goto(`/${city}`);
-  await expect(page.getByRole("tab", { name: "Hartă" })).toHaveAttribute("aria-selected", "true");
-  await expect(page.locator(".panel-list")).toBeHidden();
-  await page.getByRole("tab", { name: "Listă" }).click();
-  await expect(page.locator(".panel-list")).toBeVisible();
-  await expect(page.locator(".panel-map")).toBeHidden();
+  const sheet = page.getByRole("complementary", { name: "Rezultate și filtre" });
+  await expect(sheet).toHaveAttribute("data-snap", "peek");
+  await expect(page.locator(".map[data-ready=true]")).toBeVisible();
+
+  await sheet.getByRole("button", { name: "Listă" }).click();
+  await expect(sheet).toHaveAttribute("data-snap", "full");
+  await expect(page.locator(".project-list > li").first()).toBeInViewport();
+  await sheet.getByRole("button", { name: "Hartă" }).click();
+  await expect(sheet).toHaveAttribute("data-snap", "peek");
+
+  // Drag the handle up one step (peek -> half), as a finger would.
+  const handle = sheet.locator("[data-handle]");
+  const box = (await handle.boundingBox())!;
+  const y = box.y + box.height / 2;
+  await handle.dispatchEvent("pointerdown", { clientY: y, pointerId: 1, pointerType: "touch" });
+  await handle.dispatchEvent("pointerup", { clientY: y - 120, pointerId: 1, pointerType: "touch" });
+  await expect(sheet).toHaveAttribute("data-snap", "half");
+
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - window.innerWidth,
   );
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test("a map popup link opens the sheet at that project", async ({ page, city }, info) => {
+  test.skip(info.project.name !== "phone", "phone layout");
+  await page.goto(`/${city}`);
+  const first = page.locator(".project-list > li").first();
+  const id = await first.getAttribute("id");
+  await page.evaluate((hash) => (window.location.hash = hash), `#${id}`);
+  const sheet = page.getByRole("complementary", { name: "Rezultate și filtre" });
+  await expect(sheet).toHaveAttribute("data-snap", "full");
 });

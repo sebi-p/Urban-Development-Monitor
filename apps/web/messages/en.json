@@ -132,6 +132,33 @@
     "tabs": "View",
     "mapTab": "Map",
     "listTab": "List",
-    "showOnList": "Show in the list"
+    "showOnList": "Show in the list",
+    "more": "More filters"
+  },
+  "Sheet": {
+    "label": "Results and filters",
+    "showList": "List",
+    "showMap": "Map"
+  },
+  "Style": {
+    "title": "Style guide",
+    "intro": "The app's colours, typography and components, rendered from the code. The rules are in docs/design.md.",
+    "colours": "Colours",
+    "accent": "Accent (links, primary buttons, selected filters)",
+    "neutral": "Neutrals (text, borders, background)",
+    "status": "Statuses (colour + icon, never colour alone)",
+    "type": "Typography",
+    "components": "Components",
+    "buttons": "Buttons",
+    "chips": "Filters",
+    "badges": "Badges",
+    "card": "Project card",
+    "primary": "Primary",
+    "secondary": "Secondary",
+    "ghost": "Quiet",
+    "danger": "Danger",
+    "sample": "Sample text: urban development in Brașov, explained for everyone.",
+    "chipOn": "Selected",
+    "chipOff": "Not selected"
   }
 }

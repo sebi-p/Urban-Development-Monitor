@@ -12,9 +12,9 @@ export default async function HomePage() {
 
   const t = await getTranslations("Home");
   return (
-    <main className="page">
-      <h1>{t("title")}</h1>
-      <p>{t("tagline")}</p>
+    <main className="mx-auto max-w-3xl p-6">
+      <h1 className="mb-2 text-3xl font-semibold">{t("title")}</h1>
+      <p className="mb-4 text-slate-600">{t("tagline")}</p>
       {jurisdictions.length === 0 ? (
         <p>{t("noCities")}</p>
       ) : (

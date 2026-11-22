@@ -1,174 +1,59 @@
-/* Minimal styles until the UI kit lands in M4 (Tailwind + shadcn/ui, PLAN §4). */
-:root {
-  color-scheme: light;
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
-}
-body {
-  margin: 0;
-}
-.page {
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 1rem;
-}
-.map {
-  height: 70vh;
-  min-height: 20rem;
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-.project-list {
-  list-style: none;
-  padding: 0;
-}
-.project-list > li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #e5e7eb;
-}
-.project-list .dot {
-  display: inline-block;
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 50%;
-  margin-right: 0.5rem;
-}
-.project-list .indicators {
-  margin: 0.25rem 0 0 1.25rem;
-  font-size: 0.875rem;
-}
-.project-list .indicators a {
-  color: inherit;
-  text-decoration: underline dotted;
-}
-.project-list .doc-type {
-  color: #6b7280;
-  font-size: 0.8125rem;
-}
-.project-list .meta {
-  display: block;
-  color: #4b5563;
-  font-size: 0.875rem;
-  margin-left: 1.25rem;
-}
-.project-list .docs {
-  margin: 0.25rem 0 0 1.25rem;
-  font-size: 0.875rem;
-}
-.project-list .docs ul {
-  margin: 0.25rem 0;
-  padding-left: 1.25rem;
-}
-.project-list .source {
-  margin: 0.25rem 0 0;
-  color: #4b5563;
+/* Design tokens and base styles (M4.0, docs/design.md). Components use Tailwind utilities. */
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* One accent, a calm deep teal: links, primary buttons, selected chips, focus rings. */
+  --color-accent-50: #f0fdfa;
+  --color-accent-100: #ccfbf1;
+  --color-accent-200: #99f6e4;
+  --color-accent-600: #0d9488;
+  --color-accent-700: #0f766e;
+  --color-accent-800: #115e59;
+  --color-accent-900: #134e4a;
+
+  /* Status groups: the only strong colours, so they stand out on the map (lib/status.ts). */
+  --color-status-preparation: #7c3aed;
+  --color-status-consultation: #ea580c;
+  --color-status-council: #b45309;
+  --color-status-approved: #15803d;
+  --color-status-construction: #1d4ed8;
+  --color-status-closed: #64748b;
+  --color-status-contested: #be123c;
+
+  --radius-card: 1rem;
+  --radius-sheet: 1.25rem;
+  --shadow-panel: 0 10px 30px -12px rgb(15 23 42 / 0.25), 0 2px 6px -2px rgb(15 23 42 / 0.08);
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 1px rgb(15 23 42 / 0.04);
+
+  --app-bar-height: 3.5rem;
 }
 
-/* Admin (M3.5) */
-.admin-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 1rem;
-}
-.admin-table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 0.875rem;
-}
-.admin-table td,
-.admin-table th {
-  border-bottom: 1px solid #e5e7eb;
-  padding: 0.35rem 0.5rem;
-  text-align: left;
-  vertical-align: top;
-}
-.admin-table .muted {
-  color: #9ca3af;
-}
-.admin form.inline {
-  display: inline;
-}
-.editor-map {
-  height: 420px;
-  border-radius: 8px;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-slate-50 font-sans text-slate-900 antialiased;
+  }
+  a {
+    @apply text-accent-700 underline-offset-2 hover:underline;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent-600;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight text-slate-900;
+  }
 }
 
-/* City page (M4.1): filters, map/list tabs on phones, side by side on wide screens. */
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  align-items: flex-start;
-  font-size: 0.875rem;
-  margin-bottom: 0.75rem;
+/* MapLibre's own controls and popups, in the same style. */
+.maplibregl-popup-content {
+  @apply rounded-xl px-3 py-2 text-sm shadow-[var(--shadow-panel)];
 }
-.filters fieldset {
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.75rem;
-}
-.filters label {
-  white-space: nowrap;
-}
-.filters .open {
-  align-self: center;
-}
-.filter-actions {
-  flex-basis: 100%;
-  margin: 0;
-}
-.filters[aria-busy="true"] output {
-  opacity: 0.5;
-}
-.views .tabs {
-  display: flex;
-  gap: 0.25rem;
-  margin-bottom: 0.5rem;
-}
-.views .tabs button {
-  flex: 1;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  background: #fff;
-  border-radius: 0.375rem;
-  font-size: 1rem;
-}
-.views .tabs button[aria-selected="true"] {
-  background: #1f2937;
-  color: #fff;
-}
-.views[data-view="map"] .panel-list,
-.views[data-view="list"] .panel-map {
-  display: none;
-}
-@media (min-width: 64rem) {
-  .views {
-    display: grid;
-    grid-template-columns: 24rem 1fr;
-    gap: 1rem;
-  }
-  .views .tabs {
-    display: none;
-  }
-  .views .panel-list,
-  .views .panel-map {
-    display: block !important;
-  }
-  .views .panel-list {
-    order: -1;
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-  .views .panel-map .map {
-    height: 80vh;
-  }
+.maplibregl-ctrl-group {
+  @apply rounded-xl! shadow-[var(--shadow-card)]!;
 }

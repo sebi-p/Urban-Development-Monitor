@@ -41,10 +41,11 @@ describe("ProjectList", () => {
   it("shows kind, status, date, location note, documents and the official source", () => {
     renderRo(<ProjectList projects={[item(1, "in_public_consultation"), item(2, "approved")]} />);
     expect(screen.getByText("P.U.Z. Proiect 1")).toBeInTheDocument();
-    expect(screen.getByText(/PUZ · În consultare publică · 3 nov\. 2026/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/Strada Grădinii nr\. 1 · locație aproximativă \(strada\)/),
-    ).toBeInTheDocument();
+    // Status is a badge (icon + label); type and date follow it.
+    expect(screen.getAllByText("În consultare publică")[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/^PUZ · 3 nov\. 2026$/)[0]).toBeInTheDocument();
+    expect(screen.getByText(/Strada Grădinii nr\. 1/)).toBeInTheDocument();
+    expect(screen.getAllByText("locație aproximativă (strada)")[0]).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Proiect de hotărâre" })[0]).toHaveAttribute(
       "href",
       "https://example.test/1.pdf",
@@ -59,7 +60,8 @@ describe("ProjectList", () => {
     renderRo(
       <ProjectList projects={[item(3, "approved", { hasLocation: false, address: null })]} />,
     );
-    expect(screen.getByText(/Fără adresă identificată · nu apare pe hartă/)).toBeInTheDocument();
+    expect(screen.getByText(/Fără adresă identificată/)).toBeInTheDocument();
+    expect(screen.getByText(/nu apare pe hartă/)).toBeInTheDocument();
   });
 
   it("says so when there are no projects", () => {

@@ -38,7 +38,7 @@ CI (`.github/workflows/ci.yml`) runs every check above. Run them before you comm
 - Change the schema only through Drizzle migrations, and update the `packages/shared` enums in the same PR. Enum values live only in `packages/shared/src/enums.ts`; append, never reorder.
 - No Brașov-specific strings outside `pipeline/src/mdu/adapters/brasov/` and `config/jurisdictions/brasov.yaml`.
 - Every extracted value keeps its `source_document_id` and page number.
-- UI strings go only through `next-intl` message files (`ro` default, `en`).
+- UI strings go only through `next-intl` message files (`ro` default, `en`). Follow `docs/design.md` (tokens in `globals.css`, components in `components/ui`, live at `/stil`).
 - Write an ADR in `docs/adr/` for any new dependency or service.
 - Ask for a plan before writing code on anything that touches the schema.
 - The public site is read-only against Postgres. Only the pipeline writes, plus `/admin` server actions (login + allow-list, each write in `packages/db/src/admin.ts` with an `audit_log` row; ADR 0012).

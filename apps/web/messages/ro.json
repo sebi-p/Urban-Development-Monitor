@@ -132,6 +132,33 @@
     "tabs": "Vizualizare",
     "mapTab": "Hartă",
     "listTab": "Listă",
-    "showOnList": "Vezi în listă"
+    "showOnList": "Vezi în listă",
+    "more": "Mai multe filtre"
+  },
+  "Sheet": {
+    "label": "Rezultate și filtre",
+    "showList": "Listă",
+    "showMap": "Hartă"
+  },
+  "Style": {
+    "title": "Ghid de stil",
+    "intro": "Culorile, tipografia și componentele aplicației, generate din cod. Regulile sunt în docs/design.md.",
+    "colours": "Culori",
+    "accent": "Accent (legături, butoane principale, filtre selectate)",
+    "neutral": "Neutre (text, margini, fundal)",
+    "status": "Stări (culoare + pictogramă, niciodată doar culoare)",
+    "type": "Tipografie",
+    "components": "Componente",
+    "buttons": "Butoane",
+    "chips": "Filtre",
+    "badges": "Etichete",
+    "card": "Card de proiect",
+    "primary": "Principal",
+    "secondary": "Secundar",
+    "ghost": "Discret",
+    "danger": "Periculos",
+    "sample": "Exemplu de text: dezvoltarea urbană din Brașov, explicată pe înțelesul tuturor.",
+    "chipOn": "Selectat",
+    "chipOff": "Neselectat"
   }
 }
