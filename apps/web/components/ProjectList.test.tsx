@@ -166,4 +166,9 @@ describe("messages", () => {
     );
     expect(screen.queryByText(/locație aproximativă/)).not.toBeInTheDocument();
   });
+
+  it("says when a reviewer placed the project by hand", () => {
+    renderRo(<ProjectList projects={[item(6, "approved", { geomPrecision: "manual" })]} />);
+    expect(screen.getByText("locație stabilită manual")).toBeInTheDocument();
+  });
 });

@@ -16,7 +16,8 @@
     "source": "Sursa oficială:",
     "exactLocation": "locație exactă (din coordonatele planului)",
     "addressLocation": "locație după numărul străzii",
-    "locationPage": "pagina {page} din planșă"
+    "locationPage": "pagina {page} din planșă",
+    "manualLocation": "locație stabilită manual"
   },
   "Status": {
     "announced": "Anunțat",

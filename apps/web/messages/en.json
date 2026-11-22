@@ -16,7 +16,8 @@
     "source": "Official source:",
     "exactLocation": "exact location (from the plan's coordinates)",
     "addressLocation": "location from the house number",
-    "locationPage": "page {page} of the plan sheet"
+    "locationPage": "page {page} of the plan sheet",
+    "manualLocation": "location set by hand"
   },
   "Status": {
     "announced": "Announced",

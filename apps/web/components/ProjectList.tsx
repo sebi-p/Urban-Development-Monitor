@@ -65,6 +65,7 @@ function LocationNote({ p }: { p: ProjectListItem }) {
   const t = useTranslations("City");
   if (p.geomPrecision === "street") return t("approximateLocation");
   if (p.geomPrecision === "address") return t("addressLocation");
+  if (p.geomPrecision === "manual") return t("manualLocation");
   if (p.geomPrecision !== "parcel") return null;
   const loc = p.indicators.location;
   if (loc?.source_url && loc.page) {
