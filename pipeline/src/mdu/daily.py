@@ -47,7 +47,7 @@ def _log_failure(
         )
 
 
-def run(  # noqa: PLR0913
+def run(  # noqa: PLR0913, PLR0915
     conn: psycopg.Connection[Any],
     client: PoliteClient,
     store: stages.TextStore,
@@ -60,6 +60,8 @@ def run(  # noqa: PLR0913
     extract_limit: int = 1000,
     llm: Any = None,
     field_extractor: Any = None,
+    addresses: Any = None,  # mdu.core.streets.AddressIndex
+    bbox: tuple[float, float, float, float] | None = None,
     llm_monthly_usd: float = 2.0,
     log: Callable[[str], None] = lambda _: None,
 ) -> DailyResult:
@@ -164,4 +166,18 @@ def run(  # noqa: PLR0913
     step("link", None, "link", link_all)
     # Projects created or joined by the linker get their fields the same day (mostly cached).
     step("fields after link", None, "extract_fields", fields_all)
+
+    def geocode_all() -> dict[str, Any]:
+        from mdu import geocode  # noqa: PLC0415
+        from mdu.core.streets import AddressIndex  # noqa: PLC0415
+
+        if bbox is None:
+            return {"skipped": "no bounding box"}
+        r = geocode.run(
+            conn, store, city=city, bbox=bbox, streets=streets,
+            addresses=addresses or AddressIndex({}),
+        )  # fmt: skip
+        return dict(r.counts)
+
+    step("geocode", None, "geocode", geocode_all)
     return result

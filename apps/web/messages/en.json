@@ -13,7 +13,10 @@
     "approximateLocation": "approximate location (street)",
     "notOnMap": "not on the map (address not located)",
     "documents": "{count, plural, =0 {Source} one {# document} other {# documents}}",
-    "source": "Official source:"
+    "source": "Official source:",
+    "exactLocation": "exact location (from the plan's coordinates)",
+    "addressLocation": "location from the house number",
+    "locationPage": "page {page} of the plan sheet"
   },
   "Status": {
     "announced": "Announced",

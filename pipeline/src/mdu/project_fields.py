@@ -203,9 +203,13 @@ def extract_fields(  # noqa: PLR0913
             checked = fields.check(answer, selection)
             kept = {v.field: v.value for v in checked.kept}
             cur.execute(
-                """update project set indicators = %s, initiator = %s::text, designer = %s::text,
-                       updated_at = now()
-                   where id = %s and (indicators, initiator, designer)
+                # `location` belongs to the geocode stage (M3.4) and is kept as it is.
+                """update project set
+                       indicators = %s::jsonb || case when indicators ? 'location'
+                           then jsonb_build_object('location', indicators->'location')
+                           else '{}'::jsonb end,
+                       initiator = %s::text, designer = %s::text, updated_at = now()
+                   where id = %s and (indicators - 'location', initiator, designer)
                        is distinct from (%s::jsonb, %s::text, %s::text)""",
                 (json.dumps(_indicators(checked, urls), ensure_ascii=False),
                  kept.get("initiator"), kept.get("designer"), project_id,

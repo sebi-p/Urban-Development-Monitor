@@ -1,0 +1,173 @@
+{
+  "note": "M3.4 golden set: projects whose plan sheet lists the boundary in Stereo 70. truth = centre of those points (WGS84), checked against the named street; street_pin = the street-level location before M3.4.",
+  "projects": {
+    "construire-locuinte-colective-cu-functiuni-conexe-spatii-com-81f061": {
+      "address": "Strada Nicolae Labiș",
+      "doc_type": "plansa_reglementari",
+      "fixture": "geocode/construire-locuinte-colective-cu-functiu",
+      "page": 1,
+      "street_pin": [
+        25.605129,
+        45.679523
+      ],
+      "truth": [
+        25.60734,
+        45.679957
+      ]
+    },
+    "construire-motel-si-imprejmuire-teren-7792d7": {
+      "address": "Strada Mălinului",
+      "doc_type": "plansa_reglementari",
+      "fixture": "geocode/construire-motel-si-imprejmuire-teren-77",
+      "page": 1,
+      "street_pin": [
+        25.570893,
+        45.691312
+      ],
+      "truth": [
+        25.572604,
+        45.691108
+      ]
+    },
+    "cu-scopul-demolare-constructii-existente-corp-a1-1-si-a1-2-s-2a6c09": {
+      "address": "Strada Miron Costin nr. 2",
+      "doc_type": "plansa_reglementari",
+      "fixture": "geocode/cu-scopul-demolare-constructii-existente",
+      "page": 1,
+      "street_pin": [
+        25.606631,
+        45.65165
+      ],
+      "truth": [
+        25.608653,
+        45.651432
+      ]
+    },
+    "intocmire-ansamblu-de-locuinte-colective-si-dotari-complemen-3930be": {
+      "address": "Strada Vasile Goldiș",
+      "doc_type": "plansa_reglementari",
+      "fixture": "geocode/intocmire-ansamblu-de-locuinte-colective",
+      "page": 1,
+      "street_pin": [
+        25.612001,
+        45.685407
+      ],
+      "truth": [
+        25.610467,
+        45.686785
+      ]
+    },
+    "intocmire-puz-construire-ansamblu-de-locuinte-colective-func-1fe181": {
+      "address": "Strada Târgului nr. 4",
+      "doc_type": "plansa_reglementari",
+      "fixture": "geocode/intocmire-puz-construire-ansamblu-de-loc",
+      "page": 1,
+      "street_pin": [
+        25.578988,
+        45.69866
+      ],
+      "truth": [
+        25.579284,
+        45.698394
+      ]
+    },
+    "modificare-aprobat-cu-hcl-nr-822-2010-0f980a": {
+      "address": "Strada Lucian Blaga",
+      "doc_type": "plansa_reglementari",
+      "fixture": "geocode/modificare-aprobat-cu-hcl-nr-822-2010-0f",
+      "page": 1,
+      "street_pin": [
+        25.603461,
+        45.64697
+      ],
+      "truth": [
+        25.608009,
+        45.647436
+      ]
+    },
+    "pud-construire-unitate-de-cazare-s-2e-m-turistica-cu-dotari-1846f1": {
+      "address": "Strada Poiana Ursului",
+      "doc_type": "plansa_reglementari",
+      "fixture": "geocode/pud-construire-unitate-de-cazare-s-2e-m-",
+      "page": 1,
+      "street_pin": [
+        25.552408,
+        45.599139
+      ],
+      "truth": [
+        25.556656,
+        45.597206
+      ]
+    },
+    "puz-construire-biserica-si-infiintare-cimitir-parohial-in-mu-c9eea9": {
+      "address": "Strada Albinelor",
+      "doc_type": "plansa_reglementari",
+      "fixture": "geocode/puz-construire-biserica-si-infiintare-ci",
+      "page": 1,
+      "street_pin": [
+        25.551361,
+        45.693111
+      ],
+      "truth": [
+        25.537192,
+        45.687745
+      ]
+    },
+    "puz-construire-locuinte-colective-cu-pastrarea-avizelor-obti-3c9021": {
+      "address": "Strada Nicolae Labiș",
+      "doc_type": "plansa",
+      "fixture": "geocode/puz-construire-locuinte-colective-cu-pas",
+      "page": 1,
+      "street_pin": [
+        25.605129,
+        45.679523
+      ],
+      "truth": [
+        25.60007,
+        45.678523
+      ]
+    },
+    "puz-construire-locuinte-colective-municipiul-brasov-str-ioan-a0b8b6": {
+      "address": "Strada Ioan Popasu",
+      "doc_type": "plansa_reglementari",
+      "fixture": "geocode/puz-construire-locuinte-colective-munici",
+      "page": 1,
+      "street_pin": [
+        25.597436,
+        45.675696
+      ],
+      "truth": [
+        25.600261,
+        45.676875
+      ]
+    },
+    "puz-prestari-servicii-mica-industrie-birouri-spatii-cazare-l-606710": {
+      "address": "Strada Narciselor",
+      "doc_type": "plansa_reglementari",
+      "fixture": "geocode/puz-prestari-servicii-mica-industrie-bir",
+      "page": 1,
+      "street_pin": [
+        25.637369,
+        45.671636
+      ],
+      "truth": [
+        25.63709,
+        45.670665
+      ]
+    },
+    "puz-zona-de-locuinte-individuale-cu-modificarea-tramei-strad-b22377": {
+      "address": "Strada Morarului",
+      "doc_type": "plansa_reglementari",
+      "fixture": "geocode/puz-zona-de-locuinte-individuale-cu-modi",
+      "page": 1,
+      "street_pin": [
+        25.570469,
+        45.677945
+      ],
+      "truth": [
+        25.569791,
+        45.676246
+      ]
+    }
+  }
+}

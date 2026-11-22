@@ -15,7 +15,7 @@ from mdu.core.jurisdiction import load_jurisdiction
 
 if TYPE_CHECKING:
     from mdu.core.adapter import Adapter
-    from mdu.core.streets import StreetIndex
+    from mdu.core.streets import AddressIndex, StreetIndex
 
 STREETS_MAX_AGE_DAYS = 30
 EXIT_NOT_IMPLEMENTED = 2
@@ -37,7 +37,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument(
         "--stage",
         required=True,
-        choices=["discover", "fetch", "extract", "classify", "fields", "link"],
+        choices=["discover", "fetch", "extract", "classify", "fields", "link", "geocode"],
     )
     run.add_argument("--city", required=True)
     run.add_argument("--adapter", help='e.g. "brasov.council_debates" (required for discover)')
@@ -214,42 +214,59 @@ def _inventory(args: argparse.Namespace) -> int:
     return 0
 
 
-def _street_index(city: str, client: PoliteClient, *, refresh: bool = False) -> "StreetIndex":
-    """Local cache, then R2, then the OpenFreeMap street tiles (which refresh both caches).
-    Copies older than STREETS_MAX_AGE_DAYS are rebuilt (about 60 tile requests)."""
+def _indexes(
+    city: str, client: PoliteClient, *, refresh: bool = False
+) -> tuple["StreetIndex", "AddressIndex"]:
+    """Street and house-number indexes: local cache, then R2, then the OpenFreeMap tiles (one
+    pass, about 60 requests, which refreshes both caches). Copies older than
+    STREETS_MAX_AGE_DAYS are rebuilt."""
     import time  # noqa: PLC0415
 
     from mdu.core.env import REPO_ROOT  # noqa: PLC0415
     from mdu.core.storage import ObjectStore, StorageNotConfigured  # noqa: PLC0415
-    from mdu.core.streets import StreetIndex, fetch_street_index  # noqa: PLC0415
+    from mdu.core.streets import AddressIndex, StreetIndex, fetch_indexes  # noqa: PLC0415
 
-    cache = REPO_ROOT / "pipeline" / ".cache" / f"streets-{city}.json"
-    key = f"cache/streets/{city}.json"
+    names = {"streets": f"streets-{city}.json", "addresses": f"addresses-{city}.json"}
+    local = {k: REPO_ROOT / "pipeline" / ".cache" / v for k, v in names.items()}
+    remote = {"streets": f"cache/streets/{city}.json", "addresses": f"cache/addresses/{city}.json"}
     try:
         store: ObjectStore | None = ObjectStore.from_env()
     except StorageNotConfigured:
         store = None
-    if not refresh:
-        if cache.is_file() and time.time() - cache.stat().st_mtime < STREETS_MAX_AGE_DAYS * 86400:
-            return StreetIndex.from_json(cache.read_text(encoding="utf-8"))
-        age = store.age_days(key) if store else None
+
+    def cached(kind: str) -> str | None:
+        path = local[kind]
+        if path.is_file() and time.time() - path.stat().st_mtime < STREETS_MAX_AGE_DAYS * 86400:
+            return path.read_text(encoding="utf-8")
+        age = store.age_days(remote[kind]) if store else None
         if store and age is not None and age < STREETS_MAX_AGE_DAYS:
-            text = store.get(key).decode("utf-8")
-            cache.parent.mkdir(parents=True, exist_ok=True)
-            cache.write_text(text, encoding="utf-8")
-            return StreetIndex.from_json(text)
-    index = fetch_street_index(client, load_jurisdiction(city).bbox, log=print)  # bbox centre
-    cache.parent.mkdir(parents=True, exist_ok=True)
-    cache.write_text(index.to_json(), encoding="utf-8")
-    if store:
-        store.put(key, index.to_json().encode("utf-8"), "application/json")
-    return index
+            text = store.get(remote[kind]).decode("utf-8")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8")
+            return text
+        return None
+
+    if not refresh:
+        streets_text, addresses_text = cached("streets"), cached("addresses")
+        if streets_text is not None and addresses_text is not None:
+            return StreetIndex.from_json(streets_text), AddressIndex.from_json(addresses_text)
+    streets, addresses = fetch_indexes(client, load_jurisdiction(city).bbox, log=print)
+    for kind, text in (("streets", streets.to_json()), ("addresses", addresses.to_json())):
+        local[kind].parent.mkdir(parents=True, exist_ok=True)
+        local[kind].write_text(text, encoding="utf-8")
+        if store:
+            store.put(remote[kind], text.encode("utf-8"), "application/json")
+    return streets, addresses
+
+
+def _street_index(city: str, client: PoliteClient, *, refresh: bool = False) -> "StreetIndex":
+    return _indexes(city, client, refresh=refresh)[0]
 
 
 def _streets(args: argparse.Namespace) -> int:
     with _client(args.city) as c:
-        index = _street_index(args.city, c, refresh=True)
-    print(f"{len(index)} named streets cached for {args.city}")
+        streets, addresses = _indexes(args.city, c, refresh=True)
+    print(f"{len(streets)} named streets and {len(addresses)} house numbers cached for {args.city}")
     return 0
 
 
@@ -312,9 +329,18 @@ def _run(args: argparse.Namespace) -> int:
     url = _database_url()
     if not url:
         return EXIT_FAILED
-    if args.stage in ("extract", "classify", "fields", "link"):  # R2 only, no site requests
+    if args.stage in ("extract", "classify", "fields", "link", "geocode"):  # no site requests
         with psycopg.connect(url) as conn:
-            if args.stage == "link":
+            if args.stage == "geocode":
+                from mdu import geocode  # noqa: PLC0415
+
+                with _client(args.city) as client:  # map tiles only, cached in R2
+                    streets, addresses = _indexes(args.city, client)
+                result = geocode.run(
+                    conn, ObjectStore.from_env(), city=args.city,
+                    bbox=load_jurisdiction(args.city).bbox, streets=streets, addresses=addresses,
+                )  # fmt: skip
+            elif args.stage == "link":
                 from mdu import linker  # noqa: PLC0415
 
                 extractor, budget = _field_extractor(disabled=args.no_llm)
@@ -388,7 +414,7 @@ def _daily(args: argparse.Namespace) -> int:
     adapters, order = _registry(args.city)
     store = ObjectStore.from_env()
     with psycopg.connect(url) as conn, _client(args.city) as client:
-        streets = _street_index(args.city, client)
+        streets, addresses = _indexes(args.city, client)
         llm, budget = _llm()
         extractor, _ = _field_extractor()
         result = daily.run(
@@ -400,6 +426,8 @@ def _daily(args: argparse.Namespace) -> int:
             city=args.city,
             llm=llm,
             field_extractor=extractor,
+            addresses=addresses,
+            bbox=load_jurisdiction(args.city).bbox,
             llm_monthly_usd=budget,
             fetch_limit=args.fetch_limit,
             max_bytes=args.max_mb * 1024 * 1024,

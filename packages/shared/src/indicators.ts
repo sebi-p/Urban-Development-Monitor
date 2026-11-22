@@ -22,4 +22,10 @@ export interface ProjectIndicators {
   parking_spaces?: Sourced<number>;
   green_space_percent?: Sourced<number>;
   setbacks?: Sourced<string>;
+  /** How the map location was found (M3.4): the plan's own coordinates or a house number. */
+  location?: Omit<Sourced<"parcel" | "address">, "page" | "source_document_id"> & {
+    method: string;
+    page: number | null;
+    source_document_id: string | null;
+  };
 }

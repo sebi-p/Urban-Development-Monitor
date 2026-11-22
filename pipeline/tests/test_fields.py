@@ -225,3 +225,22 @@ def test_without_an_extractor_only_links_and_identifiers(pg: psycopg.Connection[
     result = extract_fields(pg, store, city="testcity", extractor=None)
     assert result.counts["fields: LLM off"] == 1
     assert result.counts["identifiers new"] == 1
+
+
+def test_extract_fields_keeps_the_geocoded_location(pg: psycopg.Connection[Any]) -> None:
+    store = Store()
+    project_with_documents(pg, store)
+    location = {"value": "parcel", "method": "stereo70 (5 points)", "page": 1}
+    pg.execute(
+        "update project set indicators = jsonb_build_object('location', %s::jsonb)",
+        (json.dumps(location),),
+    )
+    answer = {"pot_percent": item(35, 1, 2, "POT max = 35%")}
+    first = extract_fields(pg, store, city="testcity", extractor=FakeExtractor(answer))
+    assert first.counts["projects updated"] == 1
+    row = pg.execute("select indicators from project").fetchone()
+    assert row
+    assert row[0]["location"] == location
+    assert "pot_percent" in row[0]
+    again = extract_fields(pg, store, city="testcity", extractor=FakeExtractor(answer))
+    assert again.counts["projects unchanged"] == 1

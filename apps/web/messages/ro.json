@@ -13,7 +13,10 @@
     "approximateLocation": "locație aproximativă (strada)",
     "notOnMap": "nu apare pe hartă (adresă nelocalizată)",
     "documents": "{count, plural, =0 {Sursă} one {# document} few {# documente} other {# de documente}}",
-    "source": "Sursa oficială:"
+    "source": "Sursa oficială:",
+    "exactLocation": "locație exactă (din coordonatele planului)",
+    "addressLocation": "locație după numărul străzii",
+    "locationPage": "pagina {page} din planșă"
   },
   "Status": {
     "announced": "Anunțat",

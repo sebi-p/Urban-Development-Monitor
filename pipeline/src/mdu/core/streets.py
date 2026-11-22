@@ -287,25 +287,115 @@ def same_side(borders: list[Segment], centre: Point) -> Callable[[Point], bool]:
     return inside
 
 
+# House numbers (M3.4): the tiles' `housenumber` layer has points with a number but no street, so
+# each number is given to the nearest named street line within ADDRESS_MAX_M.
+ADDRESS_MAX_M = 40.0
+
+
+def _point_segment_px(p: Point, a: Point, b: Point) -> float:
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    if dx == dy == 0:
+        return math.hypot(p[0] - a[0], p[1] - a[1])
+    t = max(0.0, min(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy)))
+    return math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy))
+
+
+def addresses_from_tile(data: bytes, tile: tuple[int, int]) -> list[tuple[str, str, float, float]]:
+    """(street name, house number, lon, lat) for the tile's numbered buildings."""
+    layers = mapbox_vector_tile.decode(data)
+    numbers, names = layers.get("housenumber"), layers.get("transportation_name")
+    if not numbers or not names:
+        return []
+    extent = numbers.get("extent", 4096)
+    lat_mid = _to_lonlat(tile, extent / 2, extent / 2, extent)[1]
+    metres_per_px = 40_075_016.686 * math.cos(math.radians(lat_mid)) / 2**ZOOM / extent
+    lines = []
+    for f in names["features"]:
+        name, geom = f["properties"].get("name"), f["geometry"]
+        if not name or geom["type"] not in ("LineString", "MultiLineString"):
+            continue
+        for line in [geom["coordinates"]] if geom["type"] == "LineString" else geom["coordinates"]:
+            lines.append((name, [(float(x), float(y)) for x, y in line]))
+    out = []
+    for f in numbers["features"]:
+        number, geom = str(f["properties"].get("housenumber") or ""), f["geometry"]
+        if not number or geom["type"] != "Point":
+            continue
+        p = (float(geom["coordinates"][0]), float(geom["coordinates"][1]))
+        best = min(
+            ((min(_point_segment_px(p, a, b) for a, b in itertools.pairwise(pts)), name)
+             for name, pts in lines if len(pts) > 1),
+            default=None,
+        )  # fmt: skip
+        if best and best[0] * metres_per_px <= ADDRESS_MAX_M:
+            out.append((best[1], number, *_to_lonlat(tile, p[0], p[1], extent)))
+    return out
+
+
+class AddressIndex:
+    """(normalised street, house number) -> point. Numbers are upper-cased ('35A')."""
+
+    def __init__(self, points: dict[str, Point]) -> None:
+        self.points = points
+
+    def __len__(self) -> int:
+        return len(self.points)
+
+    @staticmethod
+    def key(street: str, number: str) -> str:
+        return f"{normalize(street)}|{number.strip().upper()}"
+
+    def get(self, street: str, number: str) -> Point | None:
+        return self.points.get(self.key(street, number))
+
+    def to_json(self) -> str:
+        return json.dumps(
+            {k: [round(v[0], 6), round(v[1], 6)] for k, v in sorted(self.points.items())}
+        )
+
+    @classmethod
+    def from_json(cls, text: str) -> AddressIndex:
+        return cls({k: (v[0], v[1]) for k, v in json.loads(text).items()})
+
+
+def fetch_indexes(
+    client: PoliteClient,
+    bbox: tuple[float, float, float, float],
+    centre: Point | None = None,
+    log: Callable[[str], None] = lambda _: None,
+) -> tuple[StreetIndex, AddressIndex]:
+    """Street and house-number indexes from one pass over the tiles. `centre` must lie inside the
+    municipality (default: the bbox centre)."""
+    tilejson = json.loads(client.get(TILEJSON_URL).content)
+    template = tilejson["tiles"][0]
+    tiles = list(tile_range(bbox))
+    segments: list[tuple[str, float, float]] = []
+    borders: list[Segment] = []
+    numbers: list[tuple[str, str, float, float]] = []
+    for i, (x, y) in enumerate(tiles, start=1):
+        resp = client.get(template.format(z=ZOOM, x=x, y=y))
+        if resp.status == 200 and resp.content:  # noqa: PLR2004
+            segments += segments_from_tile(resp.content, (x, y))
+            borders += borders_from_tile(resp.content, (x, y))
+            numbers += addresses_from_tile(resp.content, (x, y))
+        if i % 10 == 0:
+            log(f"tiles {i}/{len(tiles)}")
+    centre = centre or ((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2)
+    log(f"{len(borders)} border segments; keeping streets in the same municipality as {centre}")
+    inside = same_side(borders, centre)
+    streets = StreetIndex.from_segments(segments, centre, inside=inside)
+    addresses: dict[str, Point] = {}
+    for street, number, lon, lat in numbers:
+        if inside((lon, lat)):
+            addresses.setdefault(AddressIndex.key(street, number), (lon, lat))
+    log(f"{len(streets)} streets, {len(addresses)} house numbers")
+    return streets, AddressIndex(addresses)
+
+
 def fetch_street_index(
     client: PoliteClient,
     bbox: tuple[float, float, float, float],
     centre: Point | None = None,
     log: Callable[[str], None] = lambda _: None,
 ) -> StreetIndex:
-    """`centre` must lie inside the municipality (default: the bbox centre)."""
-    tilejson = json.loads(client.get(TILEJSON_URL).content)
-    template = tilejson["tiles"][0]
-    tiles = list(tile_range(bbox))
-    segments: list[tuple[str, float, float]] = []
-    borders: list[Segment] = []
-    for i, (x, y) in enumerate(tiles, start=1):
-        resp = client.get(template.format(z=ZOOM, x=x, y=y))
-        if resp.status == 200 and resp.content:  # noqa: PLR2004
-            segments += segments_from_tile(resp.content, (x, y))
-            borders += borders_from_tile(resp.content, (x, y))
-        if i % 10 == 0:
-            log(f"tiles {i}/{len(tiles)}")
-    centre = centre or ((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2)
-    log(f"{len(borders)} border segments; keeping streets in the same municipality as {centre}")
-    return StreetIndex.from_segments(segments, centre, inside=same_side(borders, centre))
+    return fetch_indexes(client, bbox, centre, log)[0]

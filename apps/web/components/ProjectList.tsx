@@ -58,6 +58,27 @@ function Indicators({ p }: { p: ProjectListItem }) {
   );
 }
 
+function LocationNote({ p }: { p: ProjectListItem }) {
+  const t = useTranslations("City");
+  if (p.geomPrecision === "street") return t("approximateLocation");
+  if (p.geomPrecision === "address") return t("addressLocation");
+  if (p.geomPrecision !== "parcel") return null;
+  const loc = p.indicators.location;
+  if (loc?.source_url && loc.page) {
+    return (
+      <a
+        href={`${loc.source_url}#page=${loc.page}`}
+        rel="noopener noreferrer"
+        target="_blank"
+        title={t("locationPage", { page: loc.page })}
+      >
+        {t("exactLocation")}
+      </a>
+    );
+  }
+  return t("exactLocation");
+}
+
 /** Every project is reachable as a plain list, including those not on the map (PLAN §8). */
 export function ProjectList({ projects }: { projects: ProjectListItem[] }) {
   const t = useTranslations("City");
@@ -83,11 +104,7 @@ export function ProjectList({ projects }: { projects: ProjectListItem[] }) {
           <span className="meta">
             {p.address ?? t("noAddress")}
             {" · "}
-            {p.hasLocation
-              ? p.geomPrecision === "street"
-                ? t("approximateLocation")
-                : null
-              : t("notOnMap")}
+            {p.hasLocation ? <LocationNote p={p} /> : t("notOnMap")}
           </span>
           <Indicators p={p} />
           {(p.documents.length > 0 || p.sourceUrl) && (

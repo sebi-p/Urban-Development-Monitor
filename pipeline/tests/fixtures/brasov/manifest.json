@@ -1917,6 +1917,138 @@
       "note": "M3.2 extracted text of a project document (private)"
     },
     {
+      "id": "geocode/construire-locuinte-colective-cu-functiu",
+      "source": "geocode",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "status": 200,
+      "content_type": "application/json",
+      "size": 13953,
+      "sha256": "fdf9decaf14d16cd8d7585b9d72d2f92202896e19742ddab37be11aa4d4d6af9",
+      "file": "fdf9decaf14d16cd8d7585b9d72d2f92202896e19742ddab37be11aa4d4d6af9.json",
+      "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
+    },
+    {
+      "id": "geocode/construire-motel-si-imprejmuire-teren-77",
+      "source": "geocode",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "status": 200,
+      "content_type": "application/json",
+      "size": 2283,
+      "sha256": "b5fed93c5fd9992359ce63f4da135d4820d8740304bb1a3b343bc3404e8a9231",
+      "file": "b5fed93c5fd9992359ce63f4da135d4820d8740304bb1a3b343bc3404e8a9231.json",
+      "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
+    },
+    {
+      "id": "geocode/cu-scopul-demolare-constructii-existente",
+      "source": "geocode",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "status": 200,
+      "content_type": "application/json",
+      "size": 2914,
+      "sha256": "6431833c4f8e069b4152b43a55def6537e67282187513b99d6f3d7d2942a62c0",
+      "file": "6431833c4f8e069b4152b43a55def6537e67282187513b99d6f3d7d2942a62c0.json",
+      "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
+    },
+    {
+      "id": "geocode/intocmire-ansamblu-de-locuinte-colective",
+      "source": "geocode",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "status": 200,
+      "content_type": "application/json",
+      "size": 6609,
+      "sha256": "6955ea4492c39b9488137a92c8ff4153b734391c57a6b0d20b1dca63f0fead4a",
+      "file": "6955ea4492c39b9488137a92c8ff4153b734391c57a6b0d20b1dca63f0fead4a.json",
+      "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
+    },
+    {
+      "id": "geocode/intocmire-puz-construire-ansamblu-de-loc",
+      "source": "geocode",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "status": 200,
+      "content_type": "application/json",
+      "size": 24146,
+      "sha256": "e06744fb02a72e8101a09f75984051145897dbde660bb2814ea6fbe8ab0e6d76",
+      "file": "e06744fb02a72e8101a09f75984051145897dbde660bb2814ea6fbe8ab0e6d76.json",
+      "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
+    },
+    {
+      "id": "geocode/modificare-aprobat-cu-hcl-nr-822-2010-0f",
+      "source": "geocode",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "status": 200,
+      "content_type": "application/json",
+      "size": 32143,
+      "sha256": "0e4d97fb3eb7c4f14da07c8ff2e2e7b9004773e4504da01b556ab8e04273c379",
+      "file": "0e4d97fb3eb7c4f14da07c8ff2e2e7b9004773e4504da01b556ab8e04273c379.json",
+      "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
+    },
+    {
+      "id": "geocode/pud-construire-unitate-de-cazare-s-2e-m-",
+      "source": "geocode",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "status": 200,
+      "content_type": "application/json",
+      "size": 2130,
+      "sha256": "0242be77cbe335bdef43530b29bedcac58e37fb43eaaeac6e63a14f7ad803338",
+      "file": "0242be77cbe335bdef43530b29bedcac58e37fb43eaaeac6e63a14f7ad803338.json",
+      "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
+    },
+    {
+      "id": "geocode/puz-construire-biserica-si-infiintare-ci",
+      "source": "geocode",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "status": 200,
+      "content_type": "application/json",
+      "size": 9606,
+      "sha256": "1755a8282aa5dfa7c3c2a8595ecc4270a0e2a111c51602800568eb2f42397065",
+      "file": "1755a8282aa5dfa7c3c2a8595ecc4270a0e2a111c51602800568eb2f42397065.json",
+      "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
+    },
+    {
+      "id": "geocode/puz-construire-locuinte-colective-cu-pas",
+      "source": "geocode",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "status": 200,
+      "content_type": "application/json",
+      "size": 10984,
+      "sha256": "a9a3c48cc42bde6f1d45622514942b8b4af9dbe0327e7b76a8e13059eb419bb0",
+      "file": "a9a3c48cc42bde6f1d45622514942b8b4af9dbe0327e7b76a8e13059eb419bb0.json",
+      "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
+    },
+    {
+      "id": "geocode/puz-construire-locuinte-colective-munici",
+      "source": "geocode",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "status": 200,
+      "content_type": "application/json",
+      "size": 6723,
+      "sha256": "a5c9c51a359afddefd8629b981168e7243518dc7d76a234787e15b39aa1b9e99",
+      "file": "a5c9c51a359afddefd8629b981168e7243518dc7d76a234787e15b39aa1b9e99.json",
+      "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
+    },
+    {
+      "id": "geocode/puz-prestari-servicii-mica-industrie-bir",
+      "source": "geocode",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "status": 200,
+      "content_type": "application/json",
+      "size": 25661,
+      "sha256": "44dd06b4fb7ec7174ba51eb04b779eb78f810366c06f0a510ca47f63bf10edcb",
+      "file": "44dd06b4fb7ec7174ba51eb04b779eb78f810366c06f0a510ca47f63bf10edcb.json",
+      "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
+    },
+    {
+      "id": "geocode/puz-zona-de-locuinte-individuale-cu-modi",
+      "source": "geocode",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "status": 200,
+      "content_type": "application/json",
+      "size": 10317,
+      "sha256": "d809854113a8c3e856428bec147b07e0a7b45f7b1df8eeee73067647e723edd6",
+      "file": "d809854113a8c3e856428bec147b07e0a7b45f7b1df8eeee73067647e723edd6.json",
+      "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
+    },
+    {
       "id": "notices/environment-screening-decision",
       "source": "notices",
       "fetched_at": "2026-11-20T14:44:30+00:00",

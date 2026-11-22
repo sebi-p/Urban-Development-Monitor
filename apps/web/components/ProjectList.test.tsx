@@ -136,4 +136,32 @@ describe("messages", () => {
     const { container } = renderRo(<ProjectList projects={[item(4, "approved")]} />);
     expect(container.querySelector(".indicators")).toBeNull();
   });
+
+  it("links an exact location to the plan sheet it comes from", () => {
+    const sheet = "https://example.test/plansa.pdf";
+    renderRo(
+      <ProjectList
+        projects={[
+          item(5, "approved", {
+            geomPrecision: "parcel",
+            indicators: {
+              location: {
+                value: "parcel",
+                method: "stereo70 (12 points)",
+                source_document_id: "d",
+                source_url: sheet,
+                page: 1,
+                confidence: "high",
+              },
+            },
+          }),
+        ]}
+      />,
+    );
+    expect(screen.getByRole("link", { name: /locație exactă/ })).toHaveAttribute(
+      "href",
+      `${sheet}#page=1`,
+    );
+    expect(screen.queryByText(/locație aproximativă/)).not.toBeInTheDocument();
+  });
 });
