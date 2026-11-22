@@ -984,12 +984,12 @@
     {
       "id": "fields-llm/cu-scopul-construire-locuinte-colective--claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:10+00:00",
+      "fetched_at": "2026-11-22T08:58:48+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 803,
-      "sha256": "27da7f9ad3b3086970afcc1f45f7d5b4e854a0fcccab34fbb53fa9c34da41e40",
-      "file": "27da7f9ad3b3086970afcc1f45f7d5b4e854a0fcccab34fbb53fa9c34da41e40.json",
+      "size": 814,
+      "sha256": "956149d62bc0b202eb4d95d1136a0b868355a08b3a432c0a03ea2eaf5c885125",
+      "file": "956149d62bc0b202eb4d95d1136a0b868355a08b3a432c0a03ea2eaf5c885125.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1006,12 +1006,12 @@
     {
       "id": "fields-llm/intocmire-puz-calea-feldioarei-nr-35a-e2-claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:13+00:00",
+      "fetched_at": "2026-11-22T08:58:52+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 1028,
-      "sha256": "9f1d8ba2a6aca7090c3aaf21bbf0ccb3bec8f1906bd99a4b503ce9122efafddc",
-      "file": "9f1d8ba2a6aca7090c3aaf21bbf0ccb3bec8f1906bd99a4b503ce9122efafddc.json",
+      "size": 1539,
+      "sha256": "85dcf07777d2cee7a358768acd29afa97db9f0da91a84d27cd7e1fbfa3e957fe",
+      "file": "85dcf07777d2cee7a358768acd29afa97db9f0da91a84d27cd7e1fbfa3e957fe.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1028,12 +1028,12 @@
     {
       "id": "fields-llm/intocmire-puz-construire-ansamblu-de-loc-claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:15+00:00",
+      "fetched_at": "2026-11-22T08:58:56+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 674,
-      "sha256": "fa5a0804705ce39ae647b8bd824485afc44c897d41660c8e585fc184d18f6c48",
-      "file": "fa5a0804705ce39ae647b8bd824485afc44c897d41660c8e585fc184d18f6c48.json",
+      "size": 1102,
+      "sha256": "8b2fc3c3f24adc60b1a2e5f34b658a4b17c5b22c13bb96246ee4bcc3cdd33440",
+      "file": "8b2fc3c3f24adc60b1a2e5f34b658a4b17c5b22c13bb96246ee4bcc3cdd33440.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1050,12 +1050,12 @@
     {
       "id": "fields-llm/intocmire-puz-construire-hale-depozitare-claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:19+00:00",
+      "fetched_at": "2026-11-22T08:59:00+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 856,
-      "sha256": "7a556b86eb11e18933e672cd71af556bf2fdbcf8dc26947b32f21875d437f11d",
-      "file": "7a556b86eb11e18933e672cd71af556bf2fdbcf8dc26947b32f21875d437f11d.json",
+      "size": 1330,
+      "sha256": "ed29c4fdb928131f7104b695f5328ce7ac395155c7c1fb559661445f261a7e9c",
+      "file": "ed29c4fdb928131f7104b695f5328ce7ac395155c7c1fb559661445f261a7e9c.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1072,12 +1072,12 @@
     {
       "id": "fields-llm/modificare-puz-aprobat-cu-hcl-198-2015-s-claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:22+00:00",
+      "fetched_at": "2026-11-22T08:59:04+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 1067,
-      "sha256": "96f7fb389a19fab5beb9b8c6ebe2df9fa9ec31019a5fcb760e8fb4a7f35fc0b3",
-      "file": "96f7fb389a19fab5beb9b8c6ebe2df9fa9ec31019a5fcb760e8fb4a7f35fc0b3.json",
+      "size": 1400,
+      "sha256": "457b18748726ec3cf65a25ba8e5efad3028279333635c1588853254512b3fc7b",
+      "file": "457b18748726ec3cf65a25ba8e5efad3028279333635c1588853254512b3fc7b.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1094,12 +1094,12 @@
     {
       "id": "fields-llm/puz-actualizare-puz-aprobat-cu-hcl-339-2-claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:25+00:00",
+      "fetched_at": "2026-11-22T08:59:08+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 1022,
-      "sha256": "54a3c6e6483590c97e224d239df17f7f15ea692afda97f803202296dd3f33f44",
-      "file": "54a3c6e6483590c97e224d239df17f7f15ea692afda97f803202296dd3f33f44.json",
+      "size": 1211,
+      "sha256": "ad9f01979514187c2fa9ba11c3201fdf3aa3930038ff2ae67128feca4a3601f2",
+      "file": "ad9f01979514187c2fa9ba11c3201fdf3aa3930038ff2ae67128feca4a3601f2.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1116,12 +1116,12 @@
     {
       "id": "fields-llm/puz-construire-locuinte-colective-cu-pas-claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:27+00:00",
+      "fetched_at": "2026-11-22T08:59:11+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 606,
-      "sha256": "5943fc2a522c513cfe7e1c6dce6c2bc5ee0f04f5715ba71c38a83446fdd90197",
-      "file": "5943fc2a522c513cfe7e1c6dce6c2bc5ee0f04f5715ba71c38a83446fdd90197.json",
+      "size": 1053,
+      "sha256": "7c3c8bcedba3235b708bd16a471f6ade1327a4145382624a6fcf7c449c4fe49a",
+      "file": "7c3c8bcedba3235b708bd16a471f6ade1327a4145382624a6fcf7c449c4fe49a.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1138,12 +1138,12 @@
     {
       "id": "fields-llm/puz-construire-locuinte-colective-munici-claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:30+00:00",
+      "fetched_at": "2026-11-22T08:59:15+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 581,
-      "sha256": "c6eaa4a2f9fa1c2fed81c34f409cad043d899de11696c703d8b9c76016e4e7d9",
-      "file": "c6eaa4a2f9fa1c2fed81c34f409cad043d899de11696c703d8b9c76016e4e7d9.json",
+      "size": 1053,
+      "sha256": "3c8d98d44c566f5e0fd6e5e12d48d4a5953507ea892e0d63532515dee6460e53",
+      "file": "3c8d98d44c566f5e0fd6e5e12d48d4a5953507ea892e0d63532515dee6460e53.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1160,12 +1160,12 @@
     {
       "id": "fields-llm/puz-dezvoltare-zona-servicii-comert-depo-claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:34+00:00",
+      "fetched_at": "2026-11-22T08:59:20+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 1153,
-      "sha256": "4a1299496673b62247223263824539ed407bb808cadf14c0de2d94cfffbab70a",
-      "file": "4a1299496673b62247223263824539ed407bb808cadf14c0de2d94cfffbab70a.json",
+      "size": 1479,
+      "sha256": "869bfcf93c7996b8048f59917d3a1e7a7ef509e685ef67eca8bb609474a544c4",
+      "file": "869bfcf93c7996b8048f59917d3a1e7a7ef509e685ef67eca8bb609474a544c4.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1182,12 +1182,12 @@
     {
       "id": "fields-llm/puz-investitie-functiuni-mixte-locuinte--claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:36+00:00",
+      "fetched_at": "2026-11-22T08:59:23+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 801,
-      "sha256": "0816ab15c5a8b82d110870a0f3f2da735a135073725d551aaec7b053a8d7a5fc",
-      "file": "0816ab15c5a8b82d110870a0f3f2da735a135073725d551aaec7b053a8d7a5fc.json",
+      "size": 1325,
+      "sha256": "dc7c70493f23ac5407355d67ce8c451fd161b5f54c3415364e16715831ad4414",
+      "file": "dc7c70493f23ac5407355d67ce8c451fd161b5f54c3415364e16715831ad4414.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1204,12 +1204,12 @@
     {
       "id": "fields-llm/puz-lotizare-locuinte-individuale-si-mic-claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:39+00:00",
+      "fetched_at": "2026-11-22T08:59:27+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 997,
-      "sha256": "05cd95a3f2b766355df0f6ea7a09218650d13e2caab637fa8800940d306cda9f",
-      "file": "05cd95a3f2b766355df0f6ea7a09218650d13e2caab637fa8800940d306cda9f.json",
+      "size": 1335,
+      "sha256": "879fe8bc6ea288dab7e60ddaa7fac8062c9cafb19dd595403fc116bae142c6e1",
+      "file": "879fe8bc6ea288dab7e60ddaa7fac8062c9cafb19dd595403fc116bae142c6e1.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1226,12 +1226,12 @@
     {
       "id": "fields-llm/puz-str-jepilor-nr-14a-421ec2-claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:42+00:00",
+      "fetched_at": "2026-11-22T08:59:31+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 1102,
-      "sha256": "e2cbc5994d83122b486309fca3907420e979ea6053022cbd27c322a01c0ba8e9",
-      "file": "e2cbc5994d83122b486309fca3907420e979ea6053022cbd27c322a01c0ba8e9.json",
+      "size": 1252,
+      "sha256": "3285d2a50eb915a25956ca19460c44ea5acb4f7e8c237ebf6011c2329fcb85bf",
+      "file": "3285d2a50eb915a25956ca19460c44ea5acb4f7e8c237ebf6011c2329fcb85bf.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1248,12 +1248,12 @@
     {
       "id": "fields-llm/puz-zona-de-locuinte-individuale-cu-modi-claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:45+00:00",
+      "fetched_at": "2026-11-22T08:59:35+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 797,
-      "sha256": "20340176179c90daa3a25eade95970c126aa4d6616d2959c3c8cd1263fe6bc43",
-      "file": "20340176179c90daa3a25eade95970c126aa4d6616d2959c3c8cd1263fe6bc43.json",
+      "size": 1216,
+      "sha256": "53009d15d0eb6e392187dd0c6618b60e00f896ebc9354b4f9026e03927cdedec",
+      "file": "53009d15d0eb6e392187dd0c6618b60e00f896ebc9354b4f9026e03927cdedec.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {
@@ -1270,12 +1270,12 @@
     {
       "id": "fields-llm/puz-zona-de-locuinte-mixte-si-colective--claude-sonnet-5-5",
       "source": "fields-llm",
-      "fetched_at": "2026-11-21T09:58:48+00:00",
+      "fetched_at": "2026-11-22T08:59:38+00:00",
       "status": 200,
       "content_type": "application/json",
-      "size": 745,
-      "sha256": "28482968dbbce8d9dfb5ad219e4a481586c1901764fcf5cc96d07d6bade6bcb4",
-      "file": "28482968dbbce8d9dfb5ad219e4a481586c1901764fcf5cc96d07d6bade6bcb4.json",
+      "size": 1163,
+      "sha256": "69a7351622d8065bc18b2123a51febd450d08c2da2e2e827473490ec9fdef524",
+      "file": "69a7351622d8065bc18b2123a51febd450d08c2da2e2e827473490ec9fdef524.json",
       "note": "M3.2 recorded model answer for the golden set (private: quotes name people)"
     },
     {

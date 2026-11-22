@@ -58,6 +58,24 @@ def normalize(name: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
+# A house number directly after the street name ("str. Lungă nr. 5", "Calea X, nr. 35A"); other
+# numbers in a text ("CU nr 2456/2022", "HCL nr. 198") are not addresses.
+_NUMBER_AFTER_STREET = re.compile(r"\s*,?\s*(?:nr\.?|numarul)\s*(\d+[a-z]?)\b")
+
+
+def house_number(text: str, street_name: str) -> str | None:
+    """'35A' from '... Calea Feldioarei nr. 35a ...' given the street 'Calea Feldioarei'."""
+    folded = fold(text)
+    words = normalize(street_name).split()
+    if not words:
+        return None
+    for hit in re.finditer(rf"\b{re.escape(words[-1])}\b", folded):
+        m = _NUMBER_AFTER_STREET.match(folded, hit.end())
+        if m:
+            return m.group(1).upper()
+    return None
+
+
 @dataclass(frozen=True)
 class StreetPoint:
     name: str

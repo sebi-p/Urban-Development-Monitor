@@ -188,7 +188,8 @@ class ClaudeFieldExtractor:
         self.model = model
         self.prompt_version = fields.PROMPT_VERSION
         self._schema = fields.SCHEMA
-        self._system = (resources.files("mdu.prompts") / "fields" / "v1.md").read_text("utf-8")
+        name = fields.PROMPT_VERSION.removeprefix("fields-") + ".md"
+        self._system = (resources.files("mdu.prompts") / "fields" / name).read_text("utf-8")
 
     def __call__(self, pages_text: str) -> JsonAnswer:
         return call_json(

@@ -1,8 +1,10 @@
 import type { ProjectIndicators } from "@mdu/shared";
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   date,
   index,
+  numeric,
   jsonb,
   pgTable,
   primaryKey,
@@ -49,6 +51,10 @@ export const project = pgTable(
     summaryEn: text("summary_en"),
     legalRegime: legalRegime("legal_regime"),
     reviewState: reviewState("review_state").notNull().default("pending_review"),
+    /** Set when the linker found this is the same plan as another project (M3.3): the project
+     * stays (its source keeps updating it) but is hidden, and its events and documents show on
+     * the project it joined. */
+    mergedIntoId: uuid("merged_into_id").references((): AnyPgColumn => project.id),
     search: tsvector("search").generatedAlwaysAs(
       sql`setweight(to_tsvector('romanian', unaccent_immutable(coalesce(title, ''))), 'A') ||
           setweight(to_tsvector('romanian', unaccent_immutable(coalesce(address_text, ''))), 'B') ||
@@ -64,6 +70,7 @@ export const project = pgTable(
     index("project_title_trgm_idx").using("gin", t.title.op("gin_trgm_ops")),
     index("project_address_trgm_idx").using("gin", t.addressText.op("gin_trgm_ops")),
     index("project_status_idx").on(t.jurisdictionId, t.status),
+    index("project_merged_into_idx").on(t.mergedIntoId),
   ],
 );
 
@@ -147,5 +154,37 @@ export const consultation = pgTable(
   (t) => [
     index("consultation_closes_idx").on(t.jurisdictionId, t.closesOn),
     index("consultation_project_idx").on(t.projectId),
+  ],
+);
+
+/**
+ * Linker review queue (M3.3, PLAN §7 stage 6): a possible match between a subject (a project, or
+ * a group of documents not yet in any project) and a candidate project, with the score and the
+ * signals behind it. Scores of 0.85 and above are applied automatically; 0.6–0.85 wait here for a
+ * reviewer (admin, M3.5).
+ */
+export const linkCandidate = pgTable(
+  "link_candidate",
+  {
+    id: id(),
+    jurisdictionId: jurisdictionId(),
+    /** "project:<uuid>" or "group:<adapter>:<hash>" (a hub folder, hashed: never its name). */
+    subject: text("subject").notNull(),
+    subjectProjectId: uuid("subject_project_id").references(() => project.id, {
+      onDelete: "cascade",
+    }),
+    candidateProjectId: uuid("candidate_project_id")
+      .notNull()
+      .references(() => project.id, { onDelete: "cascade" }),
+    score: numeric("score", { precision: 4, scale: 3 }).notNull(),
+    signals: jsonb("signals").notNull().default({}),
+    /** pending_review until a reviewer decides; auto_published when applied automatically. */
+    state: reviewState("state").notNull().default("pending_review"),
+    createdAt: createdAt(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+  },
+  (t) => [
+    unique("link_candidate_pair").on(t.jurisdictionId, t.subject, t.candidateProjectId),
+    index("link_candidate_state_idx").on(t.jurisdictionId, t.state),
   ],
 );

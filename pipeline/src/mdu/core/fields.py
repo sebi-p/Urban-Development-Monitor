@@ -16,9 +16,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from mdu.core.streets import fold
-from mdu.ingest import looks_like_organisation
+from mdu.ingest import looks_like_organisation, looks_personal
 
-PROMPT_VERSION = "fields-v1"
+PROMPT_VERSION = "fields-v2"
 MAX_CHARS = 12_000
 MAX_PAGE_CHARS = 3_500
 
@@ -42,7 +42,7 @@ NUMBER_FIELDS = (
     "parking_spaces",
     "green_space_percent",
 )
-TEXT_FIELDS = ("initiator", "designer", "height_regime")
+TEXT_FIELDS = ("title", "address", "initiator", "designer", "height_regime")
 FIELDS = TEXT_FIELDS + NUMBER_FIELDS
 
 
@@ -228,6 +228,9 @@ def check(answer: dict[str, Any], selection: Selection) -> Checked:
             isinstance(value, int | float) and value > 0 and _number_in(float(value), quote)
         ):
             out.dropped[name] = "number not in the quote"
+            continue
+        if name == "title" and looks_personal(str(value)):
+            out.dropped[name] = "title names a person"
             continue
         if name in ("initiator", "designer"):
             organisations = organisations_in(str(value))

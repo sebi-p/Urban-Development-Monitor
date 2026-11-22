@@ -15,6 +15,7 @@ import hashlib
 import json
 from collections import Counter
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 import psycopg
@@ -81,11 +82,70 @@ def _indicators(checked: fields.Checked, urls: dict[str, str]) -> dict[str, Any]
             "confidence": "medium",  # extracted automatically; the quote was found on the page
         }
         for v in checked.kept
-        if v.field not in ("initiator", "designer")
+        if v.field not in ("initiator", "designer", "title", "address")
     }
 
 
-def extract_fields(  # noqa: PLR0913, PLR0915
+@dataclass
+class Budget:
+    monthly_usd: float
+    reached: bool = False
+
+
+def fields_answer(  # noqa: PLR0913
+    cur: psycopg.Cursor[Any],
+    jid: int,
+    *,
+    extractor: Any,
+    selection: fields.Selection,
+    budget: Budget,
+    counts: Counter[str],
+    log: Callable[[str], None],
+) -> dict[str, Any] | None:
+    """The extractor's answer for these pages: from the `extraction_run` cache, or a new call
+    within the monthly budget (logged there). None when the call failed or the budget is spent;
+    the caller retries on a later run."""
+    from mdu.core.llm import LlmError  # noqa: PLC0415
+
+    text = selection.prompt_text()
+    input_hash = hashlib.sha256(
+        f"{extractor.prompt_version}\n{extractor.model}\n{text}".encode()
+    ).hexdigest()
+    cur.execute(
+        """select output from extraction_run where task = 'extract_fields'
+             and input_hash = %s and prompt_version = %s and model = %s""",
+        (input_hash, extractor.prompt_version, extractor.model),
+    )
+    cached = cur.fetchone()
+    if cached:
+        counts["cached"] += 1
+        return dict(cached[0])
+    if budget.reached or _month_spend(cur, jid) >= budget.monthly_usd:
+        if not budget.reached:
+            log(f"fields: LLM budget of ${budget.monthly_usd:.2f} this month reached")
+        budget.reached = True
+        counts["deferred: LLM budget"] += 1
+        return None
+    try:
+        reply = extractor(text)
+    except LlmError as exc:
+        log(f"fields: LLM failed ({exc})")
+        counts["deferred: LLM error"] += 1
+        return None
+    cur.execute(
+        """insert into extraction_run (jurisdiction_id, raw_document_id, task, model,
+               prompt_version, input_hash, output, input_tokens, output_tokens, cost_usd)
+           values (%s, %s, 'extract_fields', %s, %s, %s, %s, %s, %s, %s)
+           on conflict (input_hash, prompt_version, model) do nothing""",
+        (jid, selection.documents[0].raw_document_id, extractor.model, extractor.prompt_version,
+         input_hash, json.dumps(reply.data, ensure_ascii=False), reply.input_tokens,
+         reply.output_tokens, reply.cost_usd),
+    )  # fmt: skip
+    counts["llm_calls"] += 1
+    return dict(reply.data)
+
+
+def extract_fields(  # noqa: PLR0913
     conn: psycopg.Connection[Any],
     store: TextStore,
     *,
@@ -95,7 +155,6 @@ def extract_fields(  # noqa: PLR0913, PLR0915
     limit: int = 200,
     log: Callable[[str], None] = lambda _: None,
 ) -> StageResult:
-    from mdu.core.llm import LlmError  # noqa: PLC0415
 
     result = StageResult()
     result.counts.update(link_documents(conn, city))
@@ -133,44 +192,14 @@ def extract_fields(  # noqa: PLR0913, PLR0915
             if not selection.pages or extractor is None:
                 result.counts["no pages to read" if extractor else "fields: LLM off"] += 1
                 continue
-            text = selection.prompt_text()
-            input_hash = hashlib.sha256(
-                f"{extractor.prompt_version}\n{extractor.model}\n{text}".encode()
-            ).hexdigest()
-            cur.execute(
-                """select output from extraction_run where task = 'extract_fields'
-                     and input_hash = %s and prompt_version = %s and model = %s""",
-                (input_hash, extractor.prompt_version, extractor.model),
-            )
-            cached = cur.fetchone()
-            if cached:
-                answer = cached[0]
-                result.counts["cached"] += 1
-            elif budget_reached or _month_spend(cur, jid) >= monthly_usd:
-                if not budget_reached:
-                    log(f"fields: LLM budget of ${monthly_usd:.2f} this month reached")
-                budget_reached = True
-                result.counts["deferred: LLM budget"] += 1
+            budget = Budget(monthly_usd, reached=budget_reached)
+            answer = fields_answer(
+                cur, jid, extractor=extractor, selection=selection, budget=budget,
+                counts=result.counts, log=log,
+            )  # fmt: skip
+            budget_reached = budget.reached
+            if answer is None:
                 continue
-            else:
-                try:
-                    reply = extractor(text)
-                except LlmError as exc:
-                    log(f"fields: LLM failed for project {project_id[:8]} ({exc})")
-                    result.counts["deferred: LLM error"] += 1
-                    continue
-                answer = reply.data
-                cur.execute(
-                    """insert into extraction_run (jurisdiction_id, raw_document_id, task,
-                           model, prompt_version, input_hash, output, input_tokens,
-                           output_tokens, cost_usd)
-                       values (%s, %s, 'extract_fields', %s, %s, %s, %s, %s, %s, %s)
-                       on conflict (input_hash, prompt_version, model) do nothing""",
-                    (jid, selection.documents[0].raw_document_id, extractor.model,
-                     extractor.prompt_version, input_hash, json.dumps(answer, ensure_ascii=False),
-                     reply.input_tokens, reply.output_tokens, reply.cost_usd),
-                )  # fmt: skip
-                result.counts["llm_calls"] += 1
             checked = fields.check(answer, selection)
             kept = {v.field: v.value for v in checked.kept}
             cur.execute(
