@@ -41,7 +41,7 @@ CI (`.github/workflows/ci.yml`) runs every check above. Run them before you comm
 - UI strings go only through `next-intl` message files (`ro` default, `en`).
 - Write an ADR in `docs/adr/` for any new dependency or service.
 - Ask for a plan before writing code on anything that touches the schema.
-- The web app is read-only against Postgres; only the pipeline writes.
+- The public site is read-only against Postgres. Only the pipeline writes, plus `/admin` server actions (login + allow-list, each write in `packages/db/src/admin.ts` with an `audit_log` row; ADR 0012).
 - Pipeline stages must be idempotent: re-running a stage is a no-op.
 - Cache every LLM call in `extraction_run` by `(input_hash, prompt_version, model)`.
 - Never scrape `extranet.brasovcity.ro` (its robots.txt disallows it).

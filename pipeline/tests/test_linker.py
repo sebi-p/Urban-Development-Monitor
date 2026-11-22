@@ -271,3 +271,12 @@ def test_a_rejected_merge_is_not_made_again(pg: psycopg.Connection[Any]) -> None
     pg.execute("update project set merged_into_id = null")  # a reviewer split them
     linker.run(pg, store, city="testcity", streets=STREETS, extractor=FakeExtractor())
     assert counts(pg)["merged"] == (0,)
+
+
+def test_a_rejected_folder_match_falls_back_to_a_new_project() -> None:
+    folder = p("group:x:1", street="lunga", number="5", initiator="SC ALFA SRL")
+    project = p("project:a", project_id="a", street="lunga", number="5", initiator="SC ALFA SRL")
+    [d] = decide([folder, project])
+    assert d.action == "attach"
+    [d] = decide([folder, project], rejected=frozenset({("group:x:1", "project:a")}))
+    assert (d.action, d.target) == ("new", None)

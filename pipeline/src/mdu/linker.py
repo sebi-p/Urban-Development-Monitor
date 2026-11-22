@@ -147,14 +147,21 @@ class Decision:
     action: str  # "merge", "attach", "review", "new", "none"
 
 
-def decide(profiles: list[Profile]) -> list[Decision]:
+def decide(
+    profiles: list[Profile], rejected: frozenset[tuple[str, str]] = frozenset()
+) -> list[Decision]:
     """Pure: for each subject, its best match among the projects. Projects are compared pairwise
-    once; the earlier-stage project of a pair is the subject."""
+    once; the earlier-stage project of a pair is the subject. Pairs a reviewer rejected
+    (subject, candidate subject) are left out, so a folder can still join another project or
+    become its own."""
     projects = [p for p in profiles if p.project_id]
     groups = [p for p in profiles if not p.project_id]
     decisions: list[Decision] = []
     for g in groups:
-        scored = sorted(((score(g, p), p) for p in projects), key=lambda x: -x[0][0])
+        scored = sorted(
+            ((score(g, p), p) for p in projects if (g.subject, p.subject) not in rejected),
+            key=lambda x: -x[0][0],
+        )
         if scored and scored[0][0][0] >= REVIEW:
             (s, sig), target = scored[0]
             decisions.append(Decision(g, target, s, sig, "attach" if s >= AUTO else "review"))
@@ -163,6 +170,8 @@ def decide(profiles: list[Profile]) -> list[Decision]:
     pairs = []
     for i, a in enumerate(projects):
         for b in projects[i + 1 :]:
+            if (a.subject, b.subject) in rejected or (b.subject, a.subject) in rejected:
+                continue
             s, sig = score(a, b)
             if s >= REVIEW:
                 early, late = sorted(
@@ -376,7 +385,7 @@ def _new_project(cur: psycopg.Cursor[Any], jid: int, g: Profile) -> str:
     return pid
 
 
-def run(  # noqa: PLR0912, PLR0913, PLR0915
+def run(  # noqa: PLR0913
     conn: psycopg.Connection[Any],
     store: TextStore,
     *,
@@ -407,8 +416,16 @@ def run(  # noqa: PLR0912, PLR0913, PLR0915
             )  # fmt: skip
             if profile:
                 profiles.append(profile)
+    rejected = frozenset(
+        (subject, f"project:{candidate}")
+        for subject, candidate in conn.execute(
+            """select subject, candidate_project_id::text from link_candidate
+               where jurisdiction_id = %s and state = 'rejected'""",
+            (jid,),
+        ).fetchall()
+    )
     merged: dict[str, str] = {}
-    for decision in decide(profiles):
+    for decision in decide(profiles, rejected):
         with conn.transaction(), conn.cursor() as cur:
             d = decision
             subject, target = d.subject, d.target
@@ -424,14 +441,6 @@ def run(  # noqa: PLR0912, PLR0913, PLR0915
                 )
                 result.counts["groups attached"] += 1
             elif d.action == "merge" and target and subject.project_id:
-                cur.execute(
-                    """select state from link_candidate where jurisdiction_id = %s
-                         and subject = %s and candidate_project_id = %s""",
-                    (jid, subject.subject, target.project_id),
-                )
-                prior = cur.fetchone()
-                if prior and prior[0] == "rejected":  # a reviewer said no
-                    continue
                 _candidate(cur, jid, d, "auto_published")
                 cur.execute(
                     """update project set merged_into_id = %s

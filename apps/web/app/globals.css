@@ -67,3 +67,33 @@ body {
   margin: 0.25rem 0 0;
   color: #4b5563;
 }
+
+/* Admin (M3.5) */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+.admin-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.875rem;
+}
+.admin-table td,
+.admin-table th {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+.admin-table .muted {
+  color: #9ca3af;
+}
+.admin form.inline {
+  display: inline;
+}
+.editor-map {
+  height: 420px;
+  border-radius: 8px;
+}
