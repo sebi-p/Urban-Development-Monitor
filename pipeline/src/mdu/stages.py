@@ -356,7 +356,7 @@ def classify(  # noqa: PLR0913, PLR0915
     *,
     city: str,
     llm: Any = None,  # mdu.core.llm.Classifier
-    monthly_usd: float = 2.0,
+    monthly_usd: float = 5.0,
     limit: int = 1000,
     log: Callable[[str], None] = lambda _: None,
 ) -> StageResult:

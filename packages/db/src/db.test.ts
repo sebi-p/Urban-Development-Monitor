@@ -10,7 +10,14 @@ import { createDb } from "./client.ts";
 import { loadEnv } from "./env.ts";
 import { runMigrations } from "./migrate.ts";
 import * as schema from "./schema/index.ts";
-import { getJurisdiction, listJurisdictions, listProjects, projectsGeoJSON } from "./queries.ts";
+import {
+  getJurisdiction,
+  getProject,
+  listJurisdictions,
+  listProjects,
+  NEARBY_METRES,
+  projectsGeoJSON,
+} from "./queries.ts";
 import {
   DEMO_PROJECTS_PER_JURISDICTION,
   loadJurisdictionFiles,
@@ -259,7 +266,7 @@ describe.skipIf(!adminUrl)("database (PostGIS)", () => {
       expect(item.eventDate).toBe("2025-05-01");
       expect(item.sourceUrl).toBe("https://x.test/l");
       expect(item.documents).toEqual([
-        { label: "A", url: "https://x.test/a.pdf", size_bytes: 1, role: null },
+        { label: "A", url: "https://x.test/a.pdf", size_bytes: 1, role: null, date: "2025-05-01" },
       ]);
       expect(list.length).toBe(DEMO_PROJECTS_PER_JURISDICTION + 1);
       // A later event without files (a council agenda) becomes the latest event, but the
@@ -352,6 +359,50 @@ describe.skipIf(!adminUrl)("database (PostGIS)", () => {
       const fc = (await projectsGeoJSON(handle.db, slug))!;
       expect(fc.features.map((f) => f.properties.slug)).not.toContain("real-no-location");
       expect(await listProjects(handle.db, "no-such-city")).toBeNull();
+    });
+
+    it("gives a project page its timeline, consultation, nearby projects and redirects (M4.2)", async () => {
+      const slug = loadJurisdictionFiles()[0]!.slug;
+      const demo = await getProject(handle.db, slug, "demo-1");
+      if (!demo.found) throw new Error("demo-1 not found");
+      const p = demo.project;
+      expect(p.events.map((e) => e.type)).toEqual(["consultation_opened", "notice_published"]);
+      expect(p.events.map((e) => e.date)).toEqual([...p.events.map((e) => e.date)].sort());
+      const [c] = p.consultations;
+      expect(c).toMatchObject({ submitEmail: "registratura@example.org" });
+      expect(new Date(c!.closesOn!) > new Date()).toBe(true);
+      expect(c!.publicMeetingAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expect(p.nearby[0]).toMatchObject({ slug: "demo-2" });
+      expect(p.nearby[0]!.distanceM).toBeLessThan(NEARBY_METRES);
+      expect(p.summaryRo).toMatch(/fictiv/);
+      expect(p.indicators.summary?.page).toBe(1);
+      expect([p.lon, p.lat].every((x) => typeof x === "number")).toBe(true);
+      expect(Date.parse(p.lastCheckedAt)).not.toBeNaN();
+
+      // The project the notice was merged into shows the notice's events and files; the
+      // notice's own slug redirects there.
+      expect(await getProject(handle.db, slug, "merged-notice")).toEqual({
+        found: false,
+        redirectTo: "real-no-location",
+      });
+      const root = await getProject(handle.db, slug, "real-no-location");
+      if (!root.found) throw new Error("real-no-location not found");
+      expect(root.project.events.map((e) => e.date)).toEqual([
+        "2025-05-01",
+        "2025-06-01",
+        "2025-07-01",
+      ]);
+      expect(root.project.documents).toHaveLength(3);
+      expect(root.project.lon).toBeNull();
+      expect(root.project.nearby).toEqual([]);
+
+      expect(await getProject(handle.db, slug, "no-such-slug")).toEqual({
+        found: false,
+        redirectTo: null,
+      });
+      await sql`update project set review_state = 'pending_review' where slug = 'demo-3'`;
+      expect((await getProject(handle.db, slug, "demo-3")).found).toBe(false);
+      await sql`update project set review_state = 'auto_published' where slug = 'demo-3'`;
     });
 
     it("removes only demo projects and keeps jurisdictions", async () => {

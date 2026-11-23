@@ -1,12 +1,13 @@
 import type { ProjectListItem } from "@mdu/db";
 import type { ProjectIndicators } from "@mdu/shared";
 import { useFormatter, useTranslations } from "next-intl";
+import Link from "next/link";
 import { Building2, ExternalLink, FileText, MapPin } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 
 /** Display order of extracted indicators (PLAN §6). */
-const INDICATOR_ORDER = [
+export const INDICATOR_ORDER = [
   "height_regime",
   "max_height_m",
   "pot_percent",
@@ -61,7 +62,7 @@ function Indicators({ p }: { p: ProjectListItem }) {
   );
 }
 
-function LocationNote({ p }: { p: ProjectListItem }) {
+export function LocationNote({ p }: { p: ProjectListItem }) {
   const t = useTranslations("City");
   if (p.geomPrecision === "street") return t("approximateLocation");
   if (p.geomPrecision === "address") return t("addressLocation");
@@ -84,7 +85,7 @@ function LocationNote({ p }: { p: ProjectListItem }) {
 }
 
 /** Every project is reachable as a plain list, including those not on the map (PLAN §8). */
-export function ProjectList({ projects }: { projects: ProjectListItem[] }) {
+export function ProjectList({ city, projects }: { city: string; projects: ProjectListItem[] }) {
   const t = useTranslations("City");
   const kind = useTranslations("Kind");
   const docType = useTranslations("DocType");
@@ -113,7 +114,11 @@ export function ProjectList({ projects }: { projects: ProjectListItem[] }) {
                 : ""}
             </span>
           </div>
-          <h3 className="mt-2 text-base leading-snug font-semibold">{p.title}</h3>
+          <h3 className="mt-2 text-base leading-snug font-semibold">
+            <Link href={`/${city}/proiecte/${p.slug}`} className="text-slate-900">
+              {p.title}
+            </Link>
+          </h3>
           <p className="mt-1 flex items-start gap-1.5 text-sm text-slate-600">
             <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-slate-400" />
             <span>

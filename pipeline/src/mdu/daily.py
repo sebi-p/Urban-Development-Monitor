@@ -1,7 +1,8 @@
 """`mdu daily`: the scheduled run (PLAN §7 schedules; workflow `ingest-daily.yml`).
 
 For each adapter in order: write listing projects, add listing events, queue documents. Then
-fetch everything pending for the city, extract text, classify it and extract project fields. A
+fetch everything pending for the city, extract text, classify it, extract project fields, link,
+geocode, read the consultation notices and write the summaries. A
 failing adapter is logged as a failed `pipeline_run` and the others still run; the command then
 exits non-zero so the workflow shows red. Every step is idempotent, so a second run the same
 day does nothing but re-read the listings.
@@ -62,7 +63,9 @@ def run(  # noqa: PLR0913, PLR0915
     field_extractor: Any = None,
     addresses: Any = None,  # mdu.core.streets.AddressIndex
     bbox: tuple[float, float, float, float] | None = None,
-    llm_monthly_usd: float = 2.0,
+    consult_reader: Any = None,
+    summary_writer: Any = None,
+    llm_monthly_usd: float = 5.0,
     log: Callable[[str], None] = lambda _: None,
 ) -> DailyResult:
     result = DailyResult()
@@ -180,4 +183,24 @@ def run(  # noqa: PLR0913, PLR0915
         return dict(r.counts)
 
     step("geocode", None, "geocode", geocode_all)
+
+    def consult_all() -> dict[str, Any]:
+        from mdu import consultations  # noqa: PLC0415
+
+        r = consultations.run(
+            conn, store, city=city, reader=consult_reader, monthly_usd=llm_monthly_usd, log=log
+        )
+        return dict(r.counts)
+
+    step("consult", None, "consult", consult_all)
+
+    def summarize_all() -> dict[str, Any]:
+        from mdu import summaries  # noqa: PLC0415
+
+        r = summaries.run(
+            conn, store, city=city, writer=summary_writer, monthly_usd=llm_monthly_usd, log=log
+        )
+        return dict(r.counts)
+
+    step("summary", None, "summarize", summarize_all)
     return result

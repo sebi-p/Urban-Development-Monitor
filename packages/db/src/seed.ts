@@ -3,7 +3,7 @@
  * 10 fake projects at random points inside its bbox. Fake rows use `demo-` slugs and "[DEMO]"
  * titles; re-running replaces them, so the result is always the same 10.
  */
-import type { EventType, ProjectKind, ProjectStatus } from "@mdu/shared";
+import type { EventType, ProjectIndicators, ProjectKind, ProjectStatus } from "@mdu/shared";
 import { and, eq, like, sql } from "drizzle-orm";
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -100,6 +100,38 @@ const SAMPLES: { kind: ProjectKind; status: ProjectStatus; what: string; event: 
   { kind: "puz", status: "completed", what: "PUZ parc și locuri de joacă", event: "completed" },
 ];
 
+/** ISO date `days` from today (UTC). */
+function daysFromToday(days: number): string {
+  return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
+}
+
+/** Indicators of demo-1, so the project page shows a figures card with page links. */
+const DEMO_INDICATORS: ProjectIndicators = {
+  height_regime: {
+    value: "P+4E",
+    source_document_id: "00000000-0000-0000-0000-000000000000",
+    page: 3,
+    confidence: "medium",
+    source_url: "https://example.org/demo/memoriu.pdf",
+  },
+  dwellings: {
+    value: 120,
+    source_document_id: "00000000-0000-0000-0000-000000000000",
+    page: 4,
+    confidence: "medium",
+    source_url: "https://example.org/demo/memoriu.pdf",
+  },
+  summary: {
+    value: "generated",
+    source_document_id: "00000000-0000-0000-0000-000000000000",
+    source_url: "https://example.org/demo/memoriu.pdf",
+    page: 1,
+    confidence: "medium",
+    model: "demo",
+    prompt_version: "summary-v1",
+  },
+};
+
 /** Creates or updates every jurisdiction from config/jurisdictions/*.yaml. Returns slug -> id. */
 export async function upsertJurisdictions(
   db: Db,
@@ -152,9 +184,13 @@ export async function seed(db: Db, files = loadJurisdictionFiles()): Promise<voi
         .where(and(eq(project.jurisdictionId, j.id), like(project.slug, "demo-%")));
 
       const random = rng(j.id);
+      let first: [number, number] = [0, 0];
       for (const [i, sample] of SAMPLES.slice(0, DEMO_PROJECTS_PER_JURISDICTION).entries()) {
-        const lon = minLon + random() * (maxLon - minLon);
-        const lat = minLat + random() * (maxLat - minLat);
+        let lon = minLon + random() * (maxLon - minLon);
+        let lat = minLat + random() * (maxLat - minLat);
+        if (i === 0) first = [lon, lat];
+        // demo-2 is about 250 m from demo-1, so the project page lists a nearby project.
+        if (i === 1) [lon, lat] = [first[0] + 0.0025, first[1] + 0.001];
         const street = STREETS[i % STREETS.length];
         const n = i + 1;
         const [p] = await tx
@@ -169,6 +205,7 @@ export async function seed(db: Db, files = loadJurisdictionFiles()): Promise<voi
             geom: sql`ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)`,
             geomPrecision: "address",
             initiator: "SC Exemplu Dezvoltare SRL",
+            ...(i === 0 ? { indicators: DEMO_INDICATORS } : {}),
             summaryRo: `Proiect fictiv pentru dezvoltare: ${sample.what.toLowerCase()} pe str. ${street}.`,
             summaryEn: "Fictional project used for development and previews.",
             legalRegime: "pre_catuc",
@@ -193,12 +230,27 @@ export async function seed(db: Db, files = loadJurisdictionFiles()): Promise<voi
           value: `DEMO-${n}`,
         });
         if (sample.status === "in_public_consultation") {
+          // Relative dates, so the demo consultation is always open (tests rely on it).
+          await tx.insert(projectEvent).values({
+            jurisdictionId: j.id,
+            projectId: p.id,
+            eventDate: daysFromToday(-40),
+            eventType: "notice_published",
+            title: "[DEMO] Anunț de informare a publicului",
+            details: { source_url: "https://example.org/demo/anunt" },
+            confidence: "high",
+            reviewState: "auto_published",
+          });
           await tx.insert(consultation).values({
             jurisdictionId: j.id,
             projectId: p.id,
-            opensOn: "2026-11-10",
-            closesOn: "2026-12-10",
+            opensOn: daysFromToday(-10),
+            closesOn: daysFromToday(20),
+            submitEmail: "registratura@example.org",
+            submitAddress: "[DEMO] Piața Centrală nr. 1",
             submitInstructions: "[DEMO] Observațiile se trimit în scris la registratura primăriei.",
+            publicMeetingAt: new Date(`${daysFromToday(5)}T15:00:00+02:00`),
+            publicMeetingPlace: "[DEMO] Sala de consiliu",
           });
         }
       }

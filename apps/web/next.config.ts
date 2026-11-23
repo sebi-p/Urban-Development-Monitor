@@ -12,6 +12,13 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@mdu/shared", "@mdu/db"],
+  // The share image reads its fonts from disk (app/[city]/proiecte/[slug]/opengraph-image.tsx).
+  outputFileTracingIncludes: {
+    "/[city]/proiecte/[slug]/opengraph-image": [
+      "./node_modules/@fontsource/inter/files/inter-latin-{400,700}-normal.woff",
+      "./node_modules/@fontsource/inter/files/inter-latin-ext-{400,700}-normal.woff",
+    ],
+  },
 };
 
 export default withNextIntl(nextConfig);

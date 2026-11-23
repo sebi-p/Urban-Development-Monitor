@@ -21,7 +21,15 @@ const SOURCE = "projects";
  * The map is created once; when the filters change, only the data is swapped (setData), so a
  * phone doesn't reload the style and tiles. Nearby projects are clustered (M4.1).
  */
-export function ProjectMap({ bbox, projects }: { bbox: BBox | null; projects: ProjectCollection }) {
+export function ProjectMap({
+  city,
+  bbox,
+  projects,
+}: {
+  city: string;
+  bbox: BBox | null;
+  projects: ProjectCollection;
+}) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const latest = useRef(projects);
@@ -139,6 +147,10 @@ export function ProjectMap({ bbox, projects }: { bbox: BBox | null; projects: Pr
           const link = el.appendChild(document.createElement("a"));
           link.href = `#p-${props.slug}`;
           link.textContent = filters("showOnList");
+          el.appendChild(document.createElement("br"));
+          const page = el.appendChild(document.createElement("a"));
+          page.href = `/${city}/proiecte/${encodeURIComponent(props.slug)}`;
+          page.textContent = filters("openProject");
           new maplibregl.Popup({ offset: 10 })
             .setLngLat(f.geometry.coordinates as [number, number])
             .setDOMContent(el)
@@ -156,7 +168,7 @@ export function ProjectMap({ bbox, projects }: { bbox: BBox | null; projects: Pr
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [bbox, status, filters]);
+  }, [bbox, city, status, filters]);
 
   // New filters: swap the data only (and keep it for a map that is still loading).
   useEffect(() => {

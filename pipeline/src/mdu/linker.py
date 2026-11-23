@@ -392,7 +392,7 @@ def run(  # noqa: PLR0913
     city: str,
     streets: StreetIndex,
     extractor: Any = None,
-    monthly_usd: float = 2.0,
+    monthly_usd: float = 5.0,
     log: Callable[[str], None] = lambda _: None,
 ) -> StageResult:
     result = StageResult()

@@ -117,6 +117,7 @@ export default async function StylePage() {
         </div>
         <h3 className="mt-6 mb-2 text-sm font-semibold">{t("card")}</h3>
         <ProjectList
+          city="stil"
           projects={[
             {
               id: "sample",

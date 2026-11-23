@@ -1,5 +1,11 @@
 /** Read-only queries for the public site (admin writes are in admin.ts, ADR 0012). */
-import type { DocumentRole, ProjectIndicators, ProjectKind, ProjectStatus } from "@mdu/shared";
+import type {
+  DocumentRole,
+  EventType,
+  ProjectIndicators,
+  ProjectKind,
+  ProjectStatus,
+} from "@mdu/shared";
 import { asc, eq, sql, type SQL } from "drizzle-orm";
 import type { Db } from "./client.ts";
 import { jurisdiction } from "./schema/index.ts";
@@ -143,6 +149,9 @@ export interface ProjectDocumentLink {
   size_bytes: number | null;
   /** Classified document type, when the file has been fetched and classified. */
   role?: DocumentRole | null;
+  /** When the city published it (the listing's date) or, for attached files, when it was
+   * fetched. ISO date. */
+  date?: string | null;
 }
 
 export interface ProjectListItem {
@@ -173,6 +182,8 @@ export async function listProjects(
   db: Db,
   slug: string,
   filters: ProjectFilters = {},
+  /** Only this project (the project page reuses the list's documents and latest event). */
+  onlyId?: string,
 ): Promise<ProjectListItem[] | null> {
   const [j] = await db
     .select({ id: jurisdiction.id })
@@ -213,17 +224,18 @@ export async function listProjects(
     -- them (the source listings), once per URL.
     left join lateral (
       select jsonb_agg(x.doc) as documents from (
-        select distinct on (doc->>'url') doc
+        select distinct on (doc->>'url') doc || jsonb_build_object('date', ev.event_date) as doc
         from project_event ev, jsonb_array_elements(ev.details->'documents') doc
         where ev.project_id = any(fam.ids)
           and ev.review_state in ('auto_published', 'approved')
           and jsonb_typeof(ev.details->'documents') = 'array'
-        order by doc->>'url', ev.event_date desc
+        order by doc->>'url', ev.event_date
       ) x
     ) d on true
     where p.jurisdiction_id = ${j.id}
       and p.review_state in ('auto_published', 'approved')
       and p.merged_into_id is null
+      ${onlyId ? sql`and p.id = ${onlyId}` : sql``}
       ${sql.join(filterConditions(filters).map((c) => sql` and ${c}`))}
     order by e.event_date desc nulls last, p.title`);
   // Files the linker attached (e.g. from the urbanism page) that the listing doesn't name.
@@ -232,19 +244,29 @@ export async function listProjects(
     url: string;
     doc_type: DocumentRole;
     size_bytes: number | null;
+    date: string | null;
   }>(sql`
-    select coalesce(c.merged_into_id, c.id) as root, f.url, d.doc_type, d.size_bytes
+    select coalesce(c.merged_into_id, c.id) as root, f.url, d.doc_type, d.size_bytes,
+           f.fetched_at::date::text as date
     from project_document pd
     join project c on c.id = pd.project_id
     join raw_document d on d.id = pd.raw_document_id
     join lateral (
-      select url from "fetch" where raw_document_id = d.id order by fetched_at desc nulls last limit 1
+      select url, fetched_at from "fetch" where raw_document_id = d.id
+      order by fetched_at desc nulls last limit 1
     ) f on true
-    where c.jurisdiction_id = ${j.id} and d.doc_type <> 'registru_opinii'`);
+    where c.jurisdiction_id = ${j.id} and d.doc_type <> 'registru_opinii'
+      ${onlyId ? sql`and coalesce(c.merged_into_id, c.id) = ${onlyId}` : sql``}`);
   const extra = new Map<string, ProjectDocumentLink[]>();
   for (const a of attached) {
     const list = extra.get(a.root) ?? [];
-    list.push({ label: null, url: a.url, size_bytes: a.size_bytes, role: a.doc_type });
+    list.push({
+      label: null,
+      url: a.url,
+      size_bytes: a.size_bytes,
+      role: a.doc_type,
+      date: a.date,
+    });
     extra.set(a.root, list);
   }
   // Document types from the classifier, by URL (a file is fetched once, its type stored once).
@@ -290,4 +312,171 @@ function withAttached(
   );
   const seen = new Set(sorted.map((d) => d.url));
   return [...sorted, ...attached.filter((d) => !seen.has(d.url) && seen.add(d.url))];
+}
+
+export interface ProjectEventItem {
+  date: string; // ISO date
+  type: EventType;
+  title: string;
+  /** The page the event was read from (a listing or agenda), when known. */
+  sourceUrl: string | null;
+}
+
+export interface ConsultationItem {
+  opensOn: string | null;
+  closesOn: string | null;
+  submitEmail: string | null;
+  submitAddress: string | null;
+  submitInstructions: string | null;
+  publicMeetingAt: string | null; // ISO timestamp
+  publicMeetingPlace: string | null;
+  /** The notice the values were read from, and its page. */
+  sourceUrl: string | null;
+  page: number | null;
+}
+
+export interface NearbyProject {
+  slug: string;
+  title: string;
+  kind: ProjectKind;
+  status: ProjectStatus;
+  distanceM: number;
+}
+
+export interface ProjectDetail extends ProjectListItem {
+  designer: string | null;
+  summaryRo: string | null;
+  summaryEn: string | null;
+  lon: number | null;
+  lat: number | null;
+  firstSeenAt: string;
+  /** When the documents behind the page were last fetched from the city (or the project last
+   * changed, if later). */
+  lastCheckedAt: string;
+  events: ProjectEventItem[];
+  consultations: ConsultationItem[];
+  nearby: NearbyProject[];
+}
+
+export type ProjectLookup =
+  { found: true; project: ProjectDetail } | { found: false; redirectTo: string | null };
+
+/** Within this distance, other projects are listed as nearby (PLAN §8). */
+export const NEARBY_METRES = 500;
+
+/**
+ * One published project with everything its page shows. A slug of a project that was merged
+ * into another answers `redirectTo` with the project it joined (M3.3), so old links keep working.
+ */
+export async function getProject(db: Db, city: string, slug: string): Promise<ProjectLookup> {
+  const [p] = await db.execute<{
+    id: string;
+    merged_slug: string | null;
+    published: boolean;
+    designer: string | null;
+    summary_ro: string | null;
+    summary_en: string | null;
+    lon: number | null;
+    lat: number | null;
+    first_seen_at: string;
+    updated_at: string;
+  }>(sql`
+    select p.id, m.slug as merged_slug,
+           p.review_state in ('auto_published', 'approved') as published,
+           p.designer, p.summary_ro, p.summary_en,
+           ST_X(ST_PointOnSurface(p.geom)) as lon, ST_Y(ST_PointOnSurface(p.geom)) as lat,
+           p.first_seen_at::text, p.updated_at::text
+    from project p
+    join jurisdiction j on j.id = p.jurisdiction_id and j.slug = ${city}
+    left join project m on m.id = p.merged_into_id
+    where p.slug = ${slug}`);
+  if (!p || !p.published) return { found: false, redirectTo: null };
+  if (p.merged_slug) return { found: false, redirectTo: p.merged_slug };
+  const item = (await listProjects(db, city, {}, p.id))?.[0];
+  if (!item) return { found: false, redirectTo: null };
+
+  const family = sql`(select c.id from project c where c.id = ${p.id} or c.merged_into_id = ${p.id})`;
+  const [events, consultations, nearby, checked] = await Promise.all([
+    db.execute<{ date: string; type: EventType; title: string; source_url: string | null }>(sql`
+      select event_date::text as date, event_type as type, title,
+             details->>'source_url' as source_url
+      from project_event
+      where project_id in ${family} and review_state in ('auto_published', 'approved')
+      order by event_date, created_at`),
+    db.execute<{
+      opens_on: string | null;
+      closes_on: string | null;
+      submit_email: string | null;
+      submit_address: string | null;
+      submit_instructions: string | null;
+      public_meeting_at: string | null;
+      public_meeting_place: string | null;
+      source_url: string | null;
+      page: number | null;
+    }>(sql`
+      select co.opens_on::text, co.closes_on::text, co.submit_email, co.submit_address,
+             co.submit_instructions, to_json(co.public_meeting_at) #>> '{}' as public_meeting_at,
+             co.public_meeting_place, co.page,
+             (select f.url from "fetch" f where f.raw_document_id = co.raw_document_id
+              order by f.fetched_at desc nulls last limit 1) as source_url
+      from consultation co
+      where co.project_id in ${family}
+      order by co.closes_on desc nulls last, co.opens_on desc nulls last`),
+    db.execute<{
+      slug: string;
+      title: string;
+      kind: ProjectKind;
+      status: ProjectStatus;
+      distance_m: number;
+    }>(sql`
+      select o.slug, o.title, o.kind, o.status,
+             round(ST_Distance(o.geom::geography, p.geom::geography))::int as distance_m
+      from project p join project o on o.jurisdiction_id = p.jurisdiction_id and o.id <> p.id
+      where p.id = ${p.id} and p.geom is not null and o.geom is not null
+        and o.merged_into_id is null and o.review_state in ('auto_published', 'approved')
+        and ST_DWithin(o.geom::geography, p.geom::geography, ${NEARBY_METRES})
+      order by distance_m, o.title limit 6`),
+    db.execute<{ at: string | null }>(sql`
+      select max(f.fetched_at)::text as at
+      from project_document pd join "fetch" f on f.raw_document_id = pd.raw_document_id
+      where pd.project_id in ${family}`),
+  ]);
+  const fetched = checked[0]?.at;
+  return {
+    found: true,
+    project: {
+      ...item,
+      designer: p.designer,
+      summaryRo: p.summary_ro,
+      summaryEn: p.summary_en,
+      lon: p.lon,
+      lat: p.lat,
+      firstSeenAt: p.first_seen_at,
+      lastCheckedAt: fetched && new Date(fetched) > new Date(p.updated_at) ? fetched : p.updated_at,
+      events: events.map((e) => ({
+        date: e.date,
+        type: e.type,
+        title: e.title,
+        sourceUrl: e.source_url,
+      })),
+      consultations: consultations.map((c) => ({
+        opensOn: c.opens_on,
+        closesOn: c.closes_on,
+        submitEmail: c.submit_email,
+        submitAddress: c.submit_address,
+        submitInstructions: c.submit_instructions,
+        publicMeetingAt: c.public_meeting_at,
+        publicMeetingPlace: c.public_meeting_place,
+        sourceUrl: c.source_url,
+        page: c.page,
+      })),
+      nearby: nearby.map((n) => ({
+        slug: n.slug,
+        title: n.title,
+        kind: n.kind,
+        status: n.status,
+        distanceM: n.distance_m,
+      })),
+    },
+  };
 }

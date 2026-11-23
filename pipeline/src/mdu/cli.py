@@ -5,7 +5,7 @@ import os
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
 from mdu import __version__
@@ -37,7 +37,17 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument(
         "--stage",
         required=True,
-        choices=["discover", "fetch", "extract", "classify", "fields", "link", "geocode"],
+        choices=[
+            "discover",
+            "fetch",
+            "extract",
+            "classify",
+            "fields",
+            "link",
+            "geocode",
+            "consult",
+            "summary",
+        ],
     )
     run.add_argument("--city", required=True)
     run.add_argument("--adapter", help='e.g. "brasov.council_debates" (required for discover)')
@@ -55,7 +65,7 @@ def build_parser() -> argparse.ArgumentParser:
     daily.add_argument("--max-mb", type=int, default=30, help="skip larger files")
 
     ev = sub.add_parser("eval", help="score field extraction on the golden set (calls the model)")
-    ev.add_argument("what", choices=["fields"])
+    ev.add_argument("what", choices=["fields", "consult"])
     ev.add_argument("--city", default="brasov")
     ev.add_argument("--model", default=None, help="default: the configured fields model")
     ev.add_argument("--record", action="store_true", help="save answers as private fixtures")
@@ -112,10 +122,23 @@ def _database_url() -> str | None:
     return url
 
 
+def _budget() -> float:
+    return float(os.environ.get("MDU_LLM_MONTHLY_USD") or 5)
+
+
+def _task(kind: str, disabled: bool = False) -> object | None:
+    """The consult reader or summary writer (Claude Sonnet, M4.2) when ANTHROPIC_API_KEY is set."""
+    if disabled or not os.environ.get("ANTHROPIC_API_KEY"):
+        return None
+    from mdu.core import llm  # noqa: PLC0415
+
+    return llm.consult_reader() if kind == "consult" else llm.summary_writer()
+
+
 def _llm(disabled: bool = False) -> tuple[object | None, float]:
     """The classifier's LLM fallback when ANTHROPIC_API_KEY is set (ADR 0008), and the monthly
-    budget in USD (MDU_LLM_MONTHLY_USD, default 2)."""
-    budget = float(os.environ.get("MDU_LLM_MONTHLY_USD") or 2)
+    budget in USD (MDU_LLM_MONTHLY_USD, default 5)."""
+    budget = _budget()
     if disabled or not os.environ.get("ANTHROPIC_API_KEY"):
         return None, budget
     from mdu.core.llm import ClaudeClassifier  # noqa: PLC0415
@@ -125,7 +148,7 @@ def _llm(disabled: bool = False) -> tuple[object | None, float]:
 
 def _field_extractor(disabled: bool = False) -> tuple[object | None, float]:
     """The field extractor (Claude Sonnet, ADR 0009) when ANTHROPIC_API_KEY is set."""
-    budget = float(os.environ.get("MDU_LLM_MONTHLY_USD") or 2)
+    budget = _budget()
     if disabled or not os.environ.get("ANTHROPIC_API_KEY"):
         return None, budget
     from mdu.core.llm import ClaudeFieldExtractor  # noqa: PLC0415
@@ -317,7 +340,25 @@ def _ingest(args: argparse.Namespace) -> int:
     return 0
 
 
-def _run(args: argparse.Namespace) -> int:
+def _run_text_stage(args: argparse.Namespace, conn: Any) -> Any:
+    """`run --stage consult|summary` (M4.2)."""
+    from mdu import consultations, summaries  # noqa: PLC0415
+    from mdu.core.storage import ObjectStore  # noqa: PLC0415
+
+    task = _task(args.stage, disabled=args.no_llm)
+    print(f"{args.stage}: LLM {'on' if task else 'off'}, budget ${_budget():.2f}/month")
+    if args.stage == "consult":
+        return consultations.run(
+            conn, ObjectStore.from_env(), city=args.city, reader=task, monthly_usd=_budget(),
+            log=print,
+        )  # fmt: skip
+    return summaries.run(
+        conn, ObjectStore.from_env(), city=args.city, writer=task, monthly_usd=_budget(),
+        log=print,
+    )  # fmt: skip
+
+
+def _run(args: argparse.Namespace) -> int:  # noqa: PLR0912
     import psycopg  # noqa: PLC0415
 
     from mdu import stages  # noqa: PLC0415
@@ -329,9 +370,12 @@ def _run(args: argparse.Namespace) -> int:
     url = _database_url()
     if not url:
         return EXIT_FAILED
-    if args.stage in ("extract", "classify", "fields", "link", "geocode"):  # no site requests
+    offline = ("extract", "classify", "fields", "link", "geocode", "consult", "summary")
+    if args.stage in offline:  # no site requests
         with psycopg.connect(url) as conn:
-            if args.stage == "geocode":
+            if args.stage in ("consult", "summary"):
+                result = _run_text_stage(args, conn)
+            elif args.stage == "geocode":
                 from mdu import geocode  # noqa: PLC0415
 
                 with _client(args.city) as client:  # map tiles only, cached in R2
@@ -426,6 +470,8 @@ def _daily(args: argparse.Namespace) -> int:
             city=args.city,
             llm=llm,
             field_extractor=extractor,
+            consult_reader=_task("consult"),
+            summary_writer=_task("summary"),
             addresses=addresses,
             bbox=load_jurisdiction(args.city).bbox,
             llm_monthly_usd=budget,
@@ -444,6 +490,8 @@ def _eval(args: argparse.Namespace) -> int:
     from mdu.core.llm import FIELDS_MODEL, ClaudeFieldExtractor  # noqa: PLC0415
     from mdu.fixtures import FixtureSet  # noqa: PLC0415
 
+    if args.what == "consult":
+        return _eval_consult(args)
     extractor = ClaudeFieldExtractor(model=args.model or FIELDS_MODEL)
 
     def live(slug: str, pages_text: str) -> tuple[dict[str, object], float]:
@@ -462,6 +510,34 @@ def _eval(args: argparse.Namespace) -> int:
         + ("; answers recorded, run `mdu fixtures push`" if args.record else "")
     )
     return 0 if result.accuracy >= evals.REQUIRED_ACCURACY else EXIT_FAILED
+
+
+def _eval_consult(args: argparse.Namespace) -> int:
+    from mdu import evals  # noqa: PLC0415
+    from mdu.core.llm import consult_reader  # noqa: PLC0415
+    from mdu.fixtures import FixtureSet  # noqa: PLC0415
+
+    reader = consult_reader()
+    if args.model:
+        reader.model = args.model
+
+    def live(slug: str, text: str) -> tuple[dict[str, object], float]:
+        answer = reader(text)
+        print(f"  {slug[:50]}: {answer.input_tokens} in / {answer.output_tokens} out", flush=True)
+        return answer.data, answer.cost_usd
+
+    fs = FixtureSet(args.city)
+    result = evals.consult_run(fs, live, model=reader.model, record=args.record)
+    for p in result.projects:
+        for name, (want, got) in p.wrong.items():
+            why = f" ({p.dropped[name]})" if name in p.dropped else ""
+            print(f"WRONG {p.slug[:40]} {name}: expected {want!r}, got {got!r}{why}")
+    print(
+        f"{reader.model}: {result.accuracy:.1%} of {result.scored} values correct; "
+        f"${result.cost_usd:.4f}"
+        + ("; answers recorded, run `mdu fixtures push`" if args.record else "")
+    )
+    return 0 if result.accuracy >= evals.CONSULT_REQUIRED_ACCURACY else EXIT_FAILED
 
 
 def main(argv: Sequence[str] | None = None) -> int:

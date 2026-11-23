@@ -52,7 +52,7 @@ export default async function CityPage({ params, searchParams }: Props) {
       <main className="relative h-[calc(100dvh-var(--app-bar-height))] overflow-hidden">
         <h1 className="sr-only">{t("title", { city: j.name })}</h1>
         <div className="absolute inset-0">
-          <ProjectMap bbox={j.bbox} projects={projects!} />
+          <ProjectMap city={city} bbox={j.bbox} projects={projects!} />
         </div>
         <BottomSheet
           title={
@@ -64,7 +64,7 @@ export default async function CityPage({ params, searchParams }: Props) {
         >
           <FilterForm filters={filters} years={years} />
           <h2 className="sr-only">{t("listHeading", { count: list!.length })}</h2>
-          <ProjectList projects={list!} />
+          <ProjectList city={city} projects={list!} />
         </BottomSheet>
       </main>
     </>

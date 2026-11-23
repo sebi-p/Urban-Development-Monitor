@@ -28,4 +28,11 @@ export interface ProjectIndicators {
     page: number | null;
     source_document_id: string | null;
   };
+  /** Where `summary_ro`/`summary_en` came from (M4.2): the document the summary mostly relies
+   * on, and the model and prompt that wrote it. */
+  summary?: Omit<Sourced<"generated">, "page"> & {
+    page: number | null;
+    model: string;
+    prompt_version: string;
+  };
 }

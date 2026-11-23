@@ -4,6 +4,7 @@ import {
   type AnyPgColumn,
   date,
   index,
+  integer,
   numeric,
   jsonb,
   pgTable,
@@ -150,8 +151,14 @@ export const consultation = pgTable(
     publicMeetingAt: timestamp("public_meeting_at", { withTimezone: true }),
     publicMeetingPlace: text("public_meeting_place"),
     rawDocumentId: uuid("raw_document_id").references(() => rawDocument.id),
+    /** The notice's page the dates were read on (M4.2). */
+    page: integer("page"),
+    /** Per value: the quote it was read from, plus model, prompt version and confidence. */
+    details: jsonb("details").notNull().default({}),
   },
   (t) => [
+    /** One consultation per notice, so the consult stage can upsert (re-runs are no-ops). */
+    unique().on(t.projectId, t.rawDocumentId),
     index("consultation_closes_idx").on(t.jurisdictionId, t.closesOn),
     index("consultation_project_idx").on(t.projectId),
   ],

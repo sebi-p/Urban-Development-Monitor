@@ -21,6 +21,8 @@
   --color-status-construction: #1d4ed8;
   --color-status-closed: #64748b;
   --color-status-contested: #be123c;
+  /* Text on a consultation tint (4.5:1 or more, lib/status.ts GROUP_TEXT). */
+  --color-status-consultation-text: #c2410c;
 
   --radius-card: 1rem;
   --radius-sheet: 1.25rem;

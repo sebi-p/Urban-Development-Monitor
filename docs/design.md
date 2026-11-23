@@ -61,16 +61,17 @@ Headings use tight letter spacing (`tracking-tight`). Text is never smaller than
 
 ## Components
 
-| Component    | Where                   | Rules                                                                                                                                                                 |
-| ------------ | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| App bar      | every page (`AppBar`)   | 56 px, white with a blur over content, brand mark + product name + city; actions on the right                                                                         |
-| Button       | `ui/button.tsx`         | Variants: primary (one per view), secondary, ghost, danger; sizes md (44 px), sm (36 px), icon                                                                        |
-| Chip         | filters (`FilterChips`) | A checkbox covering the whole chip; selected = accent fill; status chips carry their icon; one scrolling row                                                          |
-| Status badge | `StatusBadge`           | icon + label in the group's text colour on its tint; never just a dot                                                                                                 |
-| Badge        | `ui/badge.tsx`          | Neutral tags: plan type, indicators (`rounded-md`), linked to their source page                                                                                       |
-| Card         | project list            | status badge, type · date, title, address with location precision, indicators, initiator, documents in a disclosure                                                   |
-| Bottom sheet | `BottomSheet`           | Phones: peek (count + chips), half, full; drag the handle or use the Listă/Hartă button; `#p-…` links open it full. Wide screens: a floating 26 rem panel on the left |
-| Map          | `ProjectMap`            | OpenFreeMap "liberty" base, clusters with click-to-zoom, pins with a white outline, popups with a link to the card                                                    |
+| Component    | Where                   | Rules                                                                                                                                                                                                                                     |
+| ------------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| App bar      | every page (`AppBar`)   | 56 px, white with a blur over content, brand mark + product name + city; actions on the right                                                                                                                                             |
+| Button       | `ui/button.tsx`         | Variants: primary (one per view), secondary, ghost, danger; sizes md (44 px), sm (36 px), icon                                                                                                                                            |
+| Chip         | filters (`FilterChips`) | A checkbox covering the whole chip; selected = accent fill; status chips carry their icon; one scrolling row                                                                                                                              |
+| Status badge | `StatusBadge`           | icon + label in the group's text colour on its tint; never just a dot                                                                                                                                                                     |
+| Badge        | `ui/badge.tsx`          | Neutral tags: plan type, indicators (`rounded-md`), linked to their source page                                                                                                                                                           |
+| Card         | project list            | status badge, type · date, title, address with location precision, indicators, initiator, documents in a disclosure                                                                                                                       |
+| Bottom sheet | `BottomSheet`           | Phones: peek (count + chips), half, full; drag the handle or use the Listă/Hartă button; `#p-…` links open it full. Wide screens: a floating 26 rem panel on the left                                                                     |
+| Map          | `ProjectMap`            | OpenFreeMap "liberty" base, clusters with click-to-zoom, pins with a white outline, popups with a link to the card and the project page                                                                                                   |
+| Project page | `components/project/*`  | Header (status, title, address), consultation box first while open, summary card with its source chip, figures with page links, timeline (hollow dot = still to come), documents, small map loaded on scroll, nearby list, "last checked" |
 
 ## Words
 
@@ -80,4 +81,4 @@ Headings use tight letter spacing (`tracking-tight`). Text is never smaller than
 
 ## Not yet
 
-Dark mode (tokens are ready for a second set), a "near me" button, neighbourhood filters, project pages (M4.2), skeleton loading states.
+Dark mode (tokens are ready for a second set), a "near me" button, neighbourhood filters, skeleton loading states.

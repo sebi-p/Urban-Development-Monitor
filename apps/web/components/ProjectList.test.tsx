@@ -39,7 +39,12 @@ const renderRo = (ui: React.ReactNode) =>
 
 describe("ProjectList", () => {
   it("shows kind, status, date, location note, documents and the official source", () => {
-    renderRo(<ProjectList projects={[item(1, "in_public_consultation"), item(2, "approved")]} />);
+    renderRo(
+      <ProjectList
+        city="oras"
+        projects={[item(1, "in_public_consultation"), item(2, "approved")]}
+      />,
+    );
     expect(screen.getByText("P.U.Z. Proiect 1")).toBeInTheDocument();
     // Status is a badge (icon + label); type and date follow it.
     expect(screen.getAllByText("În consultare publică")[0]).toBeInTheDocument();
@@ -58,14 +63,17 @@ describe("ProjectList", () => {
 
   it("says when a project has no location on the map", () => {
     renderRo(
-      <ProjectList projects={[item(3, "approved", { hasLocation: false, address: null })]} />,
+      <ProjectList
+        city="oras"
+        projects={[item(3, "approved", { hasLocation: false, address: null })]}
+      />,
     );
     expect(screen.getByText(/Fără adresă identificată/)).toBeInTheDocument();
     expect(screen.getByText(/nu apare pe hartă/)).toBeInTheDocument();
   });
 
   it("says so when there are no projects", () => {
-    renderRo(<ProjectList projects={[]} />);
+    renderRo(<ProjectList city="oras" projects={[]} />);
     expect(screen.getByText(ro.City.empty)).toBeInTheDocument();
   });
 });
@@ -91,6 +99,7 @@ describe("messages", () => {
     const source = "https://example.test/memoriu.pdf";
     renderRo(
       <ProjectList
+        city="oras"
         projects={[
           item(3, "approved", {
             initiator: "SC ALFA SRL",
@@ -135,7 +144,7 @@ describe("messages", () => {
   });
 
   it("shows no indicator line when nothing was extracted", () => {
-    const { container } = renderRo(<ProjectList projects={[item(4, "approved")]} />);
+    const { container } = renderRo(<ProjectList city="oras" projects={[item(4, "approved")]} />);
     expect(container.querySelector(".indicators")).toBeNull();
   });
 
@@ -143,6 +152,7 @@ describe("messages", () => {
     const sheet = "https://example.test/plansa.pdf";
     renderRo(
       <ProjectList
+        city="oras"
         projects={[
           item(5, "approved", {
             geomPrecision: "parcel",
@@ -168,7 +178,9 @@ describe("messages", () => {
   });
 
   it("says when a reviewer placed the project by hand", () => {
-    renderRo(<ProjectList projects={[item(6, "approved", { geomPrecision: "manual" })]} />);
+    renderRo(
+      <ProjectList city="oras" projects={[item(6, "approved", { geomPrecision: "manual" })]} />,
+    );
     expect(screen.getByText("locație stabilită manual")).toBeInTheDocument();
   });
 });

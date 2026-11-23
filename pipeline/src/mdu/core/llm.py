@@ -196,3 +196,43 @@ class ClaudeFieldExtractor:
             self.client, model=self.model, system=self._system, user=pages_text,
             schema=self._schema, max_tokens=4096,
         )  # fmt: skip
+
+
+class ClaudeTask:
+    """One prompt file and answer schema, called with a text and answering `JsonAnswer`; the
+    consult and summary stages (M4.2) use it with the same caching as field extraction."""
+
+    def __init__(
+        self,
+        prompt_version: str,
+        schema: dict[str, Any],
+        *,
+        client: anthropic.Anthropic | None = None,
+        model: str = FIELDS_MODEL,
+        max_tokens: int = 2048,
+    ) -> None:
+        folder, _, name = prompt_version.rpartition("-")
+        self.client = client or _default_client()
+        self.model = model
+        self.prompt_version = prompt_version
+        self._schema = schema
+        self._max_tokens = max_tokens
+        self._system = (resources.files("mdu.prompts") / folder / f"{name}.md").read_text("utf-8")
+
+    def __call__(self, text: str) -> JsonAnswer:
+        return call_json(
+            self.client, model=self.model, system=self._system, user=text, schema=self._schema,
+            max_tokens=self._max_tokens,
+        )  # fmt: skip
+
+
+def consult_reader(client: anthropic.Anthropic | None = None) -> ClaudeTask:
+    from mdu.core import consult  # noqa: PLC0415
+
+    return ClaudeTask(consult.PROMPT_VERSION, consult.SCHEMA, client=client)
+
+
+def summary_writer(client: anthropic.Anthropic | None = None) -> ClaudeTask:
+    from mdu.core import summary  # noqa: PLC0415
+
+    return ClaudeTask(summary.PROMPT_VERSION, summary.SCHEMA, client=client)

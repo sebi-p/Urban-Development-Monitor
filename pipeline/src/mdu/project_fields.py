@@ -102,19 +102,38 @@ def fields_answer(  # noqa: PLR0913
     counts: Counter[str],
     log: Callable[[str], None],
 ) -> dict[str, Any] | None:
-    """The extractor's answer for these pages: from the `extraction_run` cache, or a new call
-    within the monthly budget (logged there). None when the call failed or the budget is spent;
-    the caller retries on a later run."""
+    """The field extractor's answer for these pages (see `cached_answer`)."""
+    return cached_answer(
+        cur, jid, task="extract_fields", extractor=extractor, text=selection.prompt_text(),
+        raw_document_id=selection.documents[0].raw_document_id, budget=budget, counts=counts,
+        log=log,
+    )  # fmt: skip
+
+
+def cached_answer(  # noqa: PLR0913
+    cur: psycopg.Cursor[Any],
+    jid: int,
+    *,
+    task: str,
+    extractor: Any,
+    text: str,
+    raw_document_id: str | None,
+    budget: Budget,
+    counts: Counter[str],
+    log: Callable[[str], None],
+) -> dict[str, Any] | None:
+    """The model's answer for this input: from the `extraction_run` cache, or a new call within
+    the monthly budget (logged there). None when the call failed or the budget is spent; the
+    caller retries on a later run."""
     from mdu.core.llm import LlmError  # noqa: PLC0415
 
-    text = selection.prompt_text()
     input_hash = hashlib.sha256(
         f"{extractor.prompt_version}\n{extractor.model}\n{text}".encode()
     ).hexdigest()
     cur.execute(
-        """select output from extraction_run where task = 'extract_fields'
+        """select output from extraction_run where task = %s
              and input_hash = %s and prompt_version = %s and model = %s""",
-        (input_hash, extractor.prompt_version, extractor.model),
+        (task, input_hash, extractor.prompt_version, extractor.model),
     )
     cached = cur.fetchone()
     if cached:
@@ -122,24 +141,24 @@ def fields_answer(  # noqa: PLR0913
         return dict(cached[0])
     if budget.reached or _month_spend(cur, jid) >= budget.monthly_usd:
         if not budget.reached:
-            log(f"fields: LLM budget of ${budget.monthly_usd:.2f} this month reached")
+            log(f"{task}: LLM budget of ${budget.monthly_usd:.2f} this month reached")
         budget.reached = True
         counts["deferred: LLM budget"] += 1
         return None
     try:
         reply = extractor(text)
     except LlmError as exc:
-        log(f"fields: LLM failed ({exc})")
+        log(f"{task}: LLM failed ({exc})")
         counts["deferred: LLM error"] += 1
         return None
     cur.execute(
         """insert into extraction_run (jurisdiction_id, raw_document_id, task, model,
                prompt_version, input_hash, output, input_tokens, output_tokens, cost_usd)
-           values (%s, %s, 'extract_fields', %s, %s, %s, %s, %s, %s, %s)
+           values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
            on conflict (input_hash, prompt_version, model) do nothing""",
-        (jid, selection.documents[0].raw_document_id, extractor.model, extractor.prompt_version,
-         input_hash, json.dumps(reply.data, ensure_ascii=False), reply.input_tokens,
-         reply.output_tokens, reply.cost_usd),
+        (jid, raw_document_id, task, extractor.model, extractor.prompt_version, input_hash,
+         json.dumps(reply.data, ensure_ascii=False), reply.input_tokens, reply.output_tokens,
+         reply.cost_usd),
     )  # fmt: skip
     counts["llm_calls"] += 1
     return dict(reply.data)
@@ -151,7 +170,7 @@ def extract_fields(  # noqa: PLR0913
     *,
     city: str,
     extractor: Any = None,  # mdu.core.llm.ClaudeFieldExtractor or a fake with the same interface
-    monthly_usd: float = 2.0,
+    monthly_usd: float = 5.0,
     limit: int = 200,
     log: Callable[[str], None] = lambda _: None,
 ) -> StageResult:
@@ -203,13 +222,14 @@ def extract_fields(  # noqa: PLR0913
             checked = fields.check(answer, selection)
             kept = {v.field: v.value for v in checked.kept}
             cur.execute(
-                # `location` belongs to the geocode stage (M3.4) and is kept as it is.
+                # `location` belongs to the geocode stage (M3.4) and `summary` to the summary
+                # stage (M4.2): both are kept as they are.
                 """update project set
-                       indicators = %s::jsonb || case when indicators ? 'location'
-                           then jsonb_build_object('location', indicators->'location')
-                           else '{}'::jsonb end,
+                       indicators = %s::jsonb || coalesce((select jsonb_object_agg(k, v)
+                           from jsonb_each(indicators) e(k, v)
+                           where k in ('location', 'summary')), '{}'::jsonb),
                        initiator = %s::text, designer = %s::text, updated_at = now()
-                   where id = %s and (indicators - 'location', initiator, designer)
+                   where id = %s and (indicators - 'location' - 'summary', initiator, designer)
                        is distinct from (%s::jsonb, %s::text, %s::text)""",
                 (json.dumps(_indicators(checked, urls), ensure_ascii=False),
                  kept.get("initiator"), kept.get("designer"), project_id,

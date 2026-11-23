@@ -1,0 +1,72 @@
+{
+  "note": "M4.2 golden set: consultation values per notice, read by hand from the city's notices (public dates and the city's own addresses). Values not listed aren't scored: the notice is ambiguous (a period in days from an unclear display date, an email only in the letterhead).",
+  "notices": {
+    "intocmire-puz-construire-ansamblu-de-loc-0": {
+      "fixture": "consult/intocmire-puz-construire-ansamblu-de-loc-0",
+      "expected": {
+        "opens_on": "2025-05-30",
+        "closes_on": "2025-06-11",
+        "submit_email": "infopublice@brasovcity.ro"
+      }
+    },
+    "puz-investitie-functiuni-mixte-locuinte--3": {
+      "fixture": "consult/puz-investitie-functiuni-mixte-locuinte--3",
+      "expected": {
+        "opens_on": "2022-10-25",
+        "closes_on": "2022-11-13",
+        "submit_email": "infopublice@brasovcity.ro"
+      }
+    },
+    "construire-imobil-locuinte-colective-847-5": {
+      "fixture": "consult/construire-imobil-locuinte-colective-847-5",
+      "expected": {
+        "public_meeting_at": "2019-03-18T15:00"
+      }
+    },
+    "construire-motel-si-imprejmuire-teren-77-6": {
+      "fixture": "consult/construire-motel-si-imprejmuire-teren-77-6",
+      "expected": {
+        "opens_on": "2021-07-08"
+      }
+    },
+    "puz-construire-biserica-si-infiintare-ci-11": {
+      "fixture": "consult/puz-construire-biserica-si-infiintare-ci-11",
+      "expected": {
+        "opens_on": "2026-09-23",
+        "closes_on": "2026-10-05",
+        "submit_email": "infopublice@brasovcity.ro"
+      }
+    },
+    "modificare-aprobat-cu-hcl-nr-822-2010-0f-13": {
+      "fixture": "consult/modificare-aprobat-cu-hcl-nr-822-2010-0f-13",
+      "expected": {
+        "opens_on": "2020-09-30",
+        "closes_on": "2020-10-09"
+      }
+    },
+    "pud-construire-unitate-de-cazare-s-2e-m--16": {
+      "fixture": "consult/pud-construire-unitate-de-cazare-s-2e-m--16",
+      "expected": {}
+    },
+    "puz-construire-locuinte-colective-cu-pas-20": {
+      "fixture": "consult/puz-construire-locuinte-colective-cu-pas-20",
+      "expected": {
+        "opens_on": "2026-09-24",
+        "closes_on": "2026-10-06",
+        "submit_email": "infopublice@brasovcity.ro"
+      }
+    },
+    "puz-str-jepilor-nr-14a-421ec2-21": {
+      "fixture": "consult/puz-str-jepilor-nr-14a-421ec2-21",
+      "expected": {
+        "opens_on": "2025-02-10",
+        "closes_on": "2025-02-24",
+        "submit_email": "infopublice@brasovcity.ro"
+      }
+    },
+    "modificare-aprobat-cu-hcl-nr-822-2010-0f-22": {
+      "fixture": "consult/modificare-aprobat-cu-hcl-nr-822-2010-0f-22",
+      "expected": {}
+    }
+  }
+}

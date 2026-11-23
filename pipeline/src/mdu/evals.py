@@ -116,29 +116,47 @@ def run(
         result.cost_usd += cost
         result.projects.append(score(slug, project["expected"], answer, sel))
         if record:
-            body = json.dumps(
-                {"input_hash": input_hash(fields.PROMPT_VERSION, model, text), "answer": answer},
-                ensure_ascii=False,
-            ).encode()
-            sha = hashlib.sha256(body).hexdigest()
             fid = recording_id(slug, model)
-            f = Fixture(
-                id=fid,
-                source="fields-llm",
-                fetched_at=datetime.now(UTC).replace(microsecond=0).isoformat(),
-                status=200,
-                content_type="application/json",
-                size=len(body),
-                sha256=sha,
-                file=f"{sha}.json",
-                note="M3.2 recorded model answer for the golden set (private: quotes name people)",
-            )
-            fs.files_dir.mkdir(parents=True, exist_ok=True)
-            fs.local_path(f).write_bytes(body)
-            fixtures[fid] = f
+            note = "M3.2 recorded model answer for the golden set (private: quotes name people)"
+            _record(
+                fs, fixtures, fid=fid, prompt_version=fields.PROMPT_VERSION, model=model,
+                text=text, answer=answer, note=note,
+            )  # fmt: skip
     if record:
         fs.save(fixtures)
     return result
+
+
+def _record(  # noqa: PLR0913
+    fs: FixtureSet,
+    fixtures: dict[str, Fixture],
+    *,
+    fid: str,
+    prompt_version: str,
+    model: str,
+    text: str,
+    answer: dict[str, Any],
+    note: str,
+) -> None:
+    body = json.dumps(
+        {"input_hash": input_hash(prompt_version, model, text), "answer": answer},
+        ensure_ascii=False,
+    ).encode()
+    sha = hashlib.sha256(body).hexdigest()
+    f = Fixture(
+        id=fid,
+        source=fid.split("/", maxsplit=1)[0],
+        fetched_at=datetime.now(UTC).replace(microsecond=0).isoformat(),
+        status=200,
+        content_type="application/json",
+        size=len(body),
+        sha256=sha,
+        file=f"{sha}.json",
+        note=note,
+    )
+    fs.files_dir.mkdir(parents=True, exist_ok=True)
+    fs.local_path(f).write_bytes(body)
+    fixtures[fid] = f
 
 
 def replay(fs: FixtureSet, model: str) -> Callable[[str, str], tuple[dict[str, Any], float]]:
@@ -149,6 +167,85 @@ def replay(fs: FixtureSet, model: str) -> Callable[[str, str], tuple[dict[str, A
             raise AssertionError(
                 f"{slug}: the model input changed since the answers were recorded; "
                 "run `uv run mdu eval fields --record` and `mdu fixtures push`"
+            )
+        return data["answer"], 0.0
+
+    return answer_for
+
+
+# --- Consultation notices (M4.2) -----------------------------------------------------------
+
+CONSULT_REQUIRED_ACCURACY = 0.90
+
+
+def consult_golden(fs: FixtureSet) -> dict[str, Any]:
+    return dict(json.loads((fs.dir / "consult_golden.json").read_text("utf-8"))["notices"])
+
+
+def consult_pages(fs: FixtureSet, notice: dict[str, Any]) -> list[str]:
+    data = json.loads(fs.local_path(fs.load()[notice["fixture"]]).read_bytes())
+    return [p["text"] for p in data["pages"]]
+
+
+def consult_recording_id(slug: str, model: str) -> str:
+    return f"consult-llm/{slug}-{model}"
+
+
+def _consult_value(value: Any) -> Any:
+    if isinstance(value, datetime):
+        return value.strftime("%Y-%m-%dT%H:%M")
+    return value.isoformat() if hasattr(value, "isoformat") else value
+
+
+def consult_run(
+    fs: FixtureSet,
+    answer_for: Callable[[str, str], tuple[dict[str, Any], float]],
+    *,
+    model: str,
+    record: bool = False,
+) -> EvalResult:
+    """Like `run`, for `consult_golden.json`: each expected value must be kept exactly."""
+    from mdu.core import consult  # noqa: PLC0415
+
+    result = EvalResult()
+    fixtures = fs.load()
+    for slug, notice in sorted(consult_golden(fs).items()):
+        pages = consult_pages(fs, notice)
+        text = consult.prompt_text(pages)
+        answer, cost = answer_for(slug, text)
+        result.cost_usd += cost
+        checked = consult.check(answer, pages)
+        got = {k: _consult_value(v.value) for k, v in checked.values.items()}
+        score = ProjectScore(slug, dropped=checked.dropped)
+        for name, want in notice["expected"].items():
+            if got.get(name) == want:
+                score.correct.append(name)
+            else:
+                score.wrong[name] = (want, got.get(name))
+        result.projects.append(score)
+        if record:
+            note = "M4.2 recorded model answer for a notice (private: quotes may name people)"
+            fid = consult_recording_id(slug, model)
+            _record(
+                fs, fixtures, fid=fid, prompt_version=consult.PROMPT_VERSION, model=model,
+                text=text, answer=answer, note=note,
+            )  # fmt: skip
+    if record:
+        fs.save(fixtures)
+    return result
+
+
+def consult_replay(
+    fs: FixtureSet, model: str
+) -> Callable[[str, str], tuple[dict[str, Any], float]]:
+    from mdu.core import consult  # noqa: PLC0415
+
+    def answer_for(slug: str, text: str) -> tuple[dict[str, Any], float]:
+        data = json.loads(fs.local_path(fs.load()[consult_recording_id(slug, model)]).read_bytes())
+        if data["input_hash"] != input_hash(consult.PROMPT_VERSION, model, text):
+            raise AssertionError(
+                f"{slug}: the model input changed since the answers were recorded; "
+                "run `uv run mdu eval consult --record` and `mdu fixtures push`"
             )
         return data["answer"], 0.0
 
