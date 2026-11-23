@@ -1,14 +1,15 @@
 import { listJurisdictions } from "@mdu/db";
-import { getTranslations } from "next-intl/server";
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Link, redirect } from "@/i18n/navigation";
 import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const jurisdictions = await listJurisdictions(getDb());
-  if (jurisdictions.length === 1) redirect(`/${jurisdictions[0]!.slug}`);
+  if (jurisdictions.length === 1) redirect({ href: `/${jurisdictions[0]!.slug}`, locale });
 
   const t = await getTranslations("Home");
   return (

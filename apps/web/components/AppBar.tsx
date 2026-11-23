@@ -1,15 +1,19 @@
 import { MapPin } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import type { ReactNode } from "react";
+import { LocaleSwitch } from "@/components/LocaleSwitch";
 
 /** The slim top bar on every page: brand mark, product name, the city, and page actions. */
 export async function AppBar({
   city,
   actions,
+  languages = true,
 }: {
   city?: { slug: string; name: string };
   actions?: ReactNode;
+  /** The RO/EN switch; off in the admin area, which is Romanian only. */
+  languages?: boolean;
 }) {
   const t = await getTranslations("Home");
   return (
@@ -22,11 +26,25 @@ export async function AppBar({
           <MapPin aria-hidden className="size-4.5" strokeWidth={2.5} />
         </span>
         <span className="leading-tight">
-          <span className="block text-sm font-semibold">{t("title")}</span>
-          {city ? <span className="block text-xs text-slate-500">{city.name}</span> : null}
+          {/* Phones keep room for the sections: the product name shows from 640 px. */}
+          <span
+            className={
+              city ? "hidden text-sm font-semibold sm:block" : "block text-sm font-semibold"
+            }
+          >
+            {t("title")}
+          </span>
+          {city ? (
+            <span className="block text-sm font-semibold sm:text-xs sm:font-normal sm:text-slate-500">
+              {city.name}
+            </span>
+          ) : null}
         </span>
       </Link>
-      <div className="ml-auto flex items-center gap-2">{actions}</div>
+      <div className="ml-auto flex items-center gap-1">
+        {actions}
+        {languages ? <LocaleSwitch /> : null}
+      </div>
       <span aria-hidden className="busy-bar" />
     </header>
   );

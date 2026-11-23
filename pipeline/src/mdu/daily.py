@@ -2,7 +2,7 @@
 
 For each adapter in order: write listing projects, add listing events, queue documents. Then
 fetch everything pending for the city, extract text, classify it, extract project fields, link,
-geocode, read the consultation notices and write the summaries. A
+geocode, place projects in neighbourhoods, read the consultation notices and write the summaries. A
 failing adapter is logged as a failed `pipeline_run` and the others still run; the command then
 exits non-zero so the workflow shows red. Every step is idempotent, so a second run the same
 day does nothing but re-read the listings.
@@ -66,6 +66,7 @@ def run(  # noqa: PLR0913, PLR0915
     consult_reader: Any = None,
     summary_writer: Any = None,
     llm_monthly_usd: float = 5.0,
+    neighbourhood_seeds: Callable[[], Any] | None = None,
     log: Callable[[str], None] = lambda _: None,
 ) -> DailyResult:
     result = DailyResult()
@@ -183,6 +184,17 @@ def run(  # noqa: PLR0913, PLR0915
         return dict(r.counts)
 
     step("geocode", None, "geocode", geocode_all)
+
+    def neighbourhoods_all() -> dict[str, Any]:
+        from mdu import neighbourhoods  # noqa: PLC0415
+
+        if bbox is None:
+            return {"skipped": "no bounding box"}
+        # Draws the approximate areas only the first time; then just assigns new projects.
+        r = neighbourhoods.run(conn, city=city, bbox=bbox, seeds=neighbourhood_seeds, log=log)
+        return dict(r.counts)
+
+    step("neighbourhoods", None, "neighbourhoods", neighbourhoods_all)
 
     def consult_all() -> dict[str, Any]:
         from mdu import consultations  # noqa: PLC0415

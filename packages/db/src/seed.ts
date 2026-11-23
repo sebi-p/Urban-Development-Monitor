@@ -161,12 +161,15 @@ export async function upsertJurisdictions(
   return ids;
 }
 
-/** Deletes every demo project (slug `demo-%`); their events, identifiers and consultations cascade. */
+/** Deletes every demo project and neighbourhood (slug `demo-%`); the projects' events, identifiers and consultations cascade. */
 export async function removeDemoProjects(db: Db): Promise<number> {
   const deleted = await db
     .delete(project)
     .where(like(project.slug, "demo-%"))
     .returning({ id: project.id });
+  await db.execute(sql`update project set neighbourhood_id = null where neighbourhood_id in
+    (select id from neighbourhood where slug like 'demo-%')`);
+  await db.execute(sql`delete from neighbourhood where slug like 'demo-%'`);
   return deleted.length;
 }
 
@@ -253,6 +256,25 @@ export async function seed(db: Db, files = loadJurisdictionFiles()): Promise<voi
             publicMeetingPlace: "[DEMO] Sala de consiliu",
           });
         }
+      }
+
+      // Two demo neighbourhoods, the west and east halves of the box (M4.4: archive facet, feeds).
+      await tx.execute(sql`delete from neighbourhood
+        where jurisdiction_id = ${j.id} and slug like 'demo-%'`);
+      const midLon = (minLon + maxLon) / 2;
+      for (const [slug, name, x0, x1] of [
+        ["demo-vest", "[DEMO] Vest", minLon, midLon],
+        ["demo-est", "[DEMO] Est", midLon, maxLon],
+      ] as const) {
+        await tx.execute(sql`
+          with n as (
+            insert into neighbourhood (jurisdiction_id, slug, name, geom, boundary_source)
+            values (${j.id}, ${slug}, ${name},
+                    ST_Multi(ST_MakeEnvelope(${x0}, ${minLat}, ${x1}, ${maxLat}, 4326)), 'osm')
+            returning id, geom)
+          update project p set neighbourhood_id = n.id from n
+          where p.jurisdiction_id = ${j.id} and p.slug like 'demo-%'
+            and ST_Covers(n.geom, p.geom)`);
       }
     });
     console.log(`seeded ${file.slug}: ${DEMO_PROJECTS_PER_JURISDICTION} demo projects`);

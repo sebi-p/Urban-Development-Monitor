@@ -35,9 +35,10 @@ export function KeyFigures({ indicators }: { indicators: ProjectIndicators }) {
                 rel="noopener noreferrer"
                 target="_blank"
                 className="shrink-0 text-xs"
-                aria-label={t("pageLink", { label: s.label, page: s.page })}
               >
                 {p("pageShort", { page: s.page })}
+                {/* The visible text starts the link's name (WCAG 2.5.3); the rest is for screen readers. */}
+                <span className="sr-only">: {t("pageLink", { label: s.label })}</span>
               </a>
             ) : (
               <span className="shrink-0 text-xs text-slate-500">

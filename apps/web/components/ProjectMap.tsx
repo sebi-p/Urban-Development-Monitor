@@ -9,8 +9,9 @@ import type {
   MapLayerMouseEvent,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
+import { localePath } from "@/lib/locale";
 import { HIGHLIGHT, listen, SHOW } from "@/lib/map-events";
 import { STATUS_COLOURS } from "@/lib/status";
 
@@ -41,6 +42,7 @@ export function ProjectMap({
   const t = useTranslations("City");
   const status = useTranslations("Status");
   const filters = useTranslations("Filters");
+  const locale = useLocale();
 
   useEffect(() => {
     if (!container.current) return;
@@ -195,7 +197,7 @@ export function ProjectMap({
           link.textContent = filters("showOnList");
           el.appendChild(document.createElement("br"));
           const page = el.appendChild(document.createElement("a"));
-          page.href = `/${city}/proiecte/${encodeURIComponent(props.slug)}`;
+          page.href = localePath(locale, `/${city}/proiecte/${encodeURIComponent(props.slug)}`);
           page.textContent = filters("openProject");
           popup?.remove();
           popup = new maplibregl.Popup({ offset: 12 })
@@ -242,7 +244,7 @@ export function ProjectMap({
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [bbox, city, status, filters]);
+  }, [bbox, city, status, filters, locale]);
 
   // New filters: swap the data only (and keep it for a map that is still loading).
   useEffect(() => {

@@ -47,7 +47,7 @@ export const GROUP_COLOUR: Record<StatusGroup, string> = {
 /** Darker shades for text on the group's tint, all at least 4.5:1 (WCAG AA, docs/design.md). */
 export const GROUP_TEXT: Record<StatusGroup, string> = {
   preparation: "#6d28d9",
-  consultation: "#c2410c",
+  consultation: "#b23c0a",
   council: "#92400e",
   approved: "#166534",
   construction: "#1d4ed8",

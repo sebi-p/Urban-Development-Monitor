@@ -26,11 +26,16 @@ export interface SearchHit {
   initiator: string | null;
   summary: string | null;
   eventDate: string | null; // latest event, ISO date
+  neighbourhood: string | null; // name
 }
 
 export interface FacetValue<T extends string | number> {
   value: T;
   count: number;
+  /** A display name when the value is a key (neighbourhood slug -> name). */
+  label?: string;
+  /** Neighbourhoods: drawn around OpenStreetMap's point, not an official boundary. */
+  approximate?: boolean;
 }
 
 export interface SearchResult {
@@ -43,6 +48,7 @@ export interface SearchResult {
     statuses: FacetValue<ProjectStatus>[];
     years: FacetValue<number>[];
     initiators: FacetValue<string>[];
+    neighbourhoods: FacetValue<string>[];
   };
 }
 
@@ -61,7 +67,7 @@ export function prefixQuery(q: string | undefined): string | null {
   return words.length ? words.map((w) => `${w}:*`).join(" & ") : null;
 }
 
-type Facet = "kinds" | "statuses" | "years" | "initiators";
+type Facet = "kinds" | "statuses" | "years" | "initiators" | "neighbourhoods";
 
 export async function searchProjects(
   db: Db,
@@ -85,6 +91,7 @@ export async function searchProjects(
     if (except === "kinds") f.kinds = [];
     if (except === "statuses") f.statuses = [];
     if (except === "years") f.yearFrom = f.yearTo = undefined;
+    if (except === "neighbourhoods") f.neighbourhoods = [];
     const parts = [
       sql`p.jurisdiction_id = ${j.id}`,
       sql`p.review_state in ('auto_published', 'approved')`,
@@ -106,7 +113,7 @@ export async function searchProjects(
       ? sql`event_date desc nulls last, p.title`
       : sql`ts_rank_cd(p.search, ${tsq}) desc, event_date desc nulls last, p.title`;
 
-  const [hits, kinds, statuses, years, initiators] = await Promise.all([
+  const [hits, kinds, statuses, years, initiators, neighbourhoods] = await Promise.all([
     db.execute<{
       slug: string;
       title: string;
@@ -116,10 +123,12 @@ export async function searchProjects(
       initiator: string | null;
       summary: string | null;
       event_date: string | null;
+      neighbourhood: string | null;
       total: number;
     }>(sql`
       select p.slug, p.title, p.kind, p.status, p.address_text as address, p.initiator,
              p.summary_ro as summary, ${latest}::text as event_date,
+             (select n.name from neighbourhood n where n.id = p.neighbourhood_id) as neighbourhood,
              count(*) over ()::int as total
       from project p
       where ${where()}
@@ -144,6 +153,12 @@ export async function searchProjects(
       select p.initiator as value, count(*)::int as count from project p
       where ${where("initiators")} and p.initiator is not null
       group by 1 order by 2 desc, 1 limit 12`),
+    db.execute<{ value: string; label: string; approximate: boolean; count: number }>(sql`
+      select n.slug as value, n.name as label, n.boundary_source = 'osm' as approximate,
+             count(*)::int as count
+      from project p join neighbourhood n on n.id = p.neighbourhood_id
+      where ${where("neighbourhoods")}
+      group by 1, 2, 3 order by 4 desc, 2`),
   ]);
   // A page past the end still reports the total (from a count without the offset).
   let total = hits[0]?.total ?? 0;
@@ -166,12 +181,14 @@ export async function searchProjects(
       initiator: h.initiator,
       summary: h.summary,
       eventDate: h.event_date,
+      neighbourhood: h.neighbourhood,
     })),
     facets: {
       kinds: [...kinds],
       statuses: [...statuses],
       years: [...years],
       initiators: [...initiators],
+      neighbourhoods: [...neighbourhoods],
     },
   };
 }

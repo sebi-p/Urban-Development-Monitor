@@ -13,8 +13,17 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@mdu/shared", "@mdu/db"],
   // The share image reads its fonts from disk (scripts/copy-assets.mjs copies them).
+  // The feeds live at /{city}/feed.xml (PLAN §8) but are API routes: no locale segment.
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/en/:city/feed.xml", destination: "/api/:city/feed/en" },
+        { source: "/:city/feed.xml", destination: "/api/:city/feed" },
+      ],
+    };
+  },
   outputFileTracingIncludes: {
-    "/[city]/proiecte/[slug]/opengraph-image": ["./assets/og-fonts/*.woff"],
+    "/[locale]/[city]/proiecte/[slug]/opengraph-image": ["./assets/og-fonts/*.woff"],
   },
 };
 

@@ -1,19 +1,31 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { adminLogin, auth } from "@/auth";
 import { AppBar } from "@/components/AppBar";
+import { Document } from "@/components/Document";
 import { signInAction, signOutAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 
+export const viewport: Viewport = { themeColor: "#0f766e", width: "device-width", initialScale: 1 };
+
+/** The admin area is its own root layout (Romanian only, no locale in the URL). */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Document locale="ro">
+      <AdminShell>{children}</AdminShell>
+    </Document>
+  );
+}
+
+async function AdminShell({ children }: { children: React.ReactNode }) {
   const t = await getTranslations("Admin");
   if (!process.env.AUTH_SECRET || !process.env.AUTH_GITHUB_ID) {
     return (
       <>
-        <AppBar />
+        <AppBar languages={false} />
         <main className="mx-auto max-w-5xl p-4">
           <h1 className="mb-2 text-2xl font-semibold">{t("title")}</h1>
           <p className="text-slate-600">{t("notConfigured")}</p>
@@ -26,6 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <>
       <AppBar
+        languages={false}
         actions={
           login ? (
             <form action={signOutAction} className="flex items-center gap-2 text-sm text-slate-600">

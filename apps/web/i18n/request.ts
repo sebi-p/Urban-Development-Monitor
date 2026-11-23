@@ -1,9 +1,11 @@
-import { DEFAULT_LOCALE } from "@mdu/shared";
+import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
+import { routing } from "./routing";
 
-// Single locale for now; the ro/en switch and /{city} routing arrive with the public pages (M4).
-export default getRequestConfig(async () => {
-  const locale = DEFAULT_LOCALE;
+// The locale comes from the `[locale]` segment; /admin and the API have none and use Romanian.
+export default getRequestConfig(async ({ requestLocale }) => {
+  const requested = await requestLocale;
+  const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
   return {
     locale,
     timeZone: "Europe/Bucharest",

@@ -219,6 +219,26 @@ def segments_from_tile(data: bytes, tile: tuple[int, int]) -> list[tuple[str, fl
     return out
 
 
+def places_from_tile(data: bytes, tile: tuple[int, int]) -> list[tuple[str, str, float, float]]:
+    """(name, class, lon, lat) of every named place point in one tile: city, town, village,
+    suburb, quarter, neighbourhood… (OpenMapTiles `place` layer; points only, no outlines)."""
+    layer = mapbox_vector_tile.decode(data).get("place")
+    if not layer:
+        return []
+    extent = layer.get("extent", 4096)
+    out = []
+    for feature in layer["features"]:
+        props, geom = feature["properties"], feature["geometry"]
+        name = props.get("name")
+        if not name or geom["type"] != "Point":
+            continue
+        # Points in the tile's buffer are kept: at the edge of the area they are the only way to
+        # see the next town. Callers drop repeats by name.
+        px, py = geom["coordinates"]
+        out.append((name, str(props.get("class")), *_to_lonlat(tile, px, py, extent)))
+    return out
+
+
 Segment = tuple[Point, Point]
 
 

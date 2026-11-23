@@ -47,6 +47,11 @@ describe.skipIf(!adminUrl)("archive search (PostGIS)", () => {
       ["lunga", "pud", "approved", "PUD birouri str. Lungă", "SC ALFA SRL", "2025-07-01"],
       ["hidden", "pud", "approved", "PUD Răcădău ascuns", null, "2025-01-01"],
     ] as const;
+    const [west] = await sql`
+      insert into neighbourhood (jurisdiction_id, slug, name, geom, boundary_source)
+      values (${j!.id}, 'vest', 'Vest',
+              ST_Multi(ST_MakeEnvelope(25.5, 45.6, 25.6, 45.7, 4326)), 'osm')
+      returning id`;
     for (const [slug, kind, status, title, initiator, date] of rows) {
       const [p] = await sql`
         insert into project (jurisdiction_id, slug, kind, status, title, initiator,
@@ -54,6 +59,9 @@ describe.skipIf(!adminUrl)("archive search (PostGIS)", () => {
         values (${j!.id}, ${slug}, ${kind}, ${status}, ${title}, ${initiator},
           ${`Rezumat ${title}`}, ${slug === "hidden" ? "pending_review" : "auto_published"})
         returning id`;
+      if (slug === "racadau" || slug === "lunga") {
+        await sql`update project set neighbourhood_id = ${west!.id} where id = ${p!.id}`;
+      }
       await sql`
         insert into project_event (jurisdiction_id, project_id, event_date, event_type, title,
           confidence, review_state)
@@ -107,5 +115,18 @@ describe.skipIf(!adminUrl)("archive search (PostGIS)", () => {
     const past = (await searchProjects(handle.db, city, { pageSize: 2, page: 9 }))!;
     expect([past.total, past.hits]).toEqual([3, []]);
     expect(await searchProjects(handle.db, "no-such-city", {})).toBeNull();
+  });
+
+  it("filters by neighbourhood and counts the areas without that filter", async () => {
+    const r = (await searchProjects(handle.db, city, { neighbourhoods: ["vest"] }))!;
+    expect(r.hits.map((h) => h.slug).sort()).toEqual(["lunga", "racadau"]);
+    expect(r.hits[0]!.neighbourhood).toBe("Vest");
+    expect(r.facets.neighbourhoods).toEqual([
+      { value: "vest", label: "Vest", approximate: true, count: 2 },
+    ]);
+    const puz = (await searchProjects(handle.db, city, { kinds: ["puz"] }))!;
+    expect(puz.facets.neighbourhoods).toEqual([
+      { value: "vest", label: "Vest", approximate: true, count: 1 },
+    ]);
   });
 });

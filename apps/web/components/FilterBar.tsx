@@ -3,7 +3,7 @@
 import type { ProjectKind, ProjectStatus } from "@mdu/shared";
 import { SlidersHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { useEffect, useSyncExternalStore, useTransition, type ChangeEvent } from "react";
 import { setBusy } from "@/lib/busy";
 import { toQuery, type UrlFilters } from "@/lib/filters";

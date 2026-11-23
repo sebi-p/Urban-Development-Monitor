@@ -1,6 +1,6 @@
 import type { ProjectStatus } from "@mdu/shared";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AppBar } from "@/components/AppBar";
 import { ProjectList } from "@/components/ProjectList";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -26,7 +26,8 @@ const ONE_PER_GROUP = Object.entries(STATUS_GROUP).filter(
 ) as [ProjectStatus, StatusGroup][];
 
 /** Live style guide (M4.0): every token and component as the app renders it. */
-export default async function StylePage() {
+export default async function StylePage({ params }: { params: Promise<{ locale: string }> }) {
+  setRequestLocale((await params).locale);
   const t = await getTranslations("Style");
   const h2 = "mt-10 mb-3 text-lg font-semibold";
   return (

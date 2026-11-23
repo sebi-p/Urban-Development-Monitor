@@ -11,6 +11,11 @@ config:
   # Never requested: robots.txt disallows crawlers on the permit/certificate register (PLAN §2).
   blocked_hosts:
     - extranet.brasovcity.ro
-  neighbourhood_source: osm # open question in PLAN §14: OSM or PUG units
+  # Approximate areas around OpenStreetMap's neighbourhood points until the city's zoning units
+  # (UTR) can be imported with `mdu neighbourhoods import` (ADR 0017).
+  neighbourhood_source: osm
+  neighbourhoods:
+    # Places OpenStreetMap has no point for, as {name, lon, lat}; each becomes an approximate area.
+    extra: []
   legal_regime:
     catuc_from: "2026-08-25" # Law 169/2026; earlier procedures stay pre_catuc

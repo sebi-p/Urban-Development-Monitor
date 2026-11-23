@@ -16,7 +16,10 @@ function daysBetween(from: string, to: string): number {
 }
 
 /** Where a consultation stands on `day`: open (with the days left), upcoming or closed. */
-export function consultationState(c: ConsultationItem, day: string): ConsultationState {
+export function consultationState(
+  c: Pick<ConsultationItem, "opensOn" | "closesOn">,
+  day: string,
+): ConsultationState {
   if (c.opensOn && day < c.opensOn) return { state: "upcoming", opensOn: c.opensOn };
   if (c.closesOn && day > c.closesOn) return { state: "closed", closesOn: c.closesOn };
   if (c.closesOn)

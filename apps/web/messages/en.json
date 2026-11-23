@@ -59,7 +59,7 @@
     "site_area_m2": "site {value} m²",
     "initiator": "Initiator: {value}",
     "auto": "Values extracted automatically from the project's documents; each links to the page it comes from.",
-    "pageLink": "{label} (page {page} of the source document)"
+    "pageLink": "{label}, in the source document"
   },
   "DocType": {
     "memoriu": "Explanatory report",
@@ -265,6 +265,77 @@
     "csvInitiator": "Initiator",
     "csvDate": "Latest event",
     "csvSummary": "Summary",
-    "csvUrl": "Project page"
+    "csvUrl": "Project page",
+    "neighbourhood": "Neighbourhood",
+    "approximateAreas": "Approximate areas, from OpenStreetMap",
+    "csvNeighbourhood": "Neighbourhood"
+  },
+  "Site": {
+    "sections": "Sections",
+    "map": "Map",
+    "archive": "Archive",
+    "consultations": "Consultations",
+    "about": "About",
+    "method": "Method",
+    "feed": "City RSS feed",
+    "licences": "Data: CC BY 4.0 · Code: AGPL-3.0 · Map and neighbourhoods: © OpenStreetMap contributors (ODbL)",
+    "notOfficial": "An independent civic project. The city's official document remains the reference."
+  },
+  "Consultations": {
+    "title": "Public consultations in {city}",
+    "heading": "Public consultations",
+    "intro": "Projects on which the city is taking comments from residents now, with the deadline and where to send them. Below, past consultations and their reports.",
+    "openHeading": "Open now",
+    "noneOpen": "No consultation is open right now. The list is updated every morning.",
+    "follow": "Follow the RSS feed",
+    "howToComment": "How to send comments",
+    "notice": "Official notice",
+    "pastHeading": "Closed",
+    "pastIntro": "With the consultation report the city published, where there is one.",
+    "period": "{from} – {to}",
+    "report": "{n, plural, =0 {Consultation report} other {Consultation report ({n})}}",
+    "nonePast": "No closed consultations yet."
+  },
+  "Feed": {
+    "newProject": "New project: {title}",
+    "event": "{type}: {title}"
+  },
+  "About": {
+    "title": "About",
+    "heading": "About the Urban Development Monitor",
+    "intro": "The Urban Development Monitor shows on a map what is being planned in the city: zoning plans (PUZ, PUD), public consultations and council decisions, gathered from the documents the city publishes on its website.",
+    "whoHeading": "Who makes it",
+    "who": "An independent civic project made by people from the community. It is not a city website and does not replace one: every piece of information links to the official document it came from, and that document remains the reference.",
+    "sourcesHeading": "Where the data comes from",
+    "sources": "Only public pages of the city's website. The robot that reads them identifies itself, follows the site's rules (robots.txt) and makes at most one request every few seconds. Registers the city closes to robots are not read.",
+    "privacyHeading": "Personal data",
+    "privacy": "We show the names of companies and public bodies only. When the initiator is a private person, we write “private individual”. The site uses no tracking cookies and asks for no personal data.",
+    "errorsHeading": "Found a mistake?",
+    "errors": "Write to <email></email> with the page's link and what is wrong. We read every message and correct the data; corrections are kept on record.",
+    "licenceHeading": "Licences",
+    "licenceData": "The data gathered and processed here: <cc>CC BY 4.0</cc>. You may reuse it, crediting “Urban Development Monitor”.",
+    "licenceCode": "Source code: <agpl>AGPL-3.0</agpl>.",
+    "licenceOsm": "Map and neighbourhood areas: © <osm>OpenStreetMap contributors</osm>, <odbl>ODbL</odbl>; map tiles by OpenFreeMap and OpenMapTiles.",
+    "licenceDocs": "The city's documents are public-interest information (Romanian Law 544/2001); we show them with a link to the source."
+  },
+  "Method": {
+    "title": "Method",
+    "heading": "How we work",
+    "intro": "Every morning a program reads the city's public pages and updates the site. Every value shown keeps the document and page it came from.",
+    "stepsHeading": "The daily steps",
+    "step1": "<b>Collection.</b> We read the lists of zoning plans, the notices and the council's agendas, and download new documents.",
+    "step2": "<b>Text.</b> We extract the text of the PDFs; scanned pages go through optical character recognition (OCR), which can misread poor scans.",
+    "step3": "<b>Document type.</b> Simple rules, then an AI model for unclear cases: report, regulation, drawing, notice, consultation report…",
+    "step4": "<b>Project facts.</b> An AI model reads the height, plot coverage (POT), floor-area ratio (CUT), number of homes and more. Every value must be quoted from the document's page; if the quote isn't on that page, the value is rejected.",
+    "step5": "<b>Linking.</b> The same project appears in several lists; we join them by identifiers (council decision, planning certificate, cadastral number), address and title. A person checks uncertain matches.",
+    "step6": "<b>Location.</b> First the coordinates in the project's drawings (Stereo 70), then the street and number, then the street alone. Each project shows how exact its position is.",
+    "step7": "<b>Consultations.</b> From the official notices we read the period and where to send comments; the dates must appear written in the notice.",
+    "step8": "<b>Summaries.</b> Two or three neutral sentences generated from the documents. A summary is rejected if it has numbers not in the documents, evaluative words or names of people.",
+    "aiHeading": "How we use AI",
+    "ai": "We use Claude models (Anthropic): a small one for document types, a larger one for facts, consultations and summaries. Answers are checked automatically as above, saved and reused, and generated text is marked “generated automatically”. The monthly budget is capped.",
+    "areasHeading": "Neighbourhoods",
+    "areas": "OpenStreetMap has only a point for each neighbourhood, with no outline. Until we get official boundaries, a neighbourhood's area is everything closer to its point than to another neighbourhood's: an approximation, good for filters and RSS feeds, not for exact limits.",
+    "limitsHeading": "Limits",
+    "limits": "Data may be incomplete or a day late, and scanned documents can be misread. The site gives no legal advice: for deadlines and decisions, check the official document behind the link."
   }
 }

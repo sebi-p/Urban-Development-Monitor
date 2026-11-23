@@ -1,7 +1,7 @@
 import type { ProjectListItem } from "@mdu/db";
 import type { ProjectIndicators } from "@mdu/shared";
 import { useFormatter, useTranslations } from "next-intl";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Building2, ExternalLink, FileText, LocateFixed, MapPin } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";

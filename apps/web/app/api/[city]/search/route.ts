@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const CACHE = "public, s-maxage=300, stale-while-revalidate=3600";
 
-/** GET /api/{city}/search?q=&tip=&stare=&an=&initiator=&ordine=&pagina= (PLAN §8): the archive's
+/** GET /api/{city}/search?q=&tip=&stare=&an=&initiator=&cartier=&ordine=&pagina= (PLAN §8): the archive's
  * results, facets and total as JSON. */
 export async function GET(request: Request, { params }: { params: Promise<{ city: string }> }) {
   const { city } = await params;

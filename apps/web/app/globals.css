@@ -22,7 +22,7 @@
   --color-status-closed: #64748b;
   --color-status-contested: #be123c;
   /* Text on a consultation tint (4.5:1 or more, lib/status.ts GROUP_TEXT). */
-  --color-status-consultation-text: #c2410c;
+  --color-status-consultation-text: #b23c0a;
 
   --radius-card: 1rem;
   --radius-sheet: 1.25rem;
@@ -50,6 +50,12 @@
   h3 {
     @apply tracking-tight text-slate-900;
   }
+}
+
+/* Links inside running text are underlined, not only coloured (WCAG 1.4.1); links styled as
+   buttons, chips or titles carry a class and keep their own look. */
+:where(p, li, dd) > a:not([class]) {
+  @apply underline;
 }
 
 /* MapLibre's own controls and popups, in the same style. */

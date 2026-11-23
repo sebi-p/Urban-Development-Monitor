@@ -132,7 +132,7 @@ describe("messages", () => {
         ]}
       />,
     );
-    const cut = screen.getByRole("link", { name: /CUT 1,8 \(pagina 3/ });
+    const cut = screen.getByRole("link", { name: "CUT 1,8, în documentul sursă" });
     expect(cut).toHaveAttribute("href", `${source}#page=3`);
     expect(screen.getByRole("link", { name: /regim de înălțime P\+4E/ })).toHaveAttribute(
       "href",

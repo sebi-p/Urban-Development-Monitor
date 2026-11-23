@@ -22,6 +22,18 @@ EXIT_NOT_IMPLEMENTED = 2
 EXIT_FAILED = 1
 
 
+def _add_neighbourhoods(sub: Any) -> None:
+    nb = sub.add_parser("neighbourhoods", help="official or hand-drawn neighbourhood boundaries")
+    nb_sub = nb.add_subparsers(dest="neighbourhoods_command", required=True)
+    nb_import = nb_sub.add_parser(
+        "import", help="replace the approximate areas with a GeoJSON file of (Multi)Polygons"
+    )
+    nb_import.add_argument("--city", required=True)
+    nb_import.add_argument("--file", type=Path, required=True, help="GeoJSON, WGS 84")
+    nb_import.add_argument("--source", choices=["pug_unit", "manual"], required=True)
+    nb_import.add_argument("--name-property", default="name", help="feature property with the name")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="mdu", description="Monitor Dezvoltare Urbană pipeline")
     parser.add_argument("--version", action="version", version=f"mdu {__version__}")
@@ -47,6 +59,7 @@ def build_parser() -> argparse.ArgumentParser:
             "geocode",
             "consult",
             "summary",
+            "neighbourhoods",
         ],
     )
     run.add_argument("--city", required=True)
@@ -55,6 +68,9 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--max-mb", type=int, default=30, help="fetch: skip larger files")
     run.add_argument("--all", action="store_true", help="discover: not only PUZ/PUD (back-fill)")
     run.add_argument("--no-llm", action="store_true", help="classify: rules only")
+    run.add_argument(
+        "--refresh", action="store_true", help="neighbourhoods: redraw the approximate OSM areas"
+    )
     run.add_argument(
         "--night-only", action="store_true", help="refuse to run outside 22:00–06:00 Bucharest"
     )
@@ -69,6 +85,8 @@ def build_parser() -> argparse.ArgumentParser:
     ev.add_argument("--city", default="brasov")
     ev.add_argument("--model", default=None, help="default: the configured fields model")
     ev.add_argument("--record", action="store_true", help="save answers as private fixtures")
+
+    _add_neighbourhoods(sub)
 
     streets = sub.add_parser("streets", help="build and cache a city's street index (OSM tiles)")
     streets.add_argument("--city", required=True)
@@ -358,7 +376,24 @@ def _run_text_stage(args: argparse.Namespace, conn: Any) -> Any:
     )  # fmt: skip
 
 
-def _run(args: argparse.Namespace) -> int:  # noqa: PLR0912
+def _run_neighbourhoods(args: argparse.Namespace, url: str) -> int:
+    import psycopg  # noqa: PLC0415
+
+    from mdu import neighbourhoods  # noqa: PLC0415
+
+    j = load_jurisdiction(args.city)
+    extra = (j.config.get("neighbourhoods") or {}).get("extra") or []
+    with psycopg.connect(url) as conn, _client(args.city) as client:
+        result = neighbourhoods.run(
+            conn, city=args.city, bbox=j.bbox, refresh=args.refresh, log=print,
+            seeds=lambda: neighbourhoods.fetch_seeds(client, j.bbox, extra=extra, log=print),
+        )  # fmt: skip
+    print(f"neighbourhoods: {dict(result.counts)}")
+    print(f"database: {urlsplit(url).hostname}")
+    return 0
+
+
+def _run(args: argparse.Namespace) -> int:  # noqa: PLR0911, PLR0912
     import psycopg  # noqa: PLC0415
 
     from mdu import stages  # noqa: PLC0415
@@ -417,6 +452,8 @@ def _run(args: argparse.Namespace) -> int:  # noqa: PLR0912
         print(f"{args.stage}: {dict(result.counts)}")
         print(f"database: {urlsplit(url).hostname}")
         return 0
+    if args.stage == "neighbourhoods":  # map tiles only, and only when (re)drawing
+        return _run_neighbourhoods(args, url)
     with psycopg.connect(url) as conn, _client(args.city) as client:
         if args.stage == "discover":
             if not args.adapter:
@@ -457,6 +494,10 @@ def _daily(args: argparse.Namespace) -> int:
         return EXIT_FAILED
     adapters, order = _registry(args.city)
     store = ObjectStore.from_env()
+    from mdu import neighbourhoods  # noqa: PLC0415
+
+    j = load_jurisdiction(args.city)
+    extra = (j.config.get("neighbourhoods") or {}).get("extra") or []
     with psycopg.connect(url) as conn, _client(args.city) as client:
         streets, addresses = _indexes(args.city, client)
         llm, budget = _llm()
@@ -473,8 +514,11 @@ def _daily(args: argparse.Namespace) -> int:
             consult_reader=_task("consult"),
             summary_writer=_task("summary"),
             addresses=addresses,
-            bbox=load_jurisdiction(args.city).bbox,
+            bbox=j.bbox,
             llm_monthly_usd=budget,
+            neighbourhood_seeds=lambda: neighbourhoods.fetch_seeds(
+                client, j.bbox, extra=extra, log=print
+            ),
             fetch_limit=args.fetch_limit,
             max_bytes=args.max_mb * 1024 * 1024,
             log=lambda m: print(m, flush=True),
@@ -540,6 +584,27 @@ def _eval_consult(args: argparse.Namespace) -> int:
     return 0 if result.accuracy >= evals.CONSULT_REQUIRED_ACCURACY else EXIT_FAILED
 
 
+def _neighbourhoods(args: argparse.Namespace) -> int:
+    import json  # noqa: PLC0415
+
+    import psycopg  # noqa: PLC0415
+
+    from mdu import neighbourhoods  # noqa: PLC0415
+
+    url = _database_url()
+    if not url:
+        return EXIT_FAILED
+    collection = json.loads(args.file.read_text(encoding="utf-8"))
+    with psycopg.connect(url) as conn:
+        result = neighbourhoods.import_geojson(
+            conn, city=args.city, collection=collection, source=args.source,
+            name_property=args.name_property,
+        )  # fmt: skip
+    print(f"neighbourhoods import: {dict(result.counts)}")
+    print(f"database: {urlsplit(url).hostname}")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     load_env()
     args = build_parser().parse_args(argv)
@@ -550,6 +615,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "fixtures": _fixtures,
         "inventory": _inventory,
         "streets": _streets,
+        "neighbourhoods": _neighbourhoods,
         "run": _run,
         "ingest": _ingest,
     }

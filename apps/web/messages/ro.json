@@ -59,7 +59,7 @@
     "site_area_m2": "teren {value} m²",
     "initiator": "Inițiator: {value}",
     "auto": "Valori extrase automat din documentele proiectului; fiecare trimite la pagina din care provine.",
-    "pageLink": "{label} (pagina {page} din documentul sursă)"
+    "pageLink": "{label}, în documentul sursă"
   },
   "DocType": {
     "memoriu": "Memoriu",
@@ -265,6 +265,77 @@
     "csvInitiator": "Inițiator",
     "csvDate": "Ultimul eveniment",
     "csvSummary": "Rezumat",
-    "csvUrl": "Pagina proiectului"
+    "csvUrl": "Pagina proiectului",
+    "neighbourhood": "Cartier",
+    "approximateAreas": "Zone aproximative, după OpenStreetMap",
+    "csvNeighbourhood": "Cartier"
+  },
+  "Site": {
+    "sections": "Secțiuni",
+    "map": "Hartă",
+    "archive": "Arhivă",
+    "consultations": "Consultări",
+    "about": "Despre proiect",
+    "method": "Metodologie",
+    "feed": "Flux RSS al orașului",
+    "licences": "Date: CC BY 4.0 · Cod: AGPL-3.0 · Hartă și cartiere: © contribuitorii OpenStreetMap (ODbL)",
+    "notOfficial": "Proiect civic independent. Documentul oficial al primăriei rămâne sursa de referință."
+  },
+  "Consultations": {
+    "title": "Consultări publice în {city}",
+    "heading": "Consultări publice",
+    "intro": "Proiectele la care primăria primește acum observații de la cetățeni, cu termenul și adresa la care le trimiți. Mai jos, consultările încheiate și rapoartele lor.",
+    "openHeading": "Deschise acum",
+    "noneOpen": "Nicio consultare deschisă acum. Lista se actualizează în fiecare dimineață.",
+    "follow": "Urmărește fluxul RSS",
+    "howToComment": "Cum trimiți observații",
+    "notice": "Anunțul oficial",
+    "pastHeading": "Încheiate",
+    "pastIntro": "Cu raportul de consultare publicat de primărie, acolo unde există.",
+    "period": "{from} – {to}",
+    "report": "{n, plural, =0 {Raportul consultării} other {Raportul consultării ({n})}}",
+    "nonePast": "Nicio consultare încheiată încă."
+  },
+  "Feed": {
+    "newProject": "Proiect nou: {title}",
+    "event": "{type}: {title}"
+  },
+  "About": {
+    "title": "Despre proiect",
+    "heading": "Despre Monitor Dezvoltare Urbană",
+    "intro": "Monitor Dezvoltare Urbană arată pe o hartă ce se plănuiește în oraș: planuri urbanistice (PUZ, PUD), consultări publice și hotărâri ale consiliului local, adunate din documentele pe care primăria le publică pe site-ul ei.",
+    "whoHeading": "Cine îl face",
+    "who": "Un proiect civic independent, făcut de oameni din comunitate. Nu este un site al primăriei și nu o înlocuiește: fiecare informație are un link către documentul oficial din care provine, iar acel document rămâne sursa de referință.",
+    "sourcesHeading": "De unde vin datele",
+    "sources": "Doar din pagini publice ale primăriei. Robotul care le citește se prezintă, respectă regulile site-ului (robots.txt) și face cel mult o cerere la câteva secunde. Registrele pe care primăria nu le deschide roboților nu sunt citite.",
+    "privacyHeading": "Date personale",
+    "privacy": "Afișăm doar numele firmelor și ale instituțiilor. Când inițiatorul este o persoană, scriem „persoană fizică”. Site-ul nu folosește cookie-uri de urmărire și nu cere date personale.",
+    "errorsHeading": "Ai găsit o greșeală?",
+    "errors": "Scrie-ne la <email></email> cu linkul paginii și ce e greșit. Citim fiecare mesaj și corectăm datele, iar corecturile rămân în istoric.",
+    "licenceHeading": "Licențe",
+    "licenceData": "Datele adunate și prelucrate aici: <cc>CC BY 4.0</cc>. Le poți refolosi, cu mențiunea „Monitor Dezvoltare Urbană”.",
+    "licenceCode": "Codul sursă: <agpl>AGPL-3.0</agpl>.",
+    "licenceOsm": "Harta și zonele cartierelor: © <osm>contribuitorii OpenStreetMap</osm>, <odbl>ODbL</odbl>; dale de hartă OpenFreeMap și OpenMapTiles.",
+    "licenceDocs": "Documentele primăriei sunt informații de interes public (Legea 544/2001); le arătăm cu link la sursă."
+  },
+  "Method": {
+    "title": "Metodologie",
+    "heading": "Cum lucrăm",
+    "intro": "În fiecare dimineață un program citește paginile publice ale primăriei și actualizează site-ul. Fiecare valoare afișată păstrează documentul și pagina din care provine.",
+    "stepsHeading": "Pașii, în fiecare zi",
+    "step1": "<b>Colectare.</b> Citim listele de planuri urbanistice, anunțurile și ordinile de zi ale consiliului, și descărcăm documentele noi.",
+    "step2": "<b>Text.</b> Extragem textul din PDF-uri; paginile scanate trec prin recunoaștere optică (OCR), care poate greși la scanările slabe.",
+    "step3": "<b>Tipul documentului.</b> Reguli simple, apoi un model AI pentru cazurile neclare: memoriu, regulament, planșă, anunț, raport de consultare…",
+    "step4": "<b>Date despre proiect.</b> Un model AI citește înălțimea, POT, CUT, numărul de locuințe și altele. Fiecare valoare trebuie citată din pagina documentului; dacă citatul nu se găsește în pagină, valoarea e respinsă.",
+    "step5": "<b>Legare.</b> Același proiect apare în mai multe liste; le unim după identificatori (număr de HCL, certificat de urbanism, număr cadastral), adresă și titlu. Potrivirile nesigure le verifică un om.",
+    "step6": "<b>Localizare.</b> Întâi coordonatele din planșele proiectului (Stereo 70), apoi strada și numărul, apoi doar strada. Fiecare proiect arată cât de exactă e poziția.",
+    "step7": "<b>Consultări.</b> Din anunțurile oficiale citim perioada și adresa pentru observații; datele trebuie să apară scrise în anunț.",
+    "step8": "<b>Rezumate.</b> Două–trei propoziții neutre, generate automat din documente. Un rezumat e respins dacă are numere care nu sunt în documente, cuvinte de apreciere sau nume de persoane.",
+    "aiHeading": "Cum folosim inteligența artificială",
+    "ai": "Folosim modele Claude (Anthropic): unul mic pentru tipul documentelor, unul mai mare pentru date, consultări și rezumate. Răspunsurile sunt verificate automat ca mai sus, salvate și refolosite, iar textele generate sunt marcate „generat automat”. Bugetul lunar este limitat.",
+    "areasHeading": "Cartierele",
+    "areas": "OpenStreetMap are pentru cartiere doar un punct, fără contur. Până primim limitele oficiale, zona unui cartier este tot ce e mai aproape de punctul lui decât de al altui cartier: o aproximare, bună pentru filtre și fluxuri RSS, nu pentru limite exacte.",
+    "limitsHeading": "Limite",
+    "limits": "Datele pot fi incomplete sau întârziate cu o zi, iar documentele scanate pot fi citite greșit. Site-ul nu oferă consultanță juridică: pentru termene și decizii, verifică documentul oficial din link."
   }
 }

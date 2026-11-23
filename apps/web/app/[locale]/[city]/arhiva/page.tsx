@@ -1,16 +1,19 @@
 import type { FacetValue, SearchHit } from "@mdu/db";
 import { getJurisdiction } from "@mdu/db";
 import type { Metadata } from "next";
-import { getFormatter, getTranslations } from "next-intl/server";
-import Link from "next/link";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Download, LoaderCircle, Map as MapIcon, Search, SlidersHorizontal } from "lucide-react";
+import { Download, LoaderCircle, Search, SlidersHorizontal } from "lucide-react";
 import { AppBar } from "@/components/AppBar";
+import { SiteFooter } from "@/components/SiteFooter";
 import { AutoSubmit } from "@/components/AutoSubmit";
+import { SiteNav } from "@/components/SiteNav";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { archiveHref, parseArchive, toSearchParams, type ArchiveQuery } from "@/lib/archive";
+import { Link } from "@/i18n/navigation";
 import { getDb } from "@/lib/db";
+import { alternates } from "@/lib/locale";
 import { highlight, searchTerms, snippet } from "@/lib/highlight";
 import { projectPath } from "@/lib/project";
 import { cachedSearch } from "@/lib/search";
@@ -21,16 +24,17 @@ export const dynamic = "force-dynamic";
 const FORM = "archive";
 
 type Props = {
-  params: Promise<{ city: string }>;
+  params: Promise<{ locale: string; city: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { city } = await params;
+  const { locale, city } = await params;
+  setRequestLocale(locale);
   const j = await getJurisdiction(getDb(), city);
   if (!j) return {};
   const t = await getTranslations("Archive");
-  return { title: t("title", { city: j.name }), alternates: { canonical: `/${city}/arhiva` } };
+  return { title: t("title", { city: j.name }), alternates: alternates(locale, `/${city}/arhiva`) };
 }
 
 function Marked({ text, terms }: { text: string; terms: string[] }) {
@@ -74,9 +78,11 @@ async function Hit({ city, hit, terms }: { city: string; hit: SearchHit; terms: 
           <Marked text={snippet(text, terms)} terms={terms} />
         </p>
       )}
-      {hit.initiator && (
+      {(hit.initiator || hit.neighbourhood) && (
         <p className="mt-1 text-xs text-slate-500">
-          <Marked text={hit.initiator} terms={terms} />
+          {hit.neighbourhood}
+          {hit.neighbourhood && hit.initiator ? " · " : ""}
+          {hit.initiator && <Marked text={hit.initiator} terms={terms} />}
         </p>
       )}
     </li>
@@ -91,6 +97,7 @@ function Facet<T extends string | number>({
   label,
   type = "checkbox",
   all,
+  hint,
 }: {
   legend: string;
   name: string;
@@ -99,6 +106,7 @@ function Facet<T extends string | number>({
   label: (v: T) => string;
   type?: "checkbox" | "radio";
   all?: string;
+  hint?: string;
 }) {
   if (!values.length && !selected.length) return null;
   const shown = [
@@ -112,6 +120,7 @@ function Facet<T extends string | number>({
       <legend className="mb-1.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
         {legend}
       </legend>
+      {hint && <p className="mb-1.5 text-xs text-slate-500">{hint}</p>}
       <ul className="space-y-0.5">
         {all && (
           <li>
@@ -150,7 +159,8 @@ function Facet<T extends string | number>({
 }
 
 export default async function ArchivePage({ params, searchParams }: Props) {
-  const { city } = await params;
+  const { locale, city } = await params;
+  setRequestLocale(locale);
   const j = await getJurisdiction(getDb(), city);
   if (!j) notFound();
   const a: ArchiveQuery = parseArchive(await searchParams);
@@ -161,21 +171,17 @@ export default async function ArchivePage({ params, searchParams }: Props) {
   const terms = searchTerms(a.q);
   const pages = Math.max(1, Math.ceil(result.total / result.pageSize));
   const query = archiveHref(a, { page: 1 });
-  const filtered = a.kinds.length + a.statuses.length + a.initiators.length > 0 || a.year || a.open;
+  const filtered =
+    a.kinds.length + a.statuses.length + a.initiators.length + a.neighbourhoods.length > 0 ||
+    a.year ||
+    a.open;
+  const areaName = new Map(result.facets.neighbourhoods.map((n) => [n.value, n.label ?? n.value]));
 
   return (
     <>
       <AppBar
         city={{ slug: city, name: j.name }}
-        actions={
-          <Link
-            href={`/${city}`}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-slate-700 hover:bg-slate-100 hover:no-underline"
-          >
-            <MapIcon aria-hidden className="size-4" />
-            {t("mapLink")}
-          </Link>
-        }
+        actions={<SiteNav city={city} current="archive" />}
       />
       <main className="mx-auto max-w-5xl px-4 pt-5 pb-12">
         <h1 className="text-2xl font-bold">{t("heading")}</h1>
@@ -224,6 +230,18 @@ export default async function ArchivePage({ params, searchParams }: Props) {
                 values={result.facets.statuses}
                 selected={a.statuses}
                 label={(v) => status(v)}
+              />
+              <Facet
+                legend={t("neighbourhood")}
+                name="cartier"
+                values={result.facets.neighbourhoods}
+                selected={a.neighbourhoods}
+                label={(v) => areaName.get(v) ?? v}
+                hint={
+                  result.facets.neighbourhoods.some((n) => n.approximate)
+                    ? t("approximateAreas")
+                    : undefined
+                }
               />
               <Facet
                 legend={t("year")}
@@ -284,7 +302,7 @@ export default async function ArchivePage({ params, searchParams }: Props) {
                   {(["relevance", "date"] as const).map((s) => (
                     <Link
                       key={s}
-                      href={`?${archiveHref(a, { sort: s, page: 1 })}`}
+                      href={`/${city}/arhiva?${archiveHref(a, { sort: s, page: 1 })}`}
                       aria-current={a.sort === s ? "true" : undefined}
                       className="rounded-full px-2.5 py-1 text-slate-600 hover:no-underline aria-[current]:bg-accent-700 aria-[current]:text-white"
                     >
@@ -322,7 +340,7 @@ export default async function ArchivePage({ params, searchParams }: Props) {
                 className="mt-6 flex items-center justify-between text-sm"
               >
                 {a.page > 1 ? (
-                  <Link rel="prev" href={`?${archiveHref(a, { page: a.page - 1 })}`}>
+                  <Link rel="prev" href={`/${city}/arhiva?${archiveHref(a, { page: a.page - 1 })}`}>
                     {t("previous")}
                   </Link>
                 ) : (
@@ -330,7 +348,7 @@ export default async function ArchivePage({ params, searchParams }: Props) {
                 )}
                 <span className="text-slate-500">{t("pageOf", { page: a.page, pages })}</span>
                 {a.page < pages ? (
-                  <Link rel="next" href={`?${archiveHref(a, { page: a.page + 1 })}`}>
+                  <Link rel="next" href={`/${city}/arhiva?${archiveHref(a, { page: a.page + 1 })}`}>
                     {t("next")}
                   </Link>
                 ) : (
@@ -341,6 +359,7 @@ export default async function ArchivePage({ params, searchParams }: Props) {
           </section>
         </div>
       </main>
+      <SiteFooter city={city} />
     </>
   );
 }

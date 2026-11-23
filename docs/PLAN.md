@@ -337,6 +337,7 @@ The biggest risk is access to permit data, not technology: plan the product so i
   - [ ] Only what is already publicly on city platforms
 - [x] Which neighbourhood boundaries to use (OSM, PUG units, or hand-drawn), and who maintains them?
   - [ ] OSM or PUG Units
+  - [x] M4.4: approximate areas around OSM's points; the city's units replace them when it answers (ADR 0017)
 - [x] Project name and domain (e.g. `monitor``-``urban.ro`), and the legal entity that publishes it (NGO, informal group, individual).
   - [ ] `monitor-urban.ro`
   - [ ] Initially it will be published anonymously by the "community"

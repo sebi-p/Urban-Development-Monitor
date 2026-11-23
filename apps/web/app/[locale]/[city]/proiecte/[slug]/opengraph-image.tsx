@@ -50,14 +50,15 @@ function clip(text: string, max: number): string {
 export default async function Image({
   params,
 }: {
-  params: Promise<{ city: string; slug: string }>;
+  params: Promise<{ locale: string; city: string; slug: string }>;
 }) {
-  const { city, slug } = await params;
+  const { locale, city, slug } = await params;
   const { jurisdiction, lookup } = await loadProject(city, slug);
-  const t = await getTranslations("Project");
-  const status = await getTranslations("Status");
-  const kind = await getTranslations("Kind");
+  const t = await getTranslations({ locale, namespace: "Project" });
+  const status = await getTranslations({ locale, namespace: "Status" });
+  const kind = await getTranslations({ locale, namespace: "Kind" });
   const p = lookup.found ? lookup.project : null;
+  const summary = p && (locale === "en" ? (p.summaryEn ?? p.summaryRo) : p.summaryRo);
   const group = p ? STATUS_GROUP[p.status] : "closed";
   const loaded = await fonts();
   return new ImageResponse(
@@ -106,7 +107,7 @@ export default async function Image({
       >
         {clip(p?.title ?? slug, 110)}
       </div>
-      {p?.summaryRo && (
+      {summary && (
         <div
           style={{
             display: "flex",
@@ -116,7 +117,7 @@ export default async function Image({
             color: "#334155",
           }}
         >
-          {clip(p.summaryRo, 210)}
+          {clip(summary, 210)}
         </div>
       )}
       <div style={{ display: "flex", marginTop: "auto", fontSize: 24, color: "#64748b" }}>

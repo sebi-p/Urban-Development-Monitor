@@ -2,35 +2,41 @@ import { getJurisdiction, listProjects, projectsGeoJSON } from "@mdu/db";
 import { PROJECT_KINDS, PROJECT_STATUSES } from "@mdu/shared";
 import type { Metadata } from "next";
 import { LoaderCircle } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { AppBar } from "@/components/AppBar";
-import { ArchiveLink } from "@/components/ArchiveLink";
+import { SiteNav } from "@/components/SiteNav";
 import { BottomSheet } from "@/components/BottomSheet";
 import { FilterChips, FilterForm } from "@/components/FilterBar";
 import { ListMapBridge } from "@/components/ListMapBridge";
 import { ProjectList } from "@/components/ProjectList";
 import { ProjectMap } from "@/components/ProjectMap";
 import { getDb } from "@/lib/db";
+import { alternates } from "@/lib/locale";
 import { parseFilters, toDbFilters } from "@/lib/filters";
 
 export const dynamic = "force-dynamic";
 
 type Props = {
-  params: Promise<{ city: string }>;
+  params: Promise<{ locale: string; city: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { city } = await params;
+  const { locale, city } = await params;
+  setRequestLocale(locale);
   const j = await getJurisdiction(getDb(), city);
   if (!j) return {};
   const t = await getTranslations("City");
-  return { title: t("title", { city: j.name }) };
+  return {
+    title: t("title", { city: j.name }),
+    alternates: alternates(locale, `/${city}`, { city, title: j.name }),
+  };
 }
 
 export default async function CityPage({ params, searchParams }: Props) {
-  const { city } = await params;
+  const { locale, city } = await params;
+  setRequestLocale(locale);
   const filters = parseFilters(await searchParams);
   const db = getDb();
   const j = await getJurisdiction(db, city);
@@ -51,7 +57,7 @@ export default async function CityPage({ params, searchParams }: Props) {
 
   return (
     <>
-      <AppBar city={{ slug: city, name: j.name }} actions={<ArchiveLink city={city} />} />
+      <AppBar city={{ slug: city, name: j.name }} actions={<SiteNav city={city} current="map" />} />
       <main className="relative h-[calc(100dvh-var(--app-bar-height))] overflow-hidden">
         <h1 className="sr-only">{t("title", { city: j.name })}</h1>
         <div className="absolute inset-0">

@@ -54,6 +54,8 @@ export interface ProjectFilters {
   yearTo?: number;
   /** Only projects whose public consultation is open today (Bucharest date). */
   openConsultation?: boolean;
+  /** Neighbourhood slugs (M4.4): projects located in any of them. */
+  neighbourhoods?: string[];
 }
 
 /** SQL conditions on `project p` shared by the map and the list, so both show the same set. */
@@ -72,6 +74,10 @@ export function filterConditions(filters: ProjectFilters): SQL[] {
     out.push(sql`exists (select 1 from project_event ev where ev.project_id in ${family}
       and ev.review_state in ('auto_published', 'approved')
       and extract(year from ev.event_date) between ${from} and ${to})`);
+  }
+  if (filters.neighbourhoods?.length) {
+    out.push(sql`p.neighbourhood_id in (select n.id from neighbourhood n
+      where n.jurisdiction_id = p.jurisdiction_id and n.slug in ${filters.neighbourhoods})`);
   }
   if (filters.openConsultation) {
     out.push(sql`exists (select 1 from consultation co where co.project_id in ${family}
