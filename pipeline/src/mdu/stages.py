@@ -28,7 +28,7 @@ import json
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol
 from zoneinfo import ZoneInfo
 
@@ -61,6 +61,17 @@ class StageResult:
 def is_night(now: datetime | None = None, tz: str = "Europe/Bucharest") -> bool:
     hour = (now or datetime.now(UTC)).astimezone(ZoneInfo(tz)).hour
     return hour >= NIGHT_START or hour < NIGHT_END
+
+
+def night_left(now: datetime | None = None, tz: str = "Europe/Bucharest") -> float:
+    """Seconds until the night window ends (06:00 Bucharest), or 0 outside it."""
+    if not is_night(now, tz):
+        return 0.0
+    local = (now or datetime.now(UTC)).astimezone(ZoneInfo(tz))
+    end = local.replace(hour=NIGHT_END, minute=0, second=0, microsecond=0)
+    if local.hour >= NIGHT_START:
+        end += timedelta(days=1)
+    return (end - local).total_seconds()
 
 
 def _ids(cur: psycopg.Cursor[Any], city: str, adapter: str, base_url: str) -> tuple[int, str]:

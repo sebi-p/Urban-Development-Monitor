@@ -33,6 +33,22 @@ def debate_documents(client: PoliteClient, *, include_all: bool = False) -> list
     return items
 
 
+def attachment_items(article_id: int, article: notices.Article) -> list[DiscoveredItem]:
+    """A notice's attachments, queued with what the article says about them."""
+    return [
+        DiscoveredItem(
+            a.url,
+            {
+                "label": a.label,
+                "article_id": article_id,
+                "listing_title": article.title,
+                "published": article.published.isoformat() if article.published else None,
+            },
+        )
+        for a in article.attachments
+    ]
+
+
 def notice_attachments(client: PoliteClient, *, include_all: bool = False) -> list[DiscoveredItem]:
     """Attachments of urbanism PUZ/PUD notices (all urbanism notices if include_all)."""
     resp = client.get(notices.LISTING_URL)
@@ -44,20 +60,8 @@ def notice_attachments(client: PoliteClient, *, include_all: bool = False) -> li
             continue
         page = client.get(n.url)  # served with HTTP 404 but contains the article
         article = notices.parse_article(page.content, page.url)
-        if article is None:
-            continue
-        for a in article.attachments:
-            items.append(
-                DiscoveredItem(
-                    a.url,
-                    {
-                        "label": a.label,
-                        "article_id": n.article_id,
-                        "listing_title": article.title,
-                        "published": article.published.isoformat() if article.published else None,
-                    },
-                )
-            )
+        if article is not None:
+            items += attachment_items(n.article_id, article)
     return items
 
 

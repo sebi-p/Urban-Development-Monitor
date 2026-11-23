@@ -38,7 +38,8 @@ Placeholders such as `<project folder>` stand for real path segments. Real folde
 - **Articles:** `/detalii-articol/<category>/<slug>/<id>`. `<category>` is `urbanism` or `mediu` (environment), among others. `<id>` is a base64-encoded sequential number, e.g. `Mzc4Mjc` decodes to `37827`. Adapters should key articles on the decoded number, not the slug.
 - **Quirk: article pages answer HTTP 404 but still contain the article** (title and attachments). The adapter must accept a 404 for this path and check the content. Checked on three articles (fixtures `notices/*`).
 - **Attachments** are on `www` under `/file-zone/...` or `/stiri-wp/wp-content/uploads/YYYY/MM/`.
-- **Still to check in M0.2:** PLAN §2's 90-day date filter on the listing, and whether articles can be listed by ID range instead.
+- **History (M5.1, 2026-11-23):** the listing's date filter is behind Cloudflare Turnstile, so it isn't used. Any article opens by its number alone: the category and slug in the path aren't checked. Numbers are sequential across the whole site, and about 10% of them are articles. Number 2,000 is from October 2019, 21,000 from May 2023 and 35,000 from December 2025. There is no sitemap, and robots.txt is a 404 (everything allowed). `mdu backfill` walks the numbers (ADR 0018).
+- **Other towns:** some notices are about plans elsewhere (a 2021 PUZ in Săcele); adapters skip titles that name another town.
 
 ### council_agendas: proposed session agendas (P0)
 

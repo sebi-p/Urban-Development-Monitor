@@ -1,6 +1,7 @@
 """Brașov listing ingestion: public debates and urbanism notices -> ProjectRecords."""
 
 import re
+from typing import Any
 
 from mdu.adapters.brasov import council_debates, notices
 from mdu.core.enums import ProjectKind, ProjectStatus
@@ -108,6 +109,64 @@ def debate_records(
     return out
 
 
+# A notice about a plan in another town ("intravilan municipiul Săcele", "comuna Hărman"): the city
+# sometimes publishes those too. Brașov itself is allowed.
+_ELSEWHERE = re.compile(
+    r"\b(?:municipiul|ora[șşs]ul|comuna|satul)\s+(?!Bra[șşs]ov\b)[A-ZĂÂÎȘŞȚŢ][\w-]+", re.I
+)
+# Older notices are worded variously ("ANUNŢ – INFORMARE ŞI CONSULTARE …", "Anunț informare și …").
+_NOTICE_WORDS = re.compile(r"\banun[țţt]\w*\b.{0,40}\binformare\b", re.I)
+
+
+def elsewhere(title: str) -> bool:
+    """Whether a title places the plan in a town other than Brașov."""
+    m = _ELSEWHERE.search(title)
+    return m is not None and m.group(0).split()[-1][:1].isupper()
+
+
+def is_planning_notice(title: str) -> bool:
+    """A public-information notice about a PUZ/PUD (articles walked by id carry no category)."""
+    return bool(_NOTICE_WORDS.search(title)) and kind_of(title) is not None
+
+
+def notice_record(
+    article_id: int,
+    page: Any,  # mdu.core.http.Response
+    article: notices.Article,
+    streets: StreetIndex,
+    stats: IngestStats,
+) -> ProjectRecord | None:
+    """The project a PUZ/PUD notice announces, or None (counted in `stats`)."""
+    kind = kind_of(article.title)
+    if article.published is None:
+        stats.skip("article without a publication date")
+        return None
+    if kind is None:
+        stats.skip("not an urbanism PUZ/PUD notice")
+        return None
+    if elsewhere(article.title):
+        stats.skip("a plan in another town")
+        return None
+    if looks_personal(article.title) or looks_private_home(article.title):
+        stats.skipped_personal += 1
+        return None
+    address, street = _address(streets, article.title)
+    return ProjectRecord(
+        private_key=f"notice:{article_id}",
+        title=_tidy(article.title, _NOTICE_PREFIX),
+        official_title=article.title,
+        kind=kind,
+        status="in_preparation",
+        event_type="notice_published",
+        event_date=article.published,
+        event_title="Anunț de informare și consultare a publicului",
+        source=SourceDoc(page.url, page.status, page.content, page.content_type),
+        address_text=address,
+        street=street,
+        documents=[DocumentLink(a.label or "Document", a.url) for a in article.attachments],
+    )
+
+
 def urbanism_notices(
     client: PoliteClient, streets: StreetIndex, stats: IngestStats
 ) -> list[ProjectRecord]:
@@ -116,8 +175,7 @@ def urbanism_notices(
         raise HttpError(f"notices listing returned HTTP {resp.status}")
     out = []
     for item in notices.parse_listing(resp.content):
-        kind = kind_of(item.title)
-        if item.category != "urbanism" or kind is None:
+        if item.category != "urbanism" or kind_of(item.title) is None:
             stats.skip("not an urbanism PUZ/PUD notice")
             continue
         if looks_personal(item.title):
@@ -125,27 +183,10 @@ def urbanism_notices(
             continue
         page = client.get(item.url)  # served with HTTP 404 but contains the article
         article = notices.parse_article(page.content, page.url)
-        if article is None or article.published is None:
+        if article is None:
             stats.skip("article without a publication date")
             continue
-        if looks_personal(article.title) or looks_private_home(article.title):
-            stats.skipped_personal += 1
-            continue
-        address, street = _address(streets, article.title)
-        out.append(
-            ProjectRecord(
-                private_key=f"notice:{item.article_id}",
-                title=_tidy(article.title, _NOTICE_PREFIX),
-                official_title=article.title,
-                kind=kind,
-                status="in_preparation",
-                event_type="notice_published",
-                event_date=article.published,
-                event_title="Anunț de informare și consultare a publicului",
-                source=SourceDoc(page.url, page.status, page.content, page.content_type),
-                address_text=address,
-                street=street,
-                documents=[DocumentLink(a.label or "Document", a.url) for a in article.attachments],
-            )
-        )
+        record = notice_record(item.article_id, page, article, streets, stats)
+        if record is not None:
+            out.append(record)
     return out

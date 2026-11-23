@@ -7,7 +7,7 @@ import httpx
 import psycopg
 
 from mdu.core.http import PoliteClient
-from mdu.stages import DiscoveredItem, discover, fetch, is_night
+from mdu.stages import DiscoveredItem, discover, fetch, is_night, night_left
 
 PDF_A = b"%PDF-1.7 document A"
 PDF_B = b"%PDF-1.7 document B"
@@ -148,4 +148,7 @@ def test_each_run_is_logged(pg: psycopg.Connection[Any]) -> None:
 def test_night_window_is_bucharest_time() -> None:
     assert is_night(datetime(2026, 11, 20, 21, 0, tzinfo=UTC))  # 23:00 in Bucharest
     assert not is_night(datetime(2026, 11, 20, 10, 0, tzinfo=UTC))  # 12:00
+    assert night_left(datetime(2026, 11, 20, 20, 0, tzinfo=UTC)) == 8 * 3600  # 22:00 -> 06:00
+    assert night_left(datetime(2026, 11, 21, 3, 30, tzinfo=UTC)) == 30 * 60  # 05:30
+    assert night_left(datetime(2026, 11, 20, 10, 0, tzinfo=UTC)) == 0
     assert is_night(datetime(2026, 7, 1, 2, 30, tzinfo=UTC))  # 05:30 summer time

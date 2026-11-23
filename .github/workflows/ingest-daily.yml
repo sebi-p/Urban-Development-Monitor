@@ -12,8 +12,10 @@ permissions:
   contents: read
 
 concurrency:
-  group: ingest-daily
-  cancel-in-progress: false # never stop a run halfway; a second one waits
+  # Shared with the nightly back-fill: one job at a time talks to the city's site, and a run
+  # that would overlap waits (never stop a run halfway).
+  group: brasovcity-requests
+  cancel-in-progress: false
 
 jobs:
   daily:

@@ -1,0 +1,48 @@
+name: Back-fill (nightly)
+
+# PLAN §10, M5.1 (ADR 0018): walk the city's notices back to 2020, newest first, a night at a
+# time. Each run resumes where the last stopped; once the walk is done it exits in seconds. The
+# documents it queues are fetched and read by the daily run, under the monthly AI budget.
+# 20:05 UTC is 22:05 in Bucharest in winter and 23:05 in summer; the walk stops by 06:00
+# Bucharest (--night-only) even if GitHub starts the run late.
+on:
+  schedule:
+    - cron: "5 20 * * *"
+  workflow_dispatch:
+    inputs:
+      since:
+        description: "Walk back to this date (YYYY-MM-DD)"
+        default: "2020-01-01"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: brasovcity-requests # shared with the daily run: one job at a time talks to the city
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    name: Back-fill (Brașov)
+    runs-on: ubuntu-latest
+    timeout-minutes: 350 # GitHub's limit is 6 hours
+    defaults:
+      run:
+        working-directory: pipeline
+    env:
+      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3; no moving major tag
+        with:
+          working-directory: pipeline
+          enable-cache: true
+      - run: uv sync --locked --no-dev
+      - name: Walk back
+        env:
+          SINCE: ${{ inputs.since || '2020-01-01' }} # passed as data, never as shell code
+        run: uv run --no-dev mdu backfill --city brasov --night-only --hours 5.5 --since "$SINCE"

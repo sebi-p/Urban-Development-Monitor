@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 from collections.abc import Callable, Sequence
+from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
@@ -32,6 +33,18 @@ def _add_neighbourhoods(sub: Any) -> None:
     nb_import.add_argument("--file", type=Path, required=True, help="GeoJSON, WGS 84")
     nb_import.add_argument("--source", choices=["pug_unit", "manual"], required=True)
     nb_import.add_argument("--name-property", default="name", help="feature property with the name")
+
+
+def _add_backfill(sub: Any) -> None:
+    bf = sub.add_parser("backfill", help="walk numbered sources back to a date (M5.1, nightly)")
+    bf.add_argument("--city", required=True)
+    bf.add_argument("--since", type=date.fromisoformat, default=date(2020, 1, 1))
+    bf.add_argument("--hours", type=float, default=5.5, help="stop walking after this long")
+    bf.add_argument("--adapter", help="one adapter (default: every adapter with a back-fill)")
+    bf.add_argument("--status", action="store_true", help="show progress per year; fetch nothing")
+    bf.add_argument(
+        "--night-only", action="store_true", help="refuse to run outside 22:00–06:00 Bucharest"
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -79,6 +92,8 @@ def build_parser() -> argparse.ArgumentParser:
     daily.add_argument("--city", required=True)
     daily.add_argument("--fetch-limit", type=int, default=300, help="max documents to fetch")
     daily.add_argument("--max-mb", type=int, default=30, help="skip larger files")
+
+    _add_backfill(sub)
 
     ev = sub.add_parser("eval", help="score field extraction on the golden set (calls the model)")
     ev.add_argument("what", choices=["fields", "consult"])
@@ -605,10 +620,59 @@ def _neighbourhoods(args: argparse.Namespace) -> int:
     return 0
 
 
+def _backfill(args: argparse.Namespace) -> int:
+    import psycopg  # noqa: PLC0415
+
+    from mdu import backfill, stages  # noqa: PLC0415
+    from mdu.core.storage import ObjectStore  # noqa: PLC0415
+
+    url = _database_url()
+    if not url:
+        return EXIT_FAILED
+    adapters = [
+        a
+        for k, a in _registry(args.city)[0].items()
+        if a.backfill is not None and (args.adapter in (None, k))
+    ]
+    if not adapters:
+        print("no adapter with a back-fill", file=sys.stderr)
+        return EXIT_FAILED
+    with psycopg.connect(url) as conn:
+        if args.status:
+            print("\n".join(backfill.status(conn, args.city, adapters)))
+            return 0
+        if args.night_only and not stages.is_night():
+            print(
+                "outside the 22:00–06:00 Bucharest window (PLAN §7); not running", file=sys.stderr
+            )
+            return EXIT_FAILED
+        upload = ObjectStore.from_env().put
+        with _client(args.city) as client:
+            streets = _street_index(args.city, client)
+            hours = args.hours * 3600
+            # A scheduled run can start late: never walk past 06:00 Bucharest with --night-only.
+            budget = min(hours, stages.night_left()) if args.night_only else hours
+            seconds = budget / len(adapters)
+            for a in adapters:
+                r = backfill.run(
+                    conn, client, streets, a, city=args.city, since=args.since,
+                    seconds=seconds, upload=upload, log=lambda m: print(m, flush=True),
+                )  # fmt: skip
+                print(
+                    f"{a.key}: walked {r.walked} numbers, {r.projects} projects, "
+                    f"{r.documents} documents queued; skipped {r.skipped}"
+                )
+            requests = client.requests_sent
+        print("\n".join(backfill.status(conn, args.city, adapters)))
+    print(f"{requests} requests; database: {urlsplit(url).hostname}")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     load_env()
     args = build_parser().parse_args(argv)
     commands: dict[str, Callable[[argparse.Namespace], int]] = {
+        "backfill": _backfill,
         "daily": _daily,
         "eval": _eval,
         "fetch": _fetch,

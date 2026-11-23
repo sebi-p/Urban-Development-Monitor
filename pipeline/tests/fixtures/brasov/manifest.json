@@ -2269,6 +2269,39 @@
       "note": "M3.4 extracted text of a plan sheet with a Stereo 70 inventory (private)"
     },
     {
+      "id": "notices/article-missing",
+      "source": "notices",
+      "fetched_at": "2026-11-23T13:15:30+00:00",
+      "status": 404,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 228757,
+      "sha256": "b0a63055ccb9f8096d2b6c50d1eb503d6aa98e0b4e673bce44ed5d19e77bc70d",
+      "file": "b0a63055ccb9f8096d2b6c50d1eb503d6aa98e0b4e673bce44ed5d19e77bc70d.html",
+      "note": "an article id with no article: the 404 template"
+    },
+    {
+      "id": "notices/article-news-2021",
+      "source": "notices",
+      "fetched_at": "2026-11-23T13:15:27+00:00",
+      "status": 404,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 233733,
+      "sha256": "a567e94c1edf64f89d21278a7bdf16c64affbbb19255ca068a9178bf3bdfcd87",
+      "file": "a567e94c1edf64f89d21278a7bdf16c64affbbb19255ca068a9178bf3bdfcd87.html",
+      "note": "2021 news article (not urbanism), fetched by article id"
+    },
+    {
+      "id": "notices/article-other-town-2021",
+      "source": "notices",
+      "fetched_at": "2026-11-23T13:15:24+00:00",
+      "status": 404,
+      "content_type": "text/html; charset=UTF-8",
+      "size": 232929,
+      "sha256": "97c05abbfa781bb3e13b2267f675371d1950a620389dd72163217fb1f2803f0a",
+      "file": "97c05abbfa781bb3e13b2267f675371d1950a620389dd72163217fb1f2803f0a.html",
+      "note": "2021 PUZ notice for another town (Săcele), fetched by article id"
+    },
+    {
       "id": "notices/environment-screening-decision",
       "source": "notices",
       "fetched_at": "2026-11-20T14:44:30+00:00",

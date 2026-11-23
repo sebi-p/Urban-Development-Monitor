@@ -5,9 +5,10 @@ import re
 
 from mdu.adapters.brasov import council_agendas, council_debates, notices, urbanism_hub
 from mdu.adapters.brasov.agendas import agenda_events
+from mdu.adapters.brasov.backfill import newest_article, read_article
 from mdu.adapters.brasov.discover import debate_documents, hub_documents, notice_attachments
 from mdu.adapters.brasov.ingest import debates, urbanism_notices
-from mdu.core.adapter import Adapter, NeverMirror
+from mdu.core.adapter import Adapter, IdWalk, NeverMirror
 
 # The public debates' "Registru opinii" lists the residents who commented (docs/sources).
 REGISTERS = NeverMirror(
@@ -30,6 +31,7 @@ ADAPTERS: dict[str, Adapter] = {
             notices.LISTING_URL,
             projects=urbanism_notices,
             discover=notice_attachments,
+            backfill=IdWalk(newest_article, read_article),
             never_mirror=(REGISTERS,),
         ),
         Adapter(

@@ -5,7 +5,9 @@ An adapter provides any of three hooks:
 
 - `projects` turns listing pages into project records (written by `mdu.ingest.write_records`);
 - `events` adds dated events to existing projects (e.g. a council agenda naming a project);
-- `discover` lists document URLs for the fetch stage.
+- `discover` lists document URLs for the fetch stage;
+- `backfill` walks a sequentially numbered source backwards for history the listings no longer
+  show (`mdu backfill`, M5.1).
 
 Files whose listing label matches `never_mirror` (for example registers that list the residents
 who commented) are queued as `skipped` and never requested (PLAN §11).
@@ -17,6 +19,7 @@ import re
 from collections import Counter
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
+from datetime import date
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -36,6 +39,26 @@ DiscoverHook = Callable[..., "list[DiscoveredItem]"]
 
 
 @dataclass(frozen=True)
+class Walked:
+    """What one number of a walked source held: nothing, or an item with its date, maybe a
+    project and documents to queue."""
+
+    found: bool
+    published: date | None = None
+    record: ProjectRecord | None = None
+    items: tuple[DiscoveredItem, ...] = ()
+
+
+@dataclass(frozen=True)
+class IdWalk:
+    """A source whose items have sequential numbers (PLAN §10.2): `start` gives the newest number,
+    `read` one item. The driver (`mdu.backfill`) walks down from `start` to a date."""
+
+    start: Callable[[PoliteClient], int]
+    read: Callable[[PoliteClient, StreetIndex, IngestStats, int], Walked]
+
+
+@dataclass(frozen=True)
 class NeverMirror:
     pattern: re.Pattern[str]
     reason: str
@@ -51,6 +74,7 @@ class Adapter:
     projects: ProjectsHook | None = None
     events: EventsHook | None = None
     discover: DiscoverHook | None = None
+    backfill: IdWalk | None = None
     never_mirror: tuple[NeverMirror, ...] = ()
 
     @property

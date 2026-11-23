@@ -19,6 +19,13 @@ LISTING_URL = f"{BASE_URL}/anunturi"
 _ARTICLE = re.compile(r"/detalii-articol/([^/]+)/[^/]+/([A-Za-z0-9+/=_-]+)/?$")
 
 
+def article_url(article_id: int) -> str:
+    """An article's address from its number alone: the category and slug in the path are not
+    checked by the site (docs/sources/brasov.md)."""
+    token = base64.b64encode(str(article_id).encode()).decode().rstrip("=")
+    return f"{BASE_URL}/detalii-articol/anunt/articol/{token}"
+
+
 def decode_article_id(token: str) -> int | None:
     """Article ids are base64-encoded sequential numbers: 'Mzc4Mjc' -> 37827."""
     try:
