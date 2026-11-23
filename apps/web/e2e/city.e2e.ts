@@ -145,3 +145,29 @@ test("projects without a location have no Arată pe hartă button", async ({ pag
     await expect(card.locator("[data-show-on-map]")).toHaveCount(located ? 1 : 0);
   }
 });
+
+test("while new results load, a bar, a spinner and the faded list show it", async ({
+  page,
+  city,
+}) => {
+  await page.goto(`/${city}`);
+  await expect(page.locator(".map[data-ready=true]")).toBeVisible();
+  // Hold the server's answer for the new filters until the cues have been checked.
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  await page.route(
+    (url) => url.pathname === `/${city}` && url.searchParams.has("tip"),
+    async (route) => {
+      await held;
+      await route.continue();
+    },
+  );
+  await page.getByRole("checkbox", { name: "PUZ", exact: true }).check();
+  await expect(page.locator(".busy-bar")).toHaveCSS("opacity", "1");
+  await expect(page.locator(".busy-spinner")).toHaveCSS("opacity", "1");
+  await expect(page.locator("[data-busy-fade]:has(> .project-list)")).toHaveCSS("opacity", "0.5");
+  release();
+  await expect(page).toHaveURL(/tip=puz/);
+  await expect(page.locator(".busy-bar")).toHaveCSS("opacity", "0");
+  await expect(page.locator("html")).not.toHaveAttribute("data-busy");
+});

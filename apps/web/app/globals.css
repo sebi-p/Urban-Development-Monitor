@@ -59,3 +59,45 @@
 .maplibregl-ctrl-group {
   @apply rounded-xl! shadow-[var(--shadow-card)]!;
 }
+
+/* Loading new results (lib/busy.ts): a sliding bar under the app bar, faded results and a small
+   spinner by the count. Delayed 150 ms so quick updates don't flicker. */
+.busy-bar {
+  @apply pointer-events-none absolute inset-x-0 -bottom-px h-0.5 overflow-hidden opacity-0;
+}
+.busy-bar::before {
+  content: "";
+  @apply absolute inset-y-0 w-2/5 bg-accent-600;
+  animation: busy-slide 1.1s ease-in-out infinite;
+}
+@keyframes busy-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+[data-busy-fade],
+.busy-bar,
+.busy-spinner {
+  transition: opacity 0.2s;
+}
+.busy-spinner {
+  @apply opacity-0;
+}
+html[data-busy] .busy-bar,
+html[data-busy] .busy-spinner {
+  @apply opacity-100;
+  transition-delay: 150ms;
+}
+html[data-busy] [data-busy-fade] {
+  @apply opacity-50;
+  transition-delay: 150ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .busy-bar::before {
+    @apply w-full opacity-60;
+    animation: none;
+  }
+}

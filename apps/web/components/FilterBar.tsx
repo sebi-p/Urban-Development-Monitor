@@ -4,7 +4,8 @@ import type { ProjectKind, ProjectStatus } from "@mdu/shared";
 import { SlidersHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { useSyncExternalStore, useTransition, type ChangeEvent } from "react";
+import { useEffect, useSyncExternalStore, useTransition, type ChangeEvent } from "react";
+import { setBusy } from "@/lib/busy";
 import { toQuery, type UrlFilters } from "@/lib/filters";
 import { GROUP_ICON, STATUS_GROUP } from "@/lib/status";
 import { cn } from "@/lib/utils";
@@ -89,6 +90,10 @@ export function FilterForm({ filters, years }: { filters: UrlFilters; years: num
   const router = useRouter();
   const pathname = usePathname();
   const [pending, startTransition] = useTransition();
+  useEffect(() => {
+    setBusy(pending);
+    return () => setBusy(false);
+  }, [pending]);
   // Apply is only needed without JavaScript: true in the browser, false in the server render.
   const hydrated = useSyncExternalStore(
     noop,
@@ -115,7 +120,8 @@ export function FilterForm({ filters, years }: { filters: UrlFilters; years: num
         });
         startTransition(() => router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false }));
       }}
-      className={cn("mb-3 text-sm", pending && "opacity-60")}
+      className="mb-3 text-sm"
+      data-busy-fade
     >
       <details open={more} className="group rounded-xl border border-slate-200 bg-slate-50">
         <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 font-medium text-slate-700">

@@ -60,3 +60,18 @@ test("a repeated search answers from the cache in under 300 ms", async ({ page, 
   expect(res.status()).toBe(200);
   expect(Date.now() - start).toBeLessThan(300);
 });
+
+test("while a new search loads, the bar shows and the results fade", async ({ page, city }) => {
+  await page.goto(`/${city}/arhiva`);
+  await expect(page.getByRole("button", { name: "Aplică" })).toBeHidden(); // hydrated
+  // A full-page load can't be inspected half-way, so cancel the submit after the page has
+  // marked itself busy (this listener runs after the page's own) and look at the cues.
+  await page.evaluate(() =>
+    document.addEventListener("submit", (e) => e.preventDefault(), { once: true }),
+  );
+  await page.getByRole("checkbox", { name: /^PUD/ }).check();
+  await expect(page.locator("html")).toHaveAttribute("data-busy");
+  await expect(page.locator(".busy-bar")).toHaveCSS("opacity", "1");
+  await expect(page.locator(".busy-spinner")).toHaveCSS("opacity", "1");
+  await expect(page.locator("section[data-busy-fade]")).toHaveCSS("opacity", "0.5");
+});

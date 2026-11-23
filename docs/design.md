@@ -73,6 +73,7 @@ Headings use tight letter spacing (`tracking-tight`). Text is never smaller than
 | Map          | `ProjectMap`            | OpenFreeMap "liberty" base, clusters with click-to-zoom, pins with a white outline, popups with a link to the card and the project page                                                                                                   |
 | Archive      | `/{city}/arhiva`        | Search box, facets with counts (checkbox per value, year as radio), results with matches marked (`<mark>`, amber tint), relevance/date switch, CSV link; one GET form                                                                     |
 | Show on map  | card button             | "Arată pe hartă" (only with a location); hover or focus on a card draws its pin larger with an accent ring                                                                                                                                |
+| Loading      | `lib/busy.ts`           | While new results load (filters, archive search): an accent bar slides under the app bar, a spinner sits by the count, the list fades to 50%; all after 150 ms so quick updates don't flicker; reduced motion shows a still bar           |
 | Project page | `components/project/*`  | Header (status, title, address), consultation box first while open, summary card with its source chip, figures with page links, timeline (hollow dot = still to come), documents, small map loaded on scroll, nearby list, "last checked" |
 
 ## Words

@@ -27,6 +27,7 @@ export async function AppBar({
         </span>
       </Link>
       <div className="ml-auto flex items-center gap-2">{actions}</div>
+      <span aria-hidden className="busy-bar" />
     </header>
   );
 }

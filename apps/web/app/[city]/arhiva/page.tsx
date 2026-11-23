@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Download, Map as MapIcon, Search, SlidersHorizontal } from "lucide-react";
+import { Download, LoaderCircle, Map as MapIcon, Search, SlidersHorizontal } from "lucide-react";
 import { AppBar } from "@/components/AppBar";
 import { AutoSubmit } from "@/components/AutoSubmit";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -264,13 +264,20 @@ export default async function ArchivePage({ params, searchParams }: Props) {
             </div>
           </details>
 
-          <section aria-labelledby="results-heading" className="min-w-0">
+          <section aria-labelledby="results-heading" className="min-w-0" data-busy-fade>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <h2 id="results-heading" className="text-sm font-semibold text-slate-900">
+              <h2
+                id="results-heading"
+                className="flex items-center gap-2 text-sm font-semibold text-slate-900"
+              >
                 <output aria-live="polite">
                   {t("results", { count: result.total })}
                   {a.q ? ` ${t("resultsFor", { q: a.q })}` : ""}
                 </output>
+                <LoaderCircle
+                  aria-hidden
+                  className="busy-spinner size-3.5 shrink-0 text-slate-500 motion-safe:animate-spin"
+                />
               </h2>
               {a.q && (
                 <nav aria-label={t("sort")} className="flex items-center gap-1 text-sm">

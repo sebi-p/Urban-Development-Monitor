@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
+import { setBusy } from "@/lib/busy";
 
 /** Submits the form with this id whenever one of its fields changes (checkboxes, radios,
- * selects), and hides what is only needed without JavaScript (`data-no-js`, the Apply button). */
+ * selects), shows that results are loading (lib/busy.ts), and hides what is only needed without JavaScript (`data-no-js`, the Apply button). */
 export function AutoSubmit({ form }: { form: string }) {
   useEffect(() => {
     for (const n of document.querySelectorAll<HTMLElement>("[data-no-js]")) n.hidden = true;
@@ -16,8 +17,20 @@ export function AutoSubmit({ form }: { form: string }) {
         target.form.requestSubmit();
       }
     };
+    // Any submit of the form, by a change or the search button, loads a new page.
+    const onSubmit = (e: SubmitEvent) => {
+      if ((e.target as HTMLFormElement | null)?.id === form) setBusy(true);
+    };
+    const onShow = () => setBusy(false); // back to this page from the browser's cache
     document.addEventListener("change", onChange);
-    return () => document.removeEventListener("change", onChange);
+    document.addEventListener("submit", onSubmit);
+    window.addEventListener("pageshow", onShow);
+    return () => {
+      document.removeEventListener("change", onChange);
+      document.removeEventListener("submit", onSubmit);
+      window.removeEventListener("pageshow", onShow);
+      setBusy(false);
+    };
   }, [form]);
   return null;
 }

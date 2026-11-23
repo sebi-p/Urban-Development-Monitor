@@ -1,6 +1,7 @@
 import { getJurisdiction, listProjects, projectsGeoJSON } from "@mdu/db";
 import { PROJECT_KINDS, PROJECT_STATUSES } from "@mdu/shared";
 import type { Metadata } from "next";
+import { LoaderCircle } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { AppBar } from "@/components/AppBar";
@@ -58,15 +59,21 @@ export default async function CityPage({ params, searchParams }: Props) {
         </div>
         <BottomSheet
           title={
-            <p className="text-sm font-semibold text-slate-900">
+            <p className="flex items-center gap-2 text-sm font-semibold text-slate-900">
               <output aria-live="polite">{filtersT("showing", { count: list!.length })}</output>
+              <LoaderCircle
+                aria-hidden
+                className="busy-spinner size-3.5 shrink-0 text-slate-500 motion-safe:animate-spin"
+              />
             </p>
           }
           toolbar={<FilterChips filters={filters} kinds={kinds} statuses={statuses} />}
         >
           <FilterForm filters={filters} years={years} />
           <h2 className="sr-only">{t("listHeading", { count: list!.length })}</h2>
-          <ProjectList city={city} projects={list!} />
+          <div data-busy-fade>
+            <ProjectList city={city} projects={list!} />
+          </div>
           <ListMapBridge />
         </BottomSheet>
       </main>
