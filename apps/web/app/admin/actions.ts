@@ -3,12 +3,16 @@
 import {
   decideCandidate,
   mergeProjects,
+  publishAudit,
+  recordCheck,
+  startAudit,
   requestRerun,
   setManualLocation,
   splitProject,
   type RerunStage,
 } from "@mdu/db";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { adminLogin, signIn, signOut } from "@/auth";
 import { getDb } from "@/lib/db";
 
@@ -71,4 +75,35 @@ export async function rerunAction(form: FormData) {
     actor,
   });
   revalidatePath(`/admin/projects/${text(form, "projectId")}`);
+}
+
+export async function startAuditAction(form: FormData) {
+  const actor = await requireAdmin();
+  const id = await startAudit(getDb(), {
+    city: text(form, "city"),
+    size: Number(text(form, "size")),
+    actor,
+  });
+  redirect(`/admin/audit/${id}/1`);
+}
+
+export async function checkAction(form: FormData) {
+  const actor = await requireAdmin();
+  const note = form.get("note");
+  await recordCheck(getDb(), {
+    itemId: text(form, "itemId"),
+    field: text(form, "field"),
+    key: typeof form.get("key") === "string" ? (form.get("key") as string) : "",
+    verdict: text(form, "verdict"),
+    note: typeof note === "string" ? note : null,
+    actor,
+  });
+  revalidatePath(`/admin/audit/${text(form, "auditId")}/${text(form, "position")}`);
+}
+
+export async function publishAuditAction(form: FormData) {
+  const actor = await requireAdmin();
+  await publishAudit(getDb(), { auditId: text(form, "auditId"), actor });
+  revalidatePath("/admin/audit");
+  revalidatePath("/[locale]/metodologie", "page"); // the published accuracy
 }

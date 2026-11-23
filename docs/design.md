@@ -78,6 +78,7 @@ Headings use tight letter spacing (`tracking-tight`). Text is never smaller than
 | Consultations | `/{city}/consultari`      | Open and upcoming as cards (deadline, days left, email, notice), then closed ones as a list with the notice and the city's reports                                                                                                        |
 | Text pages    | `ProsePage`               | `/despre`, `/metodologie`: one 42 rem column, h2 sections; links in running text are underlined                                                                                                                                           |
 | Footer        | `SiteFooter`              | About, method, the city's RSS feed and the licences; on every page except the map                                                                                                                                                         |
+| Audit         | `/admin/audit/{id}/{n}`   | Values on the left (one card each: label, value, source page, Corect / Greșit / Nesigur / Nu se aplică, note), the mirrored PDF on the right at the cited page                                                                            |
 | Project page  | `components/project/*`    | Header (status, title, address), consultation box first while open, summary card with its source chip, figures with page links, timeline (hollow dot = still to come), documents, small map loaded on scroll, nearby list, "last checked" |
 
 ## Words

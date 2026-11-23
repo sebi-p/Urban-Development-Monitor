@@ -26,7 +26,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
     return (
       <>
         <AppBar languages={false} />
-        <main className="mx-auto max-w-5xl p-4">
+        <main className="mx-auto max-w-7xl p-4">
           <h1 className="mb-2 text-2xl font-semibold">{t("title")}</h1>
           <p className="text-slate-600">{t("notConfigured")}</p>
         </main>
@@ -53,7 +53,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
           ) : null
         }
       />
-      <main className="mx-auto max-w-5xl p-4">
+      <main className="mx-auto max-w-7xl p-4">
         <h1 className="mb-4 text-2xl font-semibold">
           <Link href="/admin" className="text-slate-900">
             {t("title")}

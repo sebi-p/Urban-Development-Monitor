@@ -108,3 +108,19 @@ export type FetchStatus = (typeof FETCH_STATUSES)[number];
 export type CorrectionState = (typeof CORRECTION_STATES)[number];
 export type LegalRegime = (typeof LEGAL_REGIMES)[number];
 export type PipelineRunStatus = (typeof PIPELINE_RUN_STATUSES)[number];
+
+/** What an accuracy audit checks on each sampled project (M5.2, PLAN §10.7). */
+export const AUDIT_FIELDS = [
+  "status",
+  "location",
+  "kind",
+  "title",
+  "figure",
+  "summary",
+  "consultation",
+] as const;
+export type AuditField = (typeof AUDIT_FIELDS)[number];
+
+/** A reviewer's verdict on one value, compared with its source document. */
+export const AUDIT_VERDICTS = ["correct", "wrong", "unsure", "not_applicable"] as const;
+export type AuditVerdict = (typeof AUDIT_VERDICTS)[number];

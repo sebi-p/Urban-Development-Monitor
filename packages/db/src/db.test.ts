@@ -84,6 +84,8 @@ describe.skipIf(!adminUrl)("database (PostGIS)", () => {
       ["correction_state", shared.CORRECTION_STATES],
       ["legal_regime", shared.LEGAL_REGIMES],
       ["pipeline_run_status", shared.PIPELINE_RUN_STATUSES],
+      ["audit_field", shared.AUDIT_FIELDS],
+      ["audit_verdict", shared.AUDIT_VERDICTS],
     ];
     const rows = await sql`
       select t.typname, array_agg(e.enumlabel order by e.enumsortorder) as labels

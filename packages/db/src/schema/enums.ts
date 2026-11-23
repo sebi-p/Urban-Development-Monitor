@@ -1,5 +1,7 @@
 import {
   AGENDA_OUTCOMES,
+  AUDIT_FIELDS,
+  AUDIT_VERDICTS,
   CONFIDENCE_LEVELS,
   CORRECTION_STATES,
   DOCUMENT_ROLES,
@@ -29,3 +31,5 @@ export const fetchStatus = pgEnum("fetch_status", FETCH_STATUSES);
 export const correctionState = pgEnum("correction_state", CORRECTION_STATES);
 export const legalRegime = pgEnum("legal_regime", LEGAL_REGIMES);
 export const pipelineRunStatus = pgEnum("pipeline_run_status", PIPELINE_RUN_STATUSES);
+export const auditField = pgEnum("audit_field", AUDIT_FIELDS);
+export const auditVerdict = pgEnum("audit_verdict", AUDIT_VERDICTS);

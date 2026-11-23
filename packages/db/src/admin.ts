@@ -66,7 +66,8 @@ export async function listReviewQueue(
   }));
 }
 
-async function audit(
+/** Writes one audit_log row (every admin write does, in its own transaction). */
+export async function writeAuditLog(
   tx: Tx,
   entry: {
     jurisdictionId: number;
@@ -116,7 +117,7 @@ async function merge(tx: Tx, projectId: string, intoId: string, actor: string, r
       ${JSON.stringify({ reviewer: reason })}::jsonb, 'approved', now())
     on conflict (jurisdiction_id, subject, candidate_project_id)
       do update set state = 'approved', decided_at = now()`);
-  await audit(tx, {
+  await writeAuditLog(tx, {
     jurisdictionId: p.jurisdiction_id,
     actor,
     entity: "project",
@@ -147,7 +148,7 @@ export async function splitProject(db: Db, args: { projectId: string; actor: str
         ${p.merged_into_id}, 0, '{"reviewer": "split"}'::jsonb, 'rejected', now())
       on conflict (jurisdiction_id, subject, candidate_project_id)
         do update set state = 'rejected', decided_at = now()`);
-    await audit(tx, {
+    await writeAuditLog(tx, {
       jurisdictionId: p.jurisdiction_id,
       actor: args.actor,
       entity: "project",
@@ -201,7 +202,7 @@ export async function decideCandidate(
           on conflict do nothing`);
       }
     }
-    await audit(tx, {
+    await writeAuditLog(tx, {
       jurisdictionId: c.jurisdiction_id,
       actor: args.actor,
       entity: "link_candidate",
@@ -243,7 +244,7 @@ export async function setManualLocation(
         indicators = jsonb_set(indicators, '{location}', ${JSON.stringify(location)}::jsonb),
         updated_at = now()
       where id = ${projectId}`);
-    await audit(tx, {
+    await writeAuditLog(tx, {
       jurisdictionId: p.jurisdiction_id,
       actor,
       entity: "project",
@@ -284,7 +285,7 @@ export async function requestRerun(
                            where raw_document_id = ${id} and task = 'classify' and model = 'rules'`);
     }
     await tx.execute(fields);
-    await audit(tx, {
+    await writeAuditLog(tx, {
       jurisdictionId: d.jurisdiction_id,
       actor,
       entity: "raw_document",

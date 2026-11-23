@@ -5,3 +5,4 @@ export * from "./queries.ts";
 export * from "./admin.ts";
 export * from "./search.ts";
 export * from "./public.ts";
+export * from "./audit.ts";

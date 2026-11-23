@@ -14,8 +14,9 @@ export default async function ReviewQueue() {
   const queue = await listReviewQueue(getDb(), CITY);
   return (
     <>
-      <nav className="mb-2 text-sm">
+      <nav className="mb-2 flex gap-4 text-sm">
         <Link href="/admin/projects">{t("projects")}</Link>
+        <Link href="/admin/audit">{t("auditTitle")}</Link>
       </nav>
       <h2 className="mt-2 mb-3 text-xl font-semibold">{t("queue")}</h2>
       {queue.length === 0 ? (
