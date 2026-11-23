@@ -1,4 +1,4 @@
-import { date, index, integer, pgTable, text, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, date, index, integer, pgTable, text, unique, uuid } from "drizzle-orm/pg-core";
 import { id, jurisdictionId } from "./columns.ts";
 import { rawDocument } from "./documents.ts";
 import { agendaOutcome } from "./enums.ts";
@@ -38,7 +38,13 @@ export const agendaItem = pgTable(
     votesFor: integer("votes_for"),
     votesAgainst: integer("votes_against"),
     votesAbstain: integer("votes_abstain"),
+    /** Councillors present who didn't vote ("neparticipări"). */
+    votesAbsent: integer("votes_absent"),
+    /** Adopted "cu unanimitate": the counts are then left empty. */
+    unanimous: boolean("unanimous").notNull().default(false),
     rawDocumentId: uuid("raw_document_id").references(() => rawDocument.id),
+    /** The page of `raw_document_id` that records the outcome (1-based). */
+    page: integer("page"),
   },
   (t) => [unique().on(t.sessionId, t.itemNumber), index("agenda_item_project_idx").on(t.projectId)],
 );

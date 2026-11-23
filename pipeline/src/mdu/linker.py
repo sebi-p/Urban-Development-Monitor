@@ -34,7 +34,7 @@ import psycopg
 from mdu.core import fields
 from mdu.core.identifiers import find_identifiers
 from mdu.core.streets import StreetIndex, fold, house_number, normalize
-from mdu.ingest import looks_personal, looks_private_home, slug_for
+from mdu.ingest import PROCEDURE_STAGE, looks_personal, looks_private_home, slug_for
 from mdu.project_fields import Budget, fields_answer
 from mdu.stages import StageResult, TextStore, _log_run
 
@@ -43,11 +43,7 @@ REVIEW = 0.6
 LINKER_VERSION = "linker-1"
 
 # Procedure stage, for the direction of a merge: the later stage absorbs the earlier one.
-STAGE = {
-    "announced": 0, "in_preparation": 1, "in_public_consultation": 2, "under_committee_review": 3,
-    "expired": 3, "on_council_agenda": 4, "approved": 5, "rejected": 5, "withdrawn": 5,
-    "permitted": 6, "under_construction": 7, "completed": 8, "contested": 6, "annulled": 6,
-}  # fmt: skip
+STAGE = PROCEDURE_STAGE
 
 _STOP = {
     "puz", "pud", "plan", "urbanistic", "zonal", "detaliu", "de", "si", "cu", "in", "pentru",
@@ -74,6 +70,9 @@ class Profile:
     documents: list[tuple[str, str, str, int | None]] = field(default_factory=list)
     address: str | None = None
     title_ok: bool = True  # False when the title names a person or a single private home
+    # A project made from a council decision alone (mdu.decisions): in a pair it joins the other
+    # project, which has the documents, the parcel location and the listing's title.
+    from_decisions: bool = False
 
 
 def title_words(title: str) -> set[str]:
@@ -88,6 +87,11 @@ def _org(name: str | None) -> str | None:
         r"\bs\.?\s?c\.?\b|\bs\.?\s?r\.?\s?l\.?\b|\bs\.?\s?a\.?\b|\bs\.?c\.?s\b", " ", fold(name)
     )
     return re.sub(r"[^a-z0-9]+", " ", s).strip() or None
+
+
+def _orgs(name: str | None) -> list[str]:
+    parts = re.split(r",|;|\bsi\b|\band\b", fold(name)) if name else []
+    return [o for o in (_org(p) for p in parts) if o]
 
 
 def _km(a: tuple[float, float], b: tuple[float, float]) -> float:
@@ -127,9 +131,10 @@ def score(a: Profile, b: Profile) -> tuple[float, dict[str, Any]]:
         sim = len(wa & wb) / len(wa | wb)
         total += 0.3 * sim
         signals["title"] = round(sim, 2)
-    oa, ob = _org(a.initiator), _org(b.initiator)
+    oa, ob = _orgs(a.initiator), _orgs(b.initiator)
     if oa and ob:
-        same = oa in ob or ob in oa
+        # Several initiators ("X SRL și Y SRL") are the same when they share a company.
+        same = any(x in y or y in x for x in oa for y in ob)
         total += 0.2 if same else -0.2
         signals["initiator"] = "same" if same else "different"
     if a.point and b.point and _km(a.point, b.point) > 1.0:
@@ -177,6 +182,7 @@ def decide(
                 early, late = sorted(
                     (a, b),
                     key=lambda p: (
+                        not p.from_decisions,
                         p.stage,
                         -(p.first_seen or datetime.max.replace(tzinfo=UTC)).timestamp(),
                     ),
@@ -200,13 +206,29 @@ def project_profiles(
                (select e.details->>'source' from project_event e
                 where e.project_id = p.id and e.details->>'kind' = 'listing' limit 1),
                coalesce((select array_agg(i.scheme::text || ':' || i.value) from identifier i
-                         where i.project_id = p.id), '{}')
+                         where i.project_id = p.id), '{}'),
+               exists (select 1 from project_event e where e.project_id = p.id
+                       and e.details->>'kind' = 'decision_project')
            from project p
            where p.jurisdiction_id = %s and p.merged_into_id is null""",
         (jid,),
     ).fetchall()
     out = []
-    for pid, kind, status, title, address, initiator, x, y, seen, official, source, ids in rows:
+    for (
+        pid,
+        kind,
+        status,
+        title,
+        address,
+        initiator,
+        x,
+        y,
+        seen,
+        official,
+        source,
+        ids,
+        made,
+    ) in rows:
         street = streets.match(address or official or title) if streets else None
         out.append(
             Profile(
@@ -222,6 +244,7 @@ def project_profiles(
                 project_id=pid,
                 stage=STAGE.get(status, 0),
                 first_seen=seen,
+                from_decisions=bool(made),
             )
         )
     return out

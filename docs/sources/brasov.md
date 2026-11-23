@@ -58,7 +58,9 @@ Placeholders such as `<project folder>` stand for real path segments. Real folde
 
 - **Listing:** `https://www.brasovcity.ro/consiliul-local/procese-verbale-sedinte/`, with the 18 most recent.
 - **Files:** `/file-zone/procese-verbale/consiliu/CMBV-PV-<n>.pdf`. `n` is sequential: 468 is 2026-09-25, 449 is 2025-08-27, and 182 is from 2013.
-- **Both sampled minutes (2013 and 2026) have a text layer.** The minutes give votes, amendments and adopted HCL numbers, which partly makes up for the HCL register (below).
+- **Text layer:** 193 of the 197 minutes from July 2018 to September 2026 have one (survey of 2026-11-23). 286 is the first of 2020. Some numbers have no file, and 278 and 279 are the same PDF.
+- **What they give:** each agenda item's title, the committees' opinion and the outcome with the vote. The wording varies: "a fost adoptat cu unanimitate de voturi", "adoptat 16 voturi si 10 abtineri", "în urma votului a fost aprobat în unanimitate (23 de voturi pentru și două neparticipări)", or headings such as "PUNCTUL 40 - RESPINS" and "PUNCTUL 74 a fost Retras".
+- **What they don't give: the number of the adopted decision (HCL).** Correction: earlier notes said they did. Some minutes list the whole agenda first, so items appear twice. Parsing and matching are described in ADR 0020.
 
 ### hcl_register: adopted council decisions (P0 in PLAN; blocked)
 

@@ -73,6 +73,7 @@ def build_parser() -> argparse.ArgumentParser:
             "consult",
             "summary",
             "neighbourhoods",
+            "decisions",
         ],
     )
     run.add_argument("--city", required=True)
@@ -391,6 +392,19 @@ def _run_text_stage(args: argparse.Namespace, conn: Any) -> Any:
     )  # fmt: skip
 
 
+def _run_decisions(args: argparse.Namespace, conn: Any) -> Any:
+    """`run --stage decisions` (M5.3): place the stored minutes items, write events, statuses."""
+    from mdu import decisions  # noqa: PLC0415
+
+    adapters, _ = _registry(args.city)
+    facts = next((a.decision_facts for a in adapters.values() if a.decision_facts), None)
+    if facts is None:
+        raise SystemExit(f"{args.city} has no minutes adapter")
+    with _client(args.city) as client:  # street tiles only, cached in R2
+        streets = _street_index(args.city, client)
+    return decisions.run(conn, city=args.city, streets=streets, facts=facts, log=print)
+
+
 def _run_neighbourhoods(args: argparse.Namespace, url: str) -> int:
     import psycopg  # noqa: PLC0415
 
@@ -408,7 +422,7 @@ def _run_neighbourhoods(args: argparse.Namespace, url: str) -> int:
     return 0
 
 
-def _run(args: argparse.Namespace) -> int:  # noqa: PLR0911, PLR0912
+def _run(args: argparse.Namespace) -> int:  # noqa: PLR0911, PLR0912, PLR0915
     import psycopg  # noqa: PLC0415
 
     from mdu import stages  # noqa: PLC0415
@@ -420,7 +434,9 @@ def _run(args: argparse.Namespace) -> int:  # noqa: PLR0911, PLR0912
     url = _database_url()
     if not url:
         return EXIT_FAILED
-    offline = ("extract", "classify", "fields", "link", "geocode", "consult", "summary")
+    offline = (
+        "extract", "classify", "fields", "link", "geocode", "consult", "summary", "decisions",
+    )  # fmt: skip
     if args.stage in offline:  # no site requests
         with psycopg.connect(url) as conn:
             if args.stage in ("consult", "summary"):
@@ -444,6 +460,8 @@ def _run(args: argparse.Namespace) -> int:  # noqa: PLR0911, PLR0912
                     conn, ObjectStore.from_env(), city=args.city, streets=streets,
                     extractor=extractor, monthly_usd=budget, log=print,
                 )  # fmt: skip
+            elif args.stage == "decisions":
+                result = _run_decisions(args, conn)
             elif args.stage == "fields":
                 from mdu.project_fields import extract_fields  # noqa: PLC0415
 

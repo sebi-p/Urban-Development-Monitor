@@ -180,5 +180,21 @@ def extract_pdf(
     )
 
 
+def raw_page_texts(data: bytes) -> list[str]:
+    """Each page's text layer as is: no OCR, no cleaning, no header removal. For sources whose page
+    edges carry content: in council minutes "cu unanimitate de voturi." often ends a page, and
+    `drop_repeated_lines` would take it for a footer."""
+    if b"%PDF-" not in data[:1024]:
+        raise ExtractionError("not a PDF (no %PDF header)")
+    try:
+        doc = pymupdf.open(stream=data, filetype="pdf")
+    except (pymupdf.FileDataError, RuntimeError, ValueError) as exc:
+        raise ExtractionError(f"not a readable PDF: {exc}") from exc
+    with doc:
+        if doc.needs_pass:
+            raise ExtractionError("encrypted PDF")
+        return [doc[i].get_text() for i in range(doc.page_count)]
+
+
 def text_r2_key(city: str, sha256: str, version: int = EXTRACTOR_VERSION) -> str:
     return f"text/{city}/{sha256}.v{version}.json"

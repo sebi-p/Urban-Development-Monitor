@@ -140,6 +140,38 @@ describe.skipIf(!adminUrl)("admin writes (PostGIS)", () => {
     expect(docs!.documents.map((d) => d.role)).toEqual(["memoriu"]); // never the register
   });
 
+  it("approving a council decision from the minutes places it on the project", async () => {
+    const [d] = await sql`
+      insert into raw_document (jurisdiction_id, url, fetched_at, sha256, mime, size_bytes,
+        doc_type)
+      values (${jid}, 'https://x.test/pv-1.pdf', now(), ${"m".repeat(64)}, 'application/pdf', 1,
+        'minutes') returning id`;
+    const [s] = await sql`
+      insert into council_session (jurisdiction_id, session_date, source_ref, minutes_document_id)
+      values (${jid}, '2026-09-25', 'PV-1', ${d!.id}) returning id`;
+    const [item] = await sql`
+      insert into agenda_item (jurisdiction_id, session_id, item_number, item_text, outcome,
+        raw_document_id, page)
+      values (${jid}, ${s!.id}, 24, 'Proiect de hotărâre ... P.U.Z. ”Zona de locuințe”',
+        'adopted', ${d!.id}, 6) returning id`;
+    const [c] = await sql`
+      insert into link_candidate (jurisdiction_id, subject, candidate_project_id, score)
+      values (${jid}, ${`minutes:${item!.id}`}, ${ids.debate!}, 0.72) returning id`;
+    const [row] = await listReviewQueue(handle.db, city);
+    expect(row!.minutes).toEqual({
+      sessionDate: "2026-09-25",
+      itemNumber: 24,
+      text: "Proiect de hotărâre ... P.U.Z. ”Zona de locuințe”",
+      outcome: "adopted",
+      documentId: d!.id,
+      page: 6,
+    });
+    await decideCandidate(handle.db, { id: c!.id, decision: "approve", actor: "rev" });
+    const [placed] = await sql`select project_id from agenda_item where id = ${item!.id}`;
+    expect(placed!.project_id).toBe(ids.debate);
+    await sql`truncate council_session cascade`;
+  });
+
   it("sets a manual location inside the city and refuses one outside", async () => {
     await setManualLocation(handle.db, {
       projectId: ids.other!,

@@ -1,13 +1,15 @@
 """The source adapter contract (PLAN §7). One `Adapter` per source; a city lists its adapters in
 `mdu.adapters.<city>.registry.ADAPTERS`.
 
-An adapter provides any of three hooks:
+An adapter provides any of these hooks:
 
 - `projects` turns listing pages into project records (written by `mdu.ingest.write_records`);
 - `events` adds dated events to existing projects (e.g. a council agenda naming a project);
 - `discover` lists document URLs for the fetch stage;
 - `backfill` walks a sequentially numbered source backwards for history the listings no longer
-  show (`mdu backfill`, M5.1).
+  show (`mdu backfill`, M5.1);
+- `decision_facts` reads a council decision item stored from the minutes (plan kind, title,
+  initiator) for the `decisions` stage (M5.3).
 
 Files whose listing label matches `never_mirror` (for example registers that list the residents
 who commented) are queued as `skipped` and never requested (PLAN §11).
@@ -28,6 +30,7 @@ if TYPE_CHECKING:
     from mdu.core.documents import Upload
     from mdu.core.http import PoliteClient
     from mdu.core.streets import StreetIndex
+    from mdu.decisions import ItemFacts
     from mdu.ingest import IngestStats, ProjectRecord
     from mdu.stages import DiscoveredItem
 
@@ -75,6 +78,7 @@ class Adapter:
     events: EventsHook | None = None
     discover: DiscoverHook | None = None
     backfill: IdWalk | None = None
+    decision_facts: Callable[[str], ItemFacts] | None = None
     never_mirror: tuple[NeverMirror, ...] = ()
 
     @property

@@ -64,6 +64,13 @@
       "when": 1795443051493,
       "tag": "0008_accuracy_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795453490541,
+      "tag": "0009_minutes_votes",
+      "breakpoints": true
     }
   ]
 }

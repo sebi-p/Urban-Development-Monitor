@@ -10,11 +10,22 @@ type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 export class AdminError extends Error {}
 
+/** A council decision from the minutes waiting to be placed on a project (M5.3). */
+export interface ReviewMinutesItem {
+  sessionDate: string;
+  itemNumber: number;
+  text: string;
+  outcome: string | null;
+  documentId: string | null;
+  page: number | null;
+}
+
 export interface ReviewItem {
   id: string;
   subject: string;
   subjectProjectId: string | null;
   subjectTitle: string | null;
+  minutes: ReviewMinutesItem | null;
   candidateProjectId: string;
   candidateSlug: string;
   candidateTitle: string;
@@ -23,6 +34,9 @@ export interface ReviewItem {
   state: string;
   createdAt: string;
 }
+
+/** link_candidate subject of a minutes item: "minutes:<agenda_item id>" (pipeline mdu.decisions). */
+const MINUTES = "minutes:";
 
 export async function listReviewQueue(
   db: Db,
@@ -41,14 +55,24 @@ export async function listReviewQueue(
     signals: Record<string, unknown>;
     state: string;
     created_at: string;
+    session_date: string | null;
+    item_number: number | null;
+    item_text: string | null;
+    outcome: string | null;
+    document_id: string | null;
+    page: number | null;
   }>(sql`
     select lc.id, lc.subject, lc.subject_project_id, s.title as subject_title,
            lc.candidate_project_id, c.slug as candidate_slug, c.title as candidate_title,
-           lc.score, lc.signals, lc.state, lc.created_at::text
+           lc.score, lc.signals, lc.state, lc.created_at::text,
+           cs.session_date::text, ai.item_number, ai.item_text, ai.outcome::text,
+           ai.raw_document_id as document_id, ai.page
     from link_candidate lc
     join jurisdiction j on j.id = lc.jurisdiction_id and j.slug = ${city}
     join project c on c.id = lc.candidate_project_id
     left join project s on s.id = lc.subject_project_id
+    left join agenda_item ai on lc.subject = ${MINUTES} || ai.id::text
+    left join council_session cs on cs.id = ai.session_id
     where lc.state = ${state}
     order by lc.score desc, lc.created_at`);
   return rows.map((r) => ({
@@ -56,6 +80,17 @@ export async function listReviewQueue(
     subject: r.subject,
     subjectProjectId: r.subject_project_id,
     subjectTitle: r.subject_title,
+    minutes:
+      r.session_date !== null && r.item_number !== null
+        ? {
+            sessionDate: r.session_date,
+            itemNumber: r.item_number,
+            text: r.item_text ?? "",
+            outcome: r.outcome,
+            documentId: r.document_id,
+            page: r.page,
+          }
+        : null,
     candidateProjectId: r.candidate_project_id,
     candidateSlug: r.candidate_slug,
     candidateTitle: r.candidate_title,
@@ -161,7 +196,9 @@ export async function splitProject(db: Db, args: { projectId: string; actor: str
 }
 
 /** Approve or reject a linker candidate. Approving a folder attaches its files to the project;
- * approving a project pair merges the earlier-stage subject into the candidate. */
+ * approving a project pair merges the earlier-stage subject into the candidate; approving a
+ * council decision from the minutes places it on the project (the next daily run writes its
+ * timeline event and status). */
 export async function decideCandidate(
   db: Db,
   args: { id: string; decision: "approve" | "reject"; actor: string },
@@ -189,6 +226,10 @@ export async function decideCandidate(
           args.actor,
           "review approved",
         );
+      } else if (c.subject.startsWith(MINUTES)) {
+        await tx.execute(sql`
+          update agenda_item set project_id = ${c.candidate_project_id}::uuid
+          where id::text = ${c.subject.slice(MINUTES.length)} and project_id is null`);
       } else if (c.subject.startsWith("group:")) {
         const [, adapter, group] = c.subject.split(":");
         await tx.execute(sql`

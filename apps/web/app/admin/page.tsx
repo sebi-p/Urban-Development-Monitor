@@ -38,6 +38,25 @@ export default async function ReviewQueue() {
                 <td>
                   {c.subjectProjectId ? (
                     <Link href={`/admin/projects/${c.subjectProjectId}`}>{c.subjectTitle}</Link>
+                  ) : c.minutes ? (
+                    <>
+                      {c.minutes.documentId ? (
+                        <a
+                          href={`/admin/documents/${c.minutes.documentId}${c.minutes.page ? `#page=${c.minutes.page}` : ""}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {t("minutesItem", {
+                            date: c.minutes.sessionDate,
+                            n: c.minutes.itemNumber,
+                          })}
+                        </a>
+                      ) : (
+                        t("minutesItem", { date: c.minutes.sessionDate, n: c.minutes.itemNumber })
+                      )}
+                      {c.minutes.outcome && <> · {t(`outcome_${c.minutes.outcome}`)}</>}
+                      <span className="block text-xs text-slate-600">{c.minutes.text}</span>
+                    </>
                   ) : (
                     t("folder")
                   )}

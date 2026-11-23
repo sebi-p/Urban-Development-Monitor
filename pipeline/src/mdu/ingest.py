@@ -193,6 +193,16 @@ def write_records(  # noqa: PLR0913
         )
 
 
+# Procedure stage of each status: a later stage is never replaced by an earlier one that a listing
+# still shows (a council decision outlives the debate page), and the linker merges the earlier
+# project of a pair into the later one.
+PROCEDURE_STAGE: dict[str, int] = {
+    "announced": 0, "in_preparation": 1, "in_public_consultation": 2, "under_committee_review": 3,
+    "expired": 3, "on_council_agenda": 4, "approved": 5, "rejected": 5, "withdrawn": 5,
+    "permitted": 6, "under_construction": 7, "completed": 8, "contested": 6, "annulled": 6,
+}  # fmt: skip
+DECIDED = "council_decision"  # project_event details.kind of a decision from the minutes
+
 # Event type for the day a listing first shows a new status.
 STATUS_EVENT: dict[str, EventType] = {
     "in_public_consultation": "consultation_opened",
@@ -218,16 +228,25 @@ def _upsert_project(  # noqa: PLR0913
     seen_on: date | None = None,
 ) -> None:
     cur.execute(
-        "select status from project where jurisdiction_id = %s and slug = %s", (jid, rec.slug)
+        """select p.status, exists (
+               select 1 from project c join project_event e on e.project_id = c.id
+               where (c.id = p.id or c.merged_into_id = p.id) and e.details->>'kind' = %s)
+           from project p where p.jurisdiction_id = %s and p.slug = %s""",
+        (DECIDED, jid, rec.slug),
     )
     before = cur.fetchone()
-    old_status = before[0] if before else None
+    old_status: str | None = before[0] if before else None
+    status: str = rec.status
+    # A project the council decided keeps that status while the listing shows an earlier stage.
+    decided = bool(before and before[1])
+    if decided and old_status and PROCEDURE_STAGE.get(status, 0) < PROCEDURE_STAGE[old_status]:
+        status = old_status
     geom = "ST_SetSRID(ST_MakePoint(%(lon)s, %(lat)s), 4326)" if rec.street is not None else "NULL"
     params: dict[str, object] = {
         "jid": jid,
         "slug": rec.slug,
         "kind": rec.kind,
-        "status": rec.status,
+        "status": status,
         "title": rec.title,
         "address": rec.address_text,
         "precision": "street" if rec.street else None,
@@ -270,12 +289,12 @@ def _upsert_project(  # noqa: PLR0913
            values (%s, %s, %s, %s, %s, %s, %s, 'high', 'auto_published')""",
         (jid, pid, rec.event_date, rec.event_type, doc_id, rec.event_title, json.dumps(details)),
     )
-    if old_status is not None and old_status != rec.status:
+    if old_status is not None and old_status != status:
         change = {
             "source": adapter,
             "kind": "status_change",
             "from": old_status,
-            "to": rec.status,
+            "to": status,
             "status_text": rec.status_text,
             "source_url": rec.source.url,
         }
@@ -283,8 +302,8 @@ def _upsert_project(  # noqa: PLR0913
             """insert into project_event (jurisdiction_id, project_id, event_date, event_type,
                    raw_document_id, title, details, confidence, review_state)
                values (%s, %s, %s, %s, %s, %s, %s, 'high', 'auto_published')""",
-            (jid, pid, seen_on or today(), STATUS_EVENT.get(rec.status, "other"), doc_id,
-             rec.status_text or rec.status, json.dumps(change)),
+            (jid, pid, seen_on or today(), STATUS_EVENT.get(status, "other"), doc_id,
+             rec.status_text or status, json.dumps(change)),
         )  # fmt: skip
     # Each project is written by exactly one adapter so far (linking sources is M3.3).
     cur.execute("delete from consultation where project_id = %s", (pid,))

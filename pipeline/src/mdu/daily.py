@@ -2,10 +2,10 @@
 
 For each adapter in order: write listing projects, add listing events, queue documents. Then
 fetch everything pending for the city, extract text, classify it, extract project fields, link,
-geocode, place projects in neighbourhoods, read the consultation notices and write the summaries. A
-failing adapter is logged as a failed `pipeline_run` and the others still run; the command then
-exits non-zero so the workflow shows red. Every step is idempotent, so a second run the same
-day does nothing but re-read the listings.
+place the council's decisions from the minutes, geocode, place projects in neighbourhoods, read
+the consultation notices and write the summaries. A failing adapter is logged as a failed
+`pipeline_run` and the others still run; the command then exits non-zero so the workflow shows
+red. Every step is idempotent, so a second run the same day does nothing but re-read the listings.
 """
 
 from __future__ import annotations
@@ -168,6 +168,17 @@ def run(  # noqa: PLR0913, PLR0915
         return dict(r.counts)
 
     step("link", None, "link", link_all)
+
+    facts = next((a.decision_facts for a in adapters if a.decision_facts), None)
+
+    def decisions_all() -> dict[str, Any]:
+        from mdu import decisions  # noqa: PLC0415
+
+        if facts is None:
+            return {"skipped": "no minutes adapter"}
+        return dict(decisions.run(conn, city=city, streets=streets, facts=facts).counts)
+
+    step("decisions", None, "decisions", decisions_all)
     # Projects created or joined by the linker get their fields the same day (mostly cached).
     step("fields after link", None, "extract_fields", fields_all)
 

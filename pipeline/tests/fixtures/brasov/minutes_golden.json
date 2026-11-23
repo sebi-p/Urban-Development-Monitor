@@ -1,0 +1,1284 @@
+{
+ "note": "M5.3 council minutes golden set. 'minutes': every planning item (PUG/PUZ/PUD) of each fixture with its outcome, votes [for, against, abstain, absent] and the page of the final vote, each checked by hand against the minutes text (2026-11-23). 'projects': linker golden-set projects (linker_golden.json) and the minutes items that must be placed on them automatically ('placed') or sent to review ('review'); any other item must not be placed on a golden project. 'status': the status each gets when it starts as an in_preparation project (as a back-filled notice does), before and after the reviews are approved.",
+ "minutes": {
+  "pv-468": {
+   "session_date": "2026-09-25",
+   "items": [
+    {
+     "number": 24,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      16,
+      null,
+      10,
+      null
+     ],
+     "unanimous": false,
+     "page": 6
+    },
+    {
+     "number": 25,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 6
+    },
+    {
+     "number": 26,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 6
+    },
+    {
+     "number": 27,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 6
+    },
+    {
+     "number": 28,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 6
+    },
+    {
+     "number": 29,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 6
+    },
+    {
+     "number": 30,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 6
+    }
+   ]
+  },
+  "pv-465": {
+   "session_date": "2026-07-31",
+   "items": [
+    {
+     "number": 62,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 12
+    },
+    {
+     "number": 63,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 12
+    },
+    {
+     "number": 64,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      16,
+      null,
+      10,
+      null
+     ],
+     "unanimous": false,
+     "page": 12
+    },
+    {
+     "number": 65,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 13
+    },
+    {
+     "number": 66,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 13
+    },
+    {
+     "number": 67,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      16,
+      null,
+      10,
+      null
+     ],
+     "unanimous": false,
+     "page": 13
+    },
+    {
+     "number": 74,
+     "kind": "pud",
+     "outcome": "withdrawn",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 14
+    }
+   ]
+  },
+  "pv-455": {
+   "session_date": "2026-02-27",
+   "items": [
+    {
+     "number": 40,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 10
+    }
+   ]
+  },
+  "pv-451": {
+   "session_date": "2025-10-31",
+   "items": [
+    {
+     "number": 51,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 11
+    },
+    {
+     "number": 52,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      16,
+      null,
+      9,
+      null
+     ],
+     "unanimous": false,
+     "page": 12
+    },
+    {
+     "number": 53,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 12
+    }
+   ]
+  },
+  "pv-423": {
+   "session_date": "2024-09-30",
+   "items": [
+    {
+     "number": 64,
+     "kind": "puz",
+     "outcome": "rejected",
+     "votes": [
+      10,
+      null,
+      14,
+      null
+     ],
+     "unanimous": false,
+     "page": 12
+    },
+    {
+     "number": 65,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      24,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 12
+    },
+    {
+     "number": 66,
+     "kind": "pud",
+     "outcome": "rejected",
+     "votes": [
+      10,
+      null,
+      14,
+      null
+     ],
+     "unanimous": false,
+     "page": 12
+    },
+    {
+     "number": 67,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      23,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 12
+    },
+    {
+     "number": 68,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      24,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 13
+    },
+    {
+     "number": 69,
+     "kind": "pud",
+     "outcome": "rejected",
+     "votes": [
+      11,
+      null,
+      13,
+      null
+     ],
+     "unanimous": false,
+     "page": 13
+    }
+   ]
+  },
+  "pv-418": {
+   "session_date": "2024-07-25",
+   "items": [
+    {
+     "number": 46,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 12
+    },
+    {
+     "number": 47,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 12
+    },
+    {
+     "number": 48,
+     "kind": "pud",
+     "outcome": "rejected",
+     "votes": [
+      9,
+      null,
+      14,
+      null
+     ],
+     "unanimous": false,
+     "page": 12
+    },
+    {
+     "number": 69,
+     "kind": "pud",
+     "outcome": null,
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 2
+    }
+   ]
+  },
+  "pv-417": {
+   "session_date": "2024-06-28",
+   "items": [
+    {
+     "number": 47,
+     "kind": "pud",
+     "outcome": "rejected",
+     "votes": [
+      8,
+      null,
+      14,
+      null
+     ],
+     "unanimous": false,
+     "page": 9
+    },
+    {
+     "number": 48,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 9
+    },
+    {
+     "number": 49,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 9
+    },
+    {
+     "number": 50,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 10
+    },
+    {
+     "number": 51,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 10
+    },
+    {
+     "number": 52,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 10
+    },
+    {
+     "number": 53,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 10
+    }
+   ]
+  },
+  "pv-413": {
+   "session_date": "2024-05-30",
+   "items": [
+    {
+     "number": 18,
+     "kind": "puz",
+     "outcome": "rejected",
+     "votes": [
+      11,
+      null,
+      14,
+      null
+     ],
+     "unanimous": false,
+     "page": 6
+    }
+   ]
+  },
+  "pv-410": {
+   "session_date": "2024-04-25",
+   "items": [
+    {
+     "number": 33,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 7
+    },
+    {
+     "number": 34,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 7
+    },
+    {
+     "number": 35,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 7
+    },
+    {
+     "number": 36,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      21,
+      null,
+      3,
+      null
+     ],
+     "unanimous": false,
+     "page": 7
+    },
+    {
+     "number": 37,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 7
+    },
+    {
+     "number": 38,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 8
+    },
+    {
+     "number": 39,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 8
+    }
+   ]
+  },
+  "pv-408": {
+   "session_date": "2024-03-29",
+   "items": [
+    {
+     "number": 39,
+     "kind": "puz",
+     "outcome": null,
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 8
+    },
+    {
+     "number": 40,
+     "kind": "pud",
+     "outcome": null,
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 8
+    },
+    {
+     "number": 41,
+     "kind": "pud",
+     "outcome": null,
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 8
+    },
+    {
+     "number": 42,
+     "kind": "pud",
+     "outcome": null,
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 9
+    },
+    {
+     "number": 43,
+     "kind": "pud",
+     "outcome": null,
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 9
+    }
+   ]
+  },
+  "pv-403": {
+   "session_date": "2024-01-31",
+   "items": [
+    {
+     "number": 22,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 5
+    },
+    {
+     "number": 23,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 6
+    },
+    {
+     "number": 24,
+     "kind": "pud",
+     "outcome": "withdrawn",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 6
+    },
+    {
+     "number": 25,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 6
+    }
+   ]
+  },
+  "pv-393": {
+   "session_date": "2023-10-31",
+   "items": [
+    {
+     "number": 31,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 8
+    },
+    {
+     "number": 32,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 8
+    },
+    {
+     "number": 33,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 8
+    },
+    {
+     "number": 34,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 8
+    }
+   ]
+  },
+  "pv-365": {
+   "session_date": "2022-12-29",
+   "items": [
+    {
+     "number": 29,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 7
+    },
+    {
+     "number": 30,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 7
+    }
+   ]
+  },
+  "pv-347": {
+   "session_date": "2022-07-28",
+   "items": [
+    {
+     "number": 86,
+     "kind": "puz",
+     "outcome": "withdrawn",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 28
+    }
+   ]
+  },
+  "pv-345": {
+   "session_date": "2022-06-29",
+   "items": [
+    {
+     "number": 11,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 10
+    },
+    {
+     "number": 12,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 10
+    },
+    {
+     "number": 85,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      23,
+      null,
+      null,
+      2
+     ],
+     "unanimous": true,
+     "page": 7
+    }
+   ]
+  },
+  "pv-341": {
+   "session_date": "2022-04-27",
+   "items": [
+    {
+     "number": 49,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 16
+    },
+    {
+     "number": 50,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 16
+    },
+    {
+     "number": 85,
+     "kind": "puz",
+     "outcome": "postponed",
+     "votes": [
+      13,
+      null,
+      13,
+      null
+     ],
+     "unanimous": false,
+     "page": 6
+    }
+   ]
+  },
+  "pv-339": {
+   "session_date": "2022-03-29",
+   "items": [
+    {
+     "number": 78,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 20
+    },
+    {
+     "number": 79,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 21
+    },
+    {
+     "number": 80,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 21
+    },
+    {
+     "number": 81,
+     "kind": "puz",
+     "outcome": "withdrawn",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 21
+    }
+   ]
+  },
+  "pv-293": {
+   "session_date": "2020-08-14",
+   "items": [
+    {
+     "number": 13,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      22,
+      null,
+      null,
+      3
+     ],
+     "unanimous": true,
+     "page": 11
+    },
+    {
+     "number": 14,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      21,
+      null,
+      1,
+      3
+     ],
+     "unanimous": false,
+     "page": 11
+    },
+    {
+     "number": 15,
+     "kind": "puz",
+     "outcome": "withdrawn",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": false,
+     "page": 11
+    },
+    {
+     "number": 37,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      23,
+      null,
+      2,
+      null
+     ],
+     "unanimous": false,
+     "page": 6
+    }
+   ]
+  },
+  "pv-182": {
+   "session_date": "2013-08-30",
+   "items": [
+    {
+     "number": 20,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 11
+    },
+    {
+     "number": 21,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 11
+    },
+    {
+     "number": 22,
+     "kind": "puz",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 11
+    },
+    {
+     "number": 23,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 12
+    },
+    {
+     "number": 24,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 12
+    },
+    {
+     "number": 25,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 12
+    },
+    {
+     "number": 26,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 13
+    },
+    {
+     "number": 27,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 13
+    },
+    {
+     "number": 28,
+     "kind": "pud",
+     "outcome": "adopted",
+     "votes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "unanimous": true,
+     "page": 13
+    }
+   ]
+  }
+ },
+ "projects": {
+  "project:puz-zona-de-locuinte-mixte-si-colective-cu-pastrarea-avizelo-bde316": {
+   "placed": [
+    "pv-468#24"
+   ],
+   "review": [],
+   "status": [
+    "approved",
+    "approved"
+   ]
+  },
+  "project:puz-construire-locuinte-colective-si-functiuni-complementare-a53bf7": {
+   "placed": [
+    "pv-465#67"
+   ],
+   "review": [],
+   "status": [
+    "approved",
+    "approved"
+   ]
+  },
+  "project:intocmire-puz-construire-ansamblu-de-locuinte-colective-func-1fe181": {
+   "placed": [
+    "pv-451#51"
+   ],
+   "review": [],
+   "status": [
+    "approved",
+    "approved"
+   ]
+  },
+  "project:puz-construire-locuinte-colective-municipiul-brasov-str-ioan-a0b8b6": {
+   "placed": [
+    "pv-408#39",
+    "pv-410#33"
+   ],
+   "review": [],
+   "status": [
+    "approved",
+    "approved"
+   ]
+  },
+  "project:intocmire-puz-construire-hale-depozitare-comert-productie-pr-5e392d": {
+   "placed": [
+    "pv-403#22"
+   ],
+   "review": [],
+   "status": [
+    "approved",
+    "approved"
+   ]
+  },
+  "project:puz-investitie-functiuni-mixte-locuinte-colective-servicii-c-8c68ef": {
+   "placed": [
+    "pv-339#81",
+    "pv-347#86"
+   ],
+   "review": [
+    "pv-365#29"
+   ],
+   "status": [
+    "withdrawn",
+    "approved"
+   ]
+  },
+  "project:puz-zona-de-locuinte-individuale-cu-modificarea-tramei-strad-b22377": {
+   "placed": [],
+   "review": [
+    "pv-455#40"
+   ],
+   "status": [
+    "in_preparation",
+    "approved"
+   ]
+  },
+  "project:puz-actualizare-puz-aprobat-cu-hcl-339-2013-municipiul-braso-6686d1": {
+   "placed": [],
+   "review": [
+    "pv-417#48"
+   ],
+   "status": [
+    "in_preparation",
+    "approved"
+   ]
+  },
+  "project:puz-parcelare-teren-pentru-construire-ansamblu-de-locuinte-s-995081": {
+   "placed": [],
+   "review": [
+    "pv-413#18",
+    "pv-417#49"
+   ],
+   "status": [
+    "in_preparation",
+    "approved"
+   ]
+  },
+  "project:puz-construire-locuinte-si-dotari-complementare-municipiul-b-14bc3e": {
+   "placed": [],
+   "review": [
+    "pv-393#31",
+    "pv-423#65"
+   ],
+   "status": [
+    "in_preparation",
+    "approved"
+   ]
+  },
+  "project:puz-zona-de-locuinte-municipiul-brasov-str-ioan-hozan-fn-afd708": {
+   "placed": [],
+   "review": [
+    "pv-417#50"
+   ],
+   "status": [
+    "in_preparation",
+    "approved"
+   ]
+  }
+ }
+}
