@@ -43,7 +43,7 @@ export function ProjectMap({
 
     void import("maplibre-gl").then((maplibregl) => {
       if (cancelled || !container.current) return;
-      // Served from public/ (scripts/copy-maplibre-worker.mjs); the version busts caches on upgrade.
+      // Served from public/ (scripts/copy-assets.mjs); the version busts caches on upgrade.
       maplibregl.setWorkerUrl(`/maplibre/maplibre-gl-worker.mjs?v=${maplibregl.getVersion()}`);
       const m = new maplibregl.Map({
         container: container.current,

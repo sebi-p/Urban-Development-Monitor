@@ -43,3 +43,4 @@ pipeline/.cache/
 # Playwright
 apps/web/test-results/
 apps/web/playwright-report/
+apps/web/assets/og-fonts/

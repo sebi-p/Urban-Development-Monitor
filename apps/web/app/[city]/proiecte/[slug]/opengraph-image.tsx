@@ -11,10 +11,22 @@ export const revalidate = 300;
 export const alt = "Monitor Dezvoltare Urbană";
 
 // Inter from @fontsource (woff; ImageResponse doesn't read woff2): latin plus latin-ext for
-// ș, ț, ă, â, î. Next copies the files into the deployment (outputFileTracingIncludes).
-const FONTS = join(process.cwd(), "node_modules/@fontsource/inter/files");
+// ș, ț, ă, â, î, copied at build time (scripts/copy-assets.mjs) and traced into the
+// deployment (outputFileTracingIncludes in next.config.ts).
+const FONTS = join(process.cwd(), "assets/og-fonts");
 
+/** The fonts, or none (next/og's built-in font) if they can't be read: a preview in a plainer
+ * font beats no preview. */
 async function fonts() {
+  try {
+    return await interFonts();
+  } catch (error) {
+    console.error("opengraph-image: Inter not found, using the built-in font", error);
+    return undefined;
+  }
+}
+
+async function interFonts() {
   const load = (subset: string, weight: 400 | 700) =>
     readFile(join(FONTS, `inter-${subset}-${weight}-normal.woff`)).then((data) => ({
       // A family per subset, so a bold "ă" comes from the bold latin-ext file.
@@ -47,6 +59,7 @@ export default async function Image({
   const kind = await getTranslations("Kind");
   const p = lookup.found ? lookup.project : null;
   const group = p ? STATUS_GROUP[p.status] : "closed";
+  const loaded = await fonts();
   return new ImageResponse(
     <div
       style={{
@@ -110,6 +123,6 @@ export default async function Image({
         {p ? clip([kind(p.kind), p.address].filter(Boolean).join(" · "), 90) : ""}
       </div>
     </div>,
-    { ...size, fonts: await fonts() },
+    loaded ? { ...size, fonts: loaded } : size,
   );
 }
