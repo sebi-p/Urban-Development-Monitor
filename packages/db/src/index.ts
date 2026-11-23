@@ -3,3 +3,4 @@ export * from "./schema/index.ts";
 export { createDb, type Db } from "./client.ts";
 export * from "./queries.ts";
 export * from "./admin.ts";
+export * from "./search.ts";

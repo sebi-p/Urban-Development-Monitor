@@ -70,10 +70,10 @@ test("on a phone the list is a sheet over the map: button, drag, no sideways scr
   await expect(sheet).toHaveAttribute("data-snap", "peek");
   await expect(page.locator(".map[data-ready=true]")).toBeVisible();
 
-  await sheet.getByRole("button", { name: "Listă" }).click();
+  await sheet.getByRole("button", { name: "Listă", exact: true }).click();
   await expect(sheet).toHaveAttribute("data-snap", "full");
   await expect(page.locator(".project-list > li").first()).toBeInViewport();
-  await sheet.getByRole("button", { name: "Hartă" }).click();
+  await sheet.getByRole("button", { name: "Hartă", exact: true }).click();
   await expect(sheet).toHaveAttribute("data-snap", "peek");
 
   // Drag the handle up one step (peek -> half), as a finger would.
@@ -98,4 +98,50 @@ test("a map popup link opens the sheet at that project", async ({ page, city }, 
   await page.evaluate((hash) => (window.location.hash = hash), `#${id}`);
   const sheet = page.getByRole("complementary", { name: "Rezultate și filtre" });
   await expect(sheet).toHaveAttribute("data-snap", "full");
+});
+
+test("hovering or focusing a card highlights its pin", async ({ page, city }, info) => {
+  test.skip(info.project.name !== "desktop", "hover and keyboard: the desktop panel");
+  await page.goto(`/${city}`);
+  const map = page.locator(".map[data-ready=true]");
+  await expect(map).toBeVisible();
+  // Zoomed in on demo-1 first, so its pin isn't inside a cluster.
+  await page.locator("#p-demo-1 [data-show-on-map]").click();
+  await expect(page.locator(".maplibregl-popup")).toContainText("PUZ locuințe colective");
+  await expect(map).toHaveAttribute("data-highlight", "demo-1");
+  await expect(map).toHaveAttribute("data-highlighted", "1");
+  await page.locator(".maplibregl-popup-close-button").click();
+  await page.mouse.move(900, 500); // off the list
+  await expect(map).toHaveAttribute("data-highlight", "");
+  // Keyboard: focusing a card's button highlights the pin again.
+  await page.locator("#p-demo-1 [data-show-on-map]").focus();
+  await expect(map).toHaveAttribute("data-highlight", "demo-1");
+  await expect(map).toHaveAttribute("data-highlighted", "1");
+  await page.locator("#p-demo-1 h3 a").blur();
+  // Mouse: hovering another located card moves the highlight.
+  await page.locator("#p-demo-2").hover();
+  await expect(map).toHaveAttribute("data-highlight", "demo-2");
+});
+
+test("on a phone, Arată pe hartă lowers the sheet and opens the pin's popup", async ({
+  page,
+  city,
+}, info) => {
+  test.skip(info.project.name !== "phone", "the sheet exists on phones");
+  await page.goto(`/${city}#p-demo-1`);
+  const sheet = page.getByRole("complementary", { name: "Rezultate și filtre" });
+  await expect(sheet).toHaveAttribute("data-snap", "full");
+  await expect(page.locator(".map[data-ready=true]")).toBeAttached();
+  await page.locator("#p-demo-1 [data-show-on-map]").tap();
+  await expect(sheet).toHaveAttribute("data-snap", "peek");
+  await expect(page.locator(".maplibregl-popup")).toContainText("PUZ locuințe colective");
+  await expect(page.locator(".map")).toHaveAttribute("data-highlighted", "1");
+});
+
+test("projects without a location have no Arată pe hartă button", async ({ page, city }) => {
+  await page.goto(`/${city}`);
+  for (const card of await page.locator(".project-list > li").all()) {
+    const located = await card.getAttribute("data-located");
+    await expect(card.locator("[data-show-on-map]")).toHaveCount(located ? 1 : 0);
+  }
 });

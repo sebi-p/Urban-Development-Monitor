@@ -17,7 +17,8 @@
     "exactLocation": "exact location (from the plan's coordinates)",
     "addressLocation": "location from the house number",
     "locationPage": "page {page} of the plan sheet",
-    "manualLocation": "location set by hand"
+    "manualLocation": "location set by hand",
+    "showOnMap": "Show on map"
   },
   "Status": {
     "announced": "Announced",
@@ -228,5 +229,42 @@
     "court_ruling": "Court ruling",
     "document_added": "Documents published",
     "other": "Other event"
+  },
+  "Archive": {
+    "title": "Archive – {city}",
+    "heading": "Archive",
+    "intro": "Search every project: title, address, initiator and summary. Diacritics don't matter.",
+    "searchLabel": "Search the archive",
+    "searchPlaceholder": "e.g. Răcădău, Tractorul, housing",
+    "search": "Search",
+    "results": "{count, plural, =0 {No results} one {# result} other {# results}}",
+    "resultsFor": "for “{q}”",
+    "sort": "Order",
+    "sortRelevance": "Relevance",
+    "sortDate": "Newest",
+    "filters": "Filters",
+    "kind": "Type",
+    "status": "Status",
+    "year": "Year",
+    "allYears": "All years",
+    "initiator": "Initiator",
+    "apply": "Apply",
+    "reset": "Clear filters",
+    "export": "Download CSV",
+    "exportHint": "Every result, for Excel or LibreOffice",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "noResults": "No project matches. Try a shorter word or clear the filters.",
+    "archiveLink": "Archive",
+    "mapLink": "Map",
+    "csvTitle": "Title",
+    "csvKind": "Type",
+    "csvStatus": "Status",
+    "csvAddress": "Address",
+    "csvInitiator": "Initiator",
+    "csvDate": "Latest event",
+    "csvSummary": "Summary",
+    "csvUrl": "Project page"
   }
 }

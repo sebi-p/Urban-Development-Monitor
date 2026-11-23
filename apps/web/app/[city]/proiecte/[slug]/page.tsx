@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { CalendarCheck, ChevronRight, MapPin, Sparkles } from "lucide-react";
 import { AppBar } from "@/components/AppBar";
+import { ArchiveLink } from "@/components/ArchiveLink";
 import { LocationNote } from "@/components/ProjectList";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ConsultationBox } from "@/components/project/ConsultationBox";
@@ -109,7 +110,7 @@ export default async function ProjectPage({ params }: Props) {
 
   return (
     <>
-      <AppBar city={{ slug: city, name: j.name }} />
+      <AppBar city={{ slug: city, name: j.name }} actions={<ArchiveLink city={city} />} />
       <main className="mx-auto max-w-3xl space-y-6 px-4 pt-4 pb-12">
         <script
           type="application/ld+json"

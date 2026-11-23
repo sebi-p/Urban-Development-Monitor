@@ -25,5 +25,7 @@ describe("URL filters", () => {
       open: false,
     });
     expect(toQuery(parseFilters({}))).toBe("");
+    // A form without JavaScript sends one value per checked box.
+    expect(parseFilters(new URLSearchParams("tip=pud&tip=puz")).kinds).toEqual(["puz", "pud"]);
   });
 });

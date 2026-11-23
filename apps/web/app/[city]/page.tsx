@@ -4,8 +4,10 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { AppBar } from "@/components/AppBar";
+import { ArchiveLink } from "@/components/ArchiveLink";
 import { BottomSheet } from "@/components/BottomSheet";
 import { FilterChips, FilterForm } from "@/components/FilterBar";
+import { ListMapBridge } from "@/components/ListMapBridge";
 import { ProjectList } from "@/components/ProjectList";
 import { ProjectMap } from "@/components/ProjectMap";
 import { getDb } from "@/lib/db";
@@ -48,7 +50,7 @@ export default async function CityPage({ params, searchParams }: Props) {
 
   return (
     <>
-      <AppBar city={{ slug: city, name: j.name }} />
+      <AppBar city={{ slug: city, name: j.name }} actions={<ArchiveLink city={city} />} />
       <main className="relative h-[calc(100dvh-var(--app-bar-height))] overflow-hidden">
         <h1 className="sr-only">{t("title", { city: j.name })}</h1>
         <div className="absolute inset-0">
@@ -65,6 +67,7 @@ export default async function CityPage({ params, searchParams }: Props) {
           <FilterForm filters={filters} years={years} />
           <h2 className="sr-only">{t("listHeading", { count: list!.length })}</h2>
           <ProjectList city={city} projects={list!} />
+          <ListMapBridge />
         </BottomSheet>
       </main>
     </>

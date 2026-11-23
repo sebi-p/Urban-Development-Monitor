@@ -17,7 +17,8 @@
     "exactLocation": "locație exactă (din coordonatele planului)",
     "addressLocation": "locație după numărul străzii",
     "locationPage": "pagina {page} din planșă",
-    "manualLocation": "locație stabilită manual"
+    "manualLocation": "locație stabilită manual",
+    "showOnMap": "Arată pe hartă"
   },
   "Status": {
     "announced": "Anunțat",
@@ -228,5 +229,42 @@
     "court_ruling": "Hotărâre judecătorească",
     "document_added": "Documente publicate",
     "other": "Alt eveniment"
+  },
+  "Archive": {
+    "title": "Arhivă – {city}",
+    "heading": "Arhivă",
+    "intro": "Caută în toate proiectele: titlu, adresă, inițiator și rezumat. Diacriticele nu contează.",
+    "searchLabel": "Caută în arhivă",
+    "searchPlaceholder": "ex. Răcădău, Tractorul, locuințe",
+    "search": "Caută",
+    "results": "{count, plural, =0 {Niciun rezultat} one {# rezultat} few {# rezultate} other {# de rezultate}}",
+    "resultsFor": "pentru „{q}”",
+    "sort": "Ordine",
+    "sortRelevance": "Relevanță",
+    "sortDate": "Cele mai noi",
+    "filters": "Filtre",
+    "kind": "Tip",
+    "status": "Stare",
+    "year": "An",
+    "allYears": "Toți anii",
+    "initiator": "Inițiator",
+    "apply": "Aplică",
+    "reset": "Șterge filtrele",
+    "export": "Descarcă CSV",
+    "exportHint": "Toate rezultatele, pentru Excel sau LibreOffice",
+    "previous": "Înapoi",
+    "next": "Înainte",
+    "pageOf": "Pagina {page} din {pages}",
+    "noResults": "Niciun proiect nu se potrivește. Încearcă un cuvânt mai scurt sau șterge filtrele.",
+    "archiveLink": "Arhivă",
+    "mapLink": "Hartă",
+    "csvTitle": "Titlu",
+    "csvKind": "Tip",
+    "csvStatus": "Stare",
+    "csvAddress": "Adresă",
+    "csvInitiator": "Inițiator",
+    "csvDate": "Ultimul eveniment",
+    "csvSummary": "Rezumat",
+    "csvUrl": "Pagina proiectului"
   }
 }

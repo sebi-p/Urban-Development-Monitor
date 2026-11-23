@@ -2,7 +2,7 @@ import type { ProjectListItem } from "@mdu/db";
 import type { ProjectIndicators } from "@mdu/shared";
 import { useFormatter, useTranslations } from "next-intl";
 import Link from "next/link";
-import { Building2, ExternalLink, FileText, MapPin } from "lucide-react";
+import { Building2, ExternalLink, FileText, LocateFixed, MapPin } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 
@@ -103,6 +103,8 @@ export function ProjectList({ city, projects }: { city: string; projects: Projec
         <li
           key={p.id}
           id={`p-${p.slug}`}
+          data-slug={p.slug}
+          data-located={p.hasLocation ? "true" : undefined}
           className="scroll-mt-4 rounded-[var(--radius-card)] border border-slate-200 bg-white p-4 shadow-[var(--shadow-card)] target:ring-2 target:ring-accent-600"
         >
           <div className="flex flex-wrap items-center gap-1.5">
@@ -130,6 +132,16 @@ export function ProjectList({ city, projects }: { city: string; projects: Projec
             </span>
           </p>
           <Indicators p={p} />
+          {p.hasLocation && (
+            <button
+              type="button"
+              data-show-on-map={p.slug}
+              className="show-on-map mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+            >
+              <LocateFixed aria-hidden className="size-4 text-accent-700" />
+              {t("showOnMap")}
+            </button>
+          )}
           {(p.documents.length > 0 || p.sourceUrl) && (
             <details className="docs group mt-3 border-t border-slate-100 pt-2">
               <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-700">

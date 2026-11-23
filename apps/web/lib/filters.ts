@@ -14,15 +14,22 @@ export interface UrlFilters {
   open: boolean;
 }
 
-type Params = Record<string, string | string[] | undefined> | URLSearchParams;
+export type Params = Record<string, string | string[] | undefined> | URLSearchParams;
 
-function get(params: Params, key: string): string {
+export function get(params: Params, key: string): string {
   const v = params instanceof URLSearchParams ? params.get(key) : params[key];
   return (Array.isArray(v) ? v[0] : v) ?? "";
 }
 
-function list<T extends string>(raw: string, allowed: readonly T[]): T[] {
-  const set = new Set(raw.split(",").map((s) => s.trim()));
+/** Every value of a key: `tip=puz,pud` (a shared link) or `tip=puz&tip=pud` (a form without
+ * JavaScript sends one per checked box). */
+export function getAll(params: Params, key: string): string[] {
+  const v = params instanceof URLSearchParams ? params.getAll(key) : params[key];
+  return v === undefined ? [] : Array.isArray(v) ? v : [v];
+}
+
+function list<T extends string>(raw: string[], allowed: readonly T[]): T[] {
+  const set = new Set(raw.flatMap((r) => r.split(",")).map((s) => s.trim()));
   return allowed.filter((a) => set.has(a));
 }
 
@@ -33,8 +40,8 @@ function year(raw: string): number | undefined {
 
 export function parseFilters(params: Params): UrlFilters {
   return {
-    kinds: list(get(params, "tip"), PROJECT_KINDS),
-    statuses: list(get(params, "stare"), PROJECT_STATUSES),
+    kinds: list(getAll(params, "tip"), PROJECT_KINDS),
+    statuses: list(getAll(params, "stare"), PROJECT_STATUSES),
     from: year(get(params, "din")),
     to: year(get(params, "pana")),
     open: get(params, "consultare") === "deschisa",

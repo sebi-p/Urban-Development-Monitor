@@ -57,7 +57,7 @@ export interface ProjectFilters {
 }
 
 /** SQL conditions on `project p` shared by the map and the list, so both show the same set. */
-function filterConditions(filters: ProjectFilters): SQL[] {
+export function filterConditions(filters: ProjectFilters): SQL[] {
   const out: SQL[] = [];
   const family = sql`(select c.id from project c where c.id = p.id or c.merged_into_id = p.id)`;
   if (filters.bbox) {

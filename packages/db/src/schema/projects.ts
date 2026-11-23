@@ -59,6 +59,7 @@ export const project = pgTable(
     search: tsvector("search").generatedAlwaysAs(
       sql`setweight(to_tsvector('romanian', unaccent_immutable(coalesce(title, ''))), 'A') ||
           setweight(to_tsvector('romanian', unaccent_immutable(coalesce(address_text, ''))), 'B') ||
+          setweight(to_tsvector('romanian', unaccent_immutable(coalesce(initiator, ''))), 'B') ||
           setweight(to_tsvector('romanian', unaccent_immutable(coalesce(summary_ro, ''))), 'C')`,
     ),
     firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).notNull().defaultNow(),

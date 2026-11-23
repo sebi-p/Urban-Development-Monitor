@@ -11,11 +11,16 @@ import type {
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
+import { HIGHLIGHT, listen, SHOW } from "@/lib/map-events";
 import { STATUS_COLOURS } from "@/lib/status";
+
+type PinProps = { title: string; status: ProjectStatus; slug: string };
 
 // Public OpenFreeMap instance: no key, no usage limits (PLAN §4). Attribution is in the style.
 const STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 const SOURCE = "projects";
+const RING = "#0f766e"; // the accent: the highlighted pin's ring
+const SHOW_ZOOM = 16; // past clusterMaxZoom, so the pin stands alone
 
 /**
  * The map is created once; when the filters change, only the data is swapped (setData), so a
@@ -40,6 +45,7 @@ export function ProjectMap({
   useEffect(() => {
     if (!container.current) return;
     let cancelled = false;
+    const stops: (() => void)[] = [];
 
     void import("maplibre-gl").then((maplibregl) => {
       if (cancelled || !container.current) return;
@@ -106,6 +112,32 @@ export function ProjectMap({
             "circle-stroke-color": "#ffffff",
           },
         });
+        // The pin of the card under the pointer or keyboard focus: larger, with a ring.
+        const none = ["==", ["get", "slug"], ""] as ExpressionSpecification;
+        m.addLayer({
+          id: "project-ring",
+          type: "circle",
+          source: SOURCE,
+          filter: none,
+          paint: {
+            "circle-radius": 17,
+            "circle-opacity": 0,
+            "circle-stroke-width": 3,
+            "circle-stroke-color": RING,
+          },
+        });
+        m.addLayer({
+          id: "project-highlight",
+          type: "circle",
+          source: SOURCE,
+          filter: none,
+          paint: {
+            "circle-radius": 11,
+            "circle-color": colour,
+            "circle-stroke-width": 3,
+            "circle-stroke-color": "#ffffff",
+          },
+        });
         container.current?.setAttribute("data-ready", "true"); // for tests and the 3G budget
         m.on("idle", () => {
           const el = container.current;
@@ -114,6 +146,10 @@ export function ProjectMap({
           el.dataset.clusters = String(clusters.length);
           el.dataset.zoom = m.getZoom().toFixed(1);
           const first = clusters[0]?.geometry;
+          // How many highlighted pins are drawn (0 while the pin is inside a cluster).
+          el.dataset.highlighted = String(
+            m.queryRenderedFeatures({ layers: ["project-highlight"] }).length,
+          );
           if (first?.type === "Point") {
             const p = m.project(first.coordinates as [number, number]);
             el.dataset.clusterXy = `${Math.round(p.x)},${Math.round(p.y)}`;
@@ -133,11 +169,18 @@ export function ProjectMap({
             });
           });
         });
-        m.on("click", "projects", (e: MapLayerMouseEvent) => {
-          const f = e.features?.[0];
-          if (!f || f.geometry.type !== "Point") return;
-          const props = f.properties as { title: string; status: ProjectStatus; slug: string };
-          // Build the popup with textContent so source text can never inject HTML.
+        let popup: import("maplibre-gl").Popup | null = null;
+        let pinned: string | null = null; // shown with "Arată pe hartă": stays until its popup closes
+        let hovered: string | null = null;
+        const mark = () => {
+          const slug = pinned ?? hovered ?? "";
+          const filter = ["==", ["get", "slug"], slug] as ExpressionSpecification;
+          m.setFilter("project-ring", filter);
+          m.setFilter("project-highlight", filter);
+          if (container.current) container.current.dataset.highlight = slug;
+        };
+        const openPopup = (coordinates: [number, number], props: PinProps) => {
+          // Built with textContent so source text can never inject HTML.
           const el = document.createElement("div");
           const title = el.appendChild(document.createElement("strong"));
           title.textContent = props.title;
@@ -151,11 +194,38 @@ export function ProjectMap({
           const page = el.appendChild(document.createElement("a"));
           page.href = `/${city}/proiecte/${encodeURIComponent(props.slug)}`;
           page.textContent = filters("openProject");
-          new maplibregl.Popup({ offset: 10 })
-            .setLngLat(f.geometry.coordinates as [number, number])
+          popup?.remove();
+          popup = new maplibregl.Popup({ offset: 12 })
+            .setLngLat(coordinates)
             .setDOMContent(el)
             .addTo(m);
+          popup.on("close", () => {
+            if (pinned === props.slug) {
+              pinned = null;
+              mark();
+            }
+          });
+        };
+        m.on("click", "projects", (e: MapLayerMouseEvent) => {
+          const f = e.features?.[0];
+          if (!f || f.geometry.type !== "Point") return;
+          openPopup(f.geometry.coordinates as [number, number], f.properties as PinProps);
         });
+        stops.push(
+          listen<{ slug: string | null }>(HIGHLIGHT, ({ slug }) => {
+            hovered = slug;
+            mark();
+          }),
+          listen<{ slug: string }>(SHOW, ({ slug }) => {
+            const f = latest.current.features.find((x) => x.properties.slug === slug);
+            if (!f || f.geometry.type !== "Point") return;
+            const at = f.geometry.coordinates as [number, number];
+            pinned = slug;
+            mark();
+            m.once("moveend", () => openPopup(at, f.properties));
+            m.easeTo({ center: at, zoom: Math.max(m.getZoom(), SHOW_ZOOM) });
+          }),
+        );
         for (const layer of ["clusters", "projects"]) {
           m.on("mouseenter", layer, () => (m.getCanvas().style.cursor = "pointer"));
           m.on("mouseleave", layer, () => (m.getCanvas().style.cursor = ""));
@@ -165,6 +235,7 @@ export function ProjectMap({
 
     return () => {
       cancelled = true;
+      for (const stop of stops) stop();
       mapRef.current?.remove();
       mapRef.current = null;
     };

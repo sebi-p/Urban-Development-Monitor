@@ -271,7 +271,7 @@ The launch phase is highlighted; v2 work starts only after real residents have u
 | M4.1 | Map page with filters in URL, clustering, list view | Works on a mid-range phone at 3G speed |
 | M4.2 | Project page with timeline, documents, consultation box, OG image | JSON-LD validates; share preview shows the summary |
 | M4.3 | Archive search with facets and CSV export; list ↔ map highlighting: hovering or focusing a project card highlights its pin on the map (larger, with a ring), and an “Arată pe hartă” button on the card pans and zooms to the pin and opens its popup (on phones it also lowers the sheet so the map is visible; projects without a location show no button) | “Racadau” finds “Răcădău”; results under 300 ms cached; highlighting works with keyboard and touch, and the e2e test checks that the pin is highlighted |
-| M4.4 | Consultations page, RSS per neighbourhood, about and method pages, RO/EN | All pages pass axe accessibility checks |
+| M4.4 | Consultations page, RSS per neighbourhood, about and method pages, RO/EN; neighbourhood boundaries and the archive's neighbourhood facet (moved from M4.3) | All pages pass axe accessibility checks |
 | M5.1 | Back-fill workflow sharded by year with nightly budgets | 2020–present processed |
 | M5.2 | Accuracy audit tooling: random sample, side-by-side with source PDF | Audit results published on `/metodologie` |
 | M6.x | Permits import, email alerts, corrections, impact analysis, second jurisdiction | Per v2 scope in section 1 |

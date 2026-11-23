@@ -71,6 +71,8 @@ Headings use tight letter spacing (`tracking-tight`). Text is never smaller than
 | Card         | project list            | status badge, type · date, title, address with location precision, indicators, initiator, documents in a disclosure                                                                                                                       |
 | Bottom sheet | `BottomSheet`           | Phones: peek (count + chips), half, full; drag the handle or use the Listă/Hartă button; `#p-…` links open it full. Wide screens: a floating 26 rem panel on the left                                                                     |
 | Map          | `ProjectMap`            | OpenFreeMap "liberty" base, clusters with click-to-zoom, pins with a white outline, popups with a link to the card and the project page                                                                                                   |
+| Archive      | `/{city}/arhiva`        | Search box, facets with counts (checkbox per value, year as radio), results with matches marked (`<mark>`, amber tint), relevance/date switch, CSV link; one GET form                                                                     |
+| Show on map  | card button             | "Arată pe hartă" (only with a location); hover or focus on a card draws its pin larger with an accent ring                                                                                                                                |
 | Project page | `components/project/*`  | Header (status, title, address), consultation box first while open, summary card with its source chip, figures with page links, timeline (hollow dot = still to come), documents, small map loaded on scroll, nearby list, "last checked" |
 
 ## Words

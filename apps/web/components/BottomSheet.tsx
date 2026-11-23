@@ -3,6 +3,7 @@
 import { ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { listen, SHEET } from "@/lib/map-events";
 import { cn } from "@/lib/utils";
 
 type Snap = "peek" | "half" | "full";
@@ -33,7 +34,12 @@ export function BottomSheet({
     };
     onHash();
     window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
+    // "Arată pe hartă" lowers the sheet so the pin and its popup are visible.
+    const stop = listen<{ snap: Snap }>(SHEET, ({ snap }) => setSnap(snap));
+    return () => {
+      window.removeEventListener("hashchange", onHash);
+      stop();
+    };
   }, []);
 
   const step = (dir: 1 | -1, from: Snap = snap) =>
