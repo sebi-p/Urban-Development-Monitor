@@ -20,6 +20,7 @@ from typing import Any
 
 from mdu.core.fields import Selection, numbers_in
 from mdu.core.streets import fold
+from mdu.ingest import looks_like_organisation
 
 PROMPT_VERSION = "summary-v1"
 MAX_CHARS = 9_000
@@ -59,11 +60,18 @@ GENERIC_WORDS = (
         "street", "avenue", "road", "square", "district", "city", "council", "zoning", "urban",
         "detailed", "municipality", "county", "the", "a", "an", "in", "on", "at", "this", "it",
         "un", "o", "pe", "la", "în", "prin", "planului", "documentatia", "documentatiei",
+        "maximum", "minimum", "maxim", "minim", "pot", "cut", "industrial",
 )  # fmt: skip
 GENERIC = frozenset(fold(w) for w in GENERIC_WORDS)
 _CAP_WORD = r"[A-ZĂÂÎȘȚŞŢ][\w-]*"
 _CAP_RUN = re.compile(rf"{_CAP_WORD}(?:\s+{_CAP_WORD})+")
-_SENTENCE_END = re.compile(r"[.!?;:]\s+")
+# A run right after one of these is a street or place named after a person ("str. Ioan Popasu").
+_PLACE_AFTER = re.compile(r"^\s+(streets?|road|avenue|boulevard|square)\b", re.I)
+_PLACE_BEFORE = re.compile(
+    r"\b(str|strada|strazii|strazile|streets?|bd|b-dul|bulevardul|boulevard|calea|aleea|piata|"
+    r"square|cartierul|zona|cartier|si|and)\.?\s*$",
+    re.I,
+)
 
 
 def prompt_text(header: str, selection: Selection) -> str:
@@ -75,8 +83,17 @@ def unknown_names(text: str, allowed: str) -> list[str]:
     `allowed` nor generic place or body words."""
     allowed_words = set(re.findall(r"\w+", fold(allowed)))
     out = []
-    runs = [r for part in _SENTENCE_END.split(text) for r in _CAP_RUN.findall(part)]
-    for run in runs:
+    # Words never include a dot, so a run can't cross the end of a sentence ("4E. Spațiile").
+    for match in _CAP_RUN.finditer(text):
+        run = match.group(0)
+        before = fold(text[max(0, match.start() - 14) : match.start()])
+        if _PLACE_BEFORE.search(before) or _PLACE_AFTER.match(text[match.end() :]):
+            continue
+        # Companies and public bodies may be named; "X S.R.L." ends the run at "S".
+        if looks_like_organisation(run) or re.match(
+            r"\.\s?(r\.\s?l|a\b)", text[match.end() :], re.I
+        ):
+            continue
         words = re.findall(r"\w+", fold(run))
         if any(w in GENERIC for w in words):
             continue

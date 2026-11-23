@@ -54,9 +54,13 @@ def test_numbers_judgements_and_names_are_refused() -> None:
 def test_place_and_body_names_are_not_taken_for_people() -> None:
     text = (
         "Consiliul Local al Municipiului Brașov a primit planul pentru Strada Ion Pop. Spațiile "
-        "verzi ocupă 20%. Inițiator: SC ALFA SRL."
+        "verzi ocupă 20%. Inițiator: SC ALFA SRL, pe str. Lucian Blaga."
     )
     assert summary.unknown_names(text, ALLOWED) == []
+    assert (
+        summary.unknown_names("Proiectant: Jepilor Proiect S.R.L., pe Ioan Popasu Street.", "")
+        == []
+    )
     assert summary.unknown_names("Inițiator: Maria Ionescu.", ALLOWED) == ["Maria Ionescu"]
 
 
