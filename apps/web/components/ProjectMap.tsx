@@ -172,8 +172,11 @@ export function ProjectMap({
         let popup: import("maplibre-gl").Popup | null = null;
         let pinned: string | null = null; // shown with "Arată pe hartă": stays until its popup closes
         let hovered: string | null = null;
+        let marked = "";
         const mark = () => {
           const slug = pinned ?? hovered ?? "";
+          if (slug === marked) return; // a filter change re-lays out the pins: skip no-ops
+          marked = slug;
           const filter = ["==", ["get", "slug"], slug] as ExpressionSpecification;
           m.setFilter("project-ring", filter);
           m.setFilter("project-highlight", filter);

@@ -15,9 +15,17 @@ export default defineConfig({
   reporter: process.env.CI ? [["list"], ["github"]] : "list",
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
+    { name: "desktop", use: { ...devices["Desktop Chrome"] }, testIgnore: "**/budget.e2e.ts" },
     // A mid-range phone, as in Lighthouse's mobile profile.
-    { name: "phone", use: { ...devices["Moto G4"] } },
+    { name: "phone", use: { ...devices["Moto G4"] }, testIgnore: "**/budget.e2e.ts" },
+    // The 3G timing runs after the others, alone: a parallel worker sharing the CPU would add
+    // hundreds of milliseconds to a measurement on a 4x slowed CPU.
+    {
+      name: "budget",
+      use: { ...devices["Moto G4"] },
+      testMatch: "**/budget.e2e.ts",
+      dependencies: ["desktop", "phone"],
+    },
   ],
   webServer: {
     command: process.env.CI ? `pnpm start -p ${PORT}` : `pnpm build && pnpm start -p ${PORT}`,

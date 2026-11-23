@@ -11,7 +11,6 @@ const PINS_MS = 10_000;
 const TAB_MS = 500;
 
 test("3G phone budget", async ({ page, city }, info) => {
-  test.skip(info.project.name !== "phone", "phone budget");
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Network.enable");
   await cdp.send("Network.emulateNetworkConditions", {
