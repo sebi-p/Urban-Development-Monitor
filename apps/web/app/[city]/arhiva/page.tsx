@@ -15,7 +15,8 @@ import { highlight, searchTerms, snippet } from "@/lib/highlight";
 import { projectPath } from "@/lib/project";
 import { cachedSearch } from "@/lib/search";
 
-export const dynamic = "force-dynamic"; // results come from cachedSearch (5 minutes)
+// Every query is its own page; cachedSearch keeps each answer for 5 minutes.
+export const dynamic = "force-dynamic";
 
 const FORM = "archive";
 
