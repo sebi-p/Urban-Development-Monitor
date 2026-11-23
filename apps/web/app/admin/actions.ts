@@ -11,9 +11,10 @@ import {
   splitProject,
   type RerunStage,
 } from "@mdu/db";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { adminLogin, signIn, signOut } from "@/auth";
+import { AUDIT_TAG } from "@/lib/audit";
 import { getDb } from "@/lib/db";
 
 /** Every action checks the session again: a server action is a public POST endpoint. */
@@ -105,5 +106,5 @@ export async function publishAuditAction(form: FormData) {
   const actor = await requireAdmin();
   await publishAudit(getDb(), { auditId: text(form, "auditId"), actor });
   revalidatePath("/admin/audit");
-  revalidatePath("/[locale]/metodologie", "page"); // the published accuracy
+  updateTag(AUDIT_TAG); // the published accuracy on /metodologie, at once
 }

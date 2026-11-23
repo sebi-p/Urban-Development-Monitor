@@ -1,13 +1,14 @@
-import { latestAuditResults, listJurisdictions, type AuditResults } from "@mdu/db";
+import type { AuditResults } from "@mdu/db";
 import type { Metadata } from "next";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import { ProsePage, Section } from "@/components/Prose";
-import { getDb } from "@/lib/db";
+import { publishedAccuracy } from "@/lib/audit";
 import { alternates } from "@/lib/locale";
 
-// The published audit changes rarely; publishing one also refreshes this page (admin action).
-export const revalidate = 3600;
+// Rendered per request, never at build time (the build has no database); the published audit is
+// cached for an hour, and publishing one refreshes it (lib/audit.ts).
+export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -78,9 +79,7 @@ export default async function MethodPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("Method");
-  const db = getDb();
-  const cities = await listJurisdictions(db);
-  const results = await Promise.all(cities.map((c) => latestAuditResults(db, c.slug)));
+  const { cities, results } = await publishedAccuracy();
   return (
     <ProsePage heading={t("heading")} intro={t("intro")}>
       <Section heading={t("stepsHeading")}>
