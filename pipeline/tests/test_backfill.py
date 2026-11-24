@@ -133,3 +133,19 @@ def test_walks_down_to_the_date_in_checkpoints_and_resumes(
     more = backfill.run(pg, client, StreetIndex({}), adapter, seconds=3, clock=clock, **common)
     assert more.walked == 2
     assert more.cursor.next_id == NEWEST - 11
+
+
+def test_each_night_leaves_one_row_for_the_watchdog(pg: psycopg.Connection[Any]) -> None:
+    _jid(pg)
+    backfill.record_night(pg, "brasov", done=False, walked=12)
+    backfill.record_night(pg, "brasov", done=False, walked=0, error="started after 06:00")
+    rows = pg.execute(
+        """select status::text, stats->>'done', stats->>'walked', error from pipeline_run
+           where stage = 'backfill_night' order by status desc"""
+    ).fetchall()
+    assert rows == [
+        ("succeeded", "false", "12", None),
+        ("failed", "false", "0", "started after 06:00"),
+    ]
+    # The walk's checkpoint is a separate stage: a night row never resets the cursor.
+    assert backfill.load_cursor(pg, "brasov", "brasov.notices") is None

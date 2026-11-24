@@ -6,6 +6,8 @@ place the council's decisions from the minutes, geocode, place projects in neigh
 the consultation notices and write the summaries. A failing adapter is logged as a failed
 `pipeline_run` and the others still run; the command then exits non-zero so the workflow shows
 red. Every step is idempotent, so a second run the same day does nothing but re-read the listings.
+The run ends with one `daily` row (succeeded, or failed with the failed steps), which the
+watchdog reads to tell a missed or failed morning (M5.4, ADR 0021).
 """
 
 from __future__ import annotations
@@ -45,6 +47,21 @@ def _log_failure(
                    error, stats)
                select id, %s, %s, 'failed', now(), %s, '{}' from jurisdiction where slug = %s""",
             (adapter, stage, error[:2000], city),
+        )
+
+
+def _log_daily(conn: psycopg.Connection[Any], city: str, result: DailyResult) -> None:
+    errors = "; ".join(f"{n}: {result.steps[n].get('error', '')}" for n in result.failed)
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute(
+            """insert into pipeline_run (jurisdiction_id, stage, status, finished_at, error, stats)
+               select id, 'daily', %s, now(), %s, %s from jurisdiction where slug = %s""",
+            (
+                "succeeded" if result.ok else "failed",
+                errors[:2000] or None,
+                json.dumps({"steps": len(result.steps), "failed": result.failed}),
+                city,
+            ),
         )
 
 
@@ -226,4 +243,5 @@ def run(  # noqa: PLR0913, PLR0915
         return dict(r.counts)
 
     step("summary", None, "summarize", summarize_all)
+    _log_daily(conn, city, result)
     return result

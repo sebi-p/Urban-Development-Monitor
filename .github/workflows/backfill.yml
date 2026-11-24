@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  issues: write # the failure alert (M5.4)
 
 concurrency:
   group: brasovcity-requests # shared with the daily run: one job at a time talks to the city
@@ -46,3 +47,16 @@ jobs:
         env:
           SINCE: ${{ inputs.since || '2020-01-01' }} # passed as data, never as shell code
         run: uv run --no-dev mdu backfill --city brasov --night-only --hours 5.5 --since "$SINCE"
+      - uses: actions/setup-node@v7
+        if: failure() || cancelled()
+        with:
+          node-version-file: .nvmrc
+      - name: Alert (GitHub issue)
+        if: failure() || cancelled()
+        working-directory: .
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ALERT_SOURCE: "the backfill workflow"
+        run: |
+          node apps/web/scripts/alert.ts "brasov:backfill" "brasov: the nightly back-fill failed" "The run failed or timed out: $RUN_URL"

@@ -148,7 +148,18 @@
     "auditConsultation": "Consultare",
     "auditViewer": "Documentul sursă",
     "auditNoR2": "Vizualizarea copiilor din R2 nu e configurată (R2_* lipsesc). Folosește linkurile către site-ul primăriei.",
-    "auditNoDoc": "Nicio copie a documentelor acestui proiect; folosește linkurile ↗ către site-ul primăriei."
+    "auditNoDoc": "Nicio copie a documentelor acestui proiect; folosește linkurile ↗ către site-ul primăriei.",
+    "healthTitle": "Starea surselor",
+    "healthIntro": "Ultima reușită și erorile fiecărei surse. Paznicul zilnic deschide un issue pe GitHub pentru o rulare lipsă sau eșuată și pentru o sursă oprită după 20 de erori la rând.",
+    "healthFindings": "Ce ar semnala paznicul acum",
+    "healthNoFindings": "Nicio problemă la rulări.",
+    "healthAdapter": "Sursă",
+    "healthLastSuccess": "Ultima reușită",
+    "healthFailures": "Eșecuri 7 / 30 zile",
+    "healthFetchErrors": "Descărcări eșuate (7 zile)",
+    "healthLastError": "Ultima eroare",
+    "healthStopped": "Oprită după 20 de erori",
+    "healthNever": "niciodată"
   },
   "Filters": {
     "heading": "Filtre",

@@ -1,0 +1,46 @@
+name: Live smoke
+
+# M5.4 (ADR 0021): after each production deploy, check the production pages and API. A failure
+# is retried once a minute later (the domain can take a moment to point at the new deploy), then
+# opens or comments on the `pages` alert issue; the daily watchdog closes it once pages work.
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      cities:
+        description: "City slugs to check, space separated"
+        default: "brasov"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  smoke:
+    name: Production pages
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE_URL: https://urban-development-monitor.vercel.app
+      CITIES: ${{ inputs.cities || 'brasov' }} # passed as data, never as shell code
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: Check the pages
+        id: first
+        continue-on-error: true
+        run: node apps/web/scripts/smoke.ts "$BASE_URL" $CITIES
+      - name: Check again, and alert
+        if: steps.first.outcome == 'failure'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALERT_SOURCE: "live-smoke (${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+        run: |
+          sleep 60
+          node apps/web/scripts/smoke.ts "$BASE_URL" $CITIES

@@ -660,27 +660,36 @@ def _backfill(args: argparse.Namespace) -> int:
             print("\n".join(backfill.status(conn, args.city, adapters)))
             return 0
         if args.night_only and not stages.is_night():
-            print(
-                "outside the 22:00–06:00 Bucharest window (PLAN §7); not running", file=sys.stderr
-            )
+            message = "outside the 22:00–06:00 Bucharest window (PLAN §7); not running"
+            print(message, file=sys.stderr)
+            backfill.record_night(conn, args.city, done=False, walked=0, error=message)
             return EXIT_FAILED
         upload = ObjectStore.from_env().put
-        with _client(args.city) as client:
-            streets = _street_index(args.city, client)
-            hours = args.hours * 3600
-            # A scheduled run can start late: never walk past 06:00 Bucharest with --night-only.
-            budget = min(hours, stages.night_left()) if args.night_only else hours
-            seconds = budget / len(adapters)
-            for a in adapters:
-                r = backfill.run(
-                    conn, client, streets, a, city=args.city, since=args.since,
-                    seconds=seconds, upload=upload, log=lambda m: print(m, flush=True),
-                )  # fmt: skip
-                print(
-                    f"{a.key}: walked {r.walked} numbers, {r.projects} projects, "
-                    f"{r.documents} documents queued; skipped {r.skipped}"
-                )
-            requests = client.requests_sent
+        walked, done = 0, True
+        try:
+            with _client(args.city) as client:
+                streets = _street_index(args.city, client)
+                hours = args.hours * 3600
+                # A scheduled run can start late: never walk past 06:00 Bucharest (--night-only).
+                budget = min(hours, stages.night_left()) if args.night_only else hours
+                seconds = budget / len(adapters)
+                for a in adapters:
+                    r = backfill.run(
+                        conn, client, streets, a, city=args.city, since=args.since,
+                        seconds=seconds, upload=upload, log=lambda m: print(m, flush=True),
+                    )  # fmt: skip
+                    walked, done = walked + r.walked, done and r.cursor.done
+                    print(
+                        f"{a.key}: walked {r.walked} numbers, {r.projects} projects, "
+                        f"{r.documents} documents queued; skipped {r.skipped}"
+                    )
+                requests = client.requests_sent
+        except Exception as exc:
+            conn.rollback()
+            error = f"{type(exc).__name__}: {exc}"
+            backfill.record_night(conn, args.city, done=False, walked=walked, error=error)
+            raise
+        backfill.record_night(conn, args.city, done=done, walked=walked)
         print("\n".join(backfill.status(conn, args.city, adapters)))
     print(f"{requests} requests; database: {urlsplit(url).hostname}")
     return 0

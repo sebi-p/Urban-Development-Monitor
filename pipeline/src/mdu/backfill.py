@@ -93,6 +93,29 @@ def _save(conn: psycopg.Connection[Any], city: str, adapter: str, cursor: Cursor
         )
 
 
+def record_night(
+    conn: psycopg.Connection[Any],
+    city: str,
+    *,
+    done: bool,
+    walked: int,
+    error: str | None = None,
+) -> None:
+    """One `backfill_night` row per run: the watchdog alerts on a missed or failed night while
+    the walk isn't done (M5.4). The checkpoint rows (`backfill`) stay the walk's own state."""
+    with conn.transaction():
+        conn.execute(
+            """insert into pipeline_run (jurisdiction_id, stage, status, finished_at, error, stats)
+               select id, 'backfill_night', %s, now(), %s, %s from jurisdiction where slug = %s""",
+            (
+                "failed" if error else "succeeded",
+                error[:2000] if error else None,
+                json.dumps({"done": done, "walked": walked}),
+                city,
+            ),
+        )
+
+
 @dataclass
 class BackfillResult:
     cursor: Cursor

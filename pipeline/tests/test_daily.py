@@ -202,9 +202,13 @@ def test_daily_runs_every_step_isolates_failures_and_reruns_as_no_op(
     assert first.steps["fetch"]["skipped"] == 1
     assert first.steps["extract"]["extracted"] == 1
     failed = pg.execute(
-        "select adapter, stage, error from pipeline_run where status = 'failed'"
+        "select adapter, stage, error from pipeline_run where status = 'failed' order by stage desc"
     ).fetchall()
-    assert failed == [("testcity.hub", "discover", "RuntimeError: listing redesigned")]
+    assert failed == [
+        ("testcity.hub", "discover", "RuntimeError: listing redesigned"),
+        # The run's own row, which the watchdog reads (M5.4).
+        (None, "daily", "testcity.hub discover: RuntimeError: listing redesigned"),
+    ]
 
     pdf_hits = site.hits["/memoriu.pdf"]
     second = run()

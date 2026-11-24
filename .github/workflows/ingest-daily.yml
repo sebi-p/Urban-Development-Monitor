@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  issues: write # the failure alert (M5.4)
 
 concurrency:
   # Shared with the nightly back-fill: one job at a time talks to the city's site, and a run
@@ -44,3 +45,16 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-ron
       - run: uv sync --locked --no-dev
       - run: uv run --no-dev mdu daily --city brasov
+      - uses: actions/setup-node@v7
+        if: failure() || cancelled()
+        with:
+          node-version-file: .nvmrc
+      - name: Alert (GitHub issue)
+        if: failure() || cancelled()
+        working-directory: .
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ALERT_SOURCE: "the ingest-daily workflow"
+        run: |
+          node apps/web/scripts/alert.ts "brasov:daily" "brasov: the daily run failed" "The run failed or timed out: $RUN_URL"

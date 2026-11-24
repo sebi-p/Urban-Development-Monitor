@@ -148,7 +148,18 @@
     "auditConsultation": "Consultation",
     "auditViewer": "Source document",
     "auditNoR2": "Viewing our R2 copies isn't configured (R2_* missing). Use the links to the city's site.",
-    "auditNoDoc": "No copy of this project's documents; use the ↗ links to the city's site."
+    "auditNoDoc": "No copy of this project's documents; use the ↗ links to the city's site.",
+    "healthTitle": "Source health",
+    "healthIntro": "Each source's last success and errors. The daily watchdog opens a GitHub issue for a missed or failed run and for a source stopped after 20 errors in a row.",
+    "healthFindings": "What the watchdog would flag now",
+    "healthNoFindings": "No problems with the runs.",
+    "healthAdapter": "Source",
+    "healthLastSuccess": "Last success",
+    "healthFailures": "Failures 7 / 30 days",
+    "healthFetchErrors": "Failed fetches (7 days)",
+    "healthLastError": "Last error",
+    "healthStopped": "Stopped after 20 errors",
+    "healthNever": "never"
   },
   "Filters": {
     "heading": "Filters",
