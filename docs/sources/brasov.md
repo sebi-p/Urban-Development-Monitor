@@ -6,12 +6,12 @@ Placeholders such as `<project folder>` stand for real path segments. Real folde
 
 ## Access rules
 
-| Host                                   | robots.txt                                                                | Status                                                                                     |
-| -------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `www.brasovcity.ro`                    | None (the URL returns the site's HTML 404 page); pages say `index,follow` | Allowed, throttled to one request per 2.5 s                                                |
-| `extranet.brasovcity.ro`               | Disallows `/Registratura/` and many other paths                           | **Never requested.** Listed in `blocked_hosts` in `config/jurisdictions/brasov.yaml`       |
-| `serviciiharta.brasovcity.ro` (WebGIS) | None                                                                      | Allowed by robots, but we read nothing beyond the app page until the city agrees (PLAN §2) |
-| `www.brasovcity.ro/stiri-wp/wp-json/`  | n/a                                                                       | HTTP 403: the WordPress REST API isn't available                                           |
+| Host                                   | robots.txt                                                                | Status                                                                                            |
+| -------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `www.brasovcity.ro`                    | None (the URL returns the site's HTML 404 page); pages say `index,follow` | Allowed, throttled to one request per 2.5 s                                                       |
+| `extranet.brasovcity.ro`               | Disallows `/Registratura/` and many other paths                           | **Never requested.** Listed in `blocked_hosts` in `config/jurisdictions/brasov.yaml`              |
+| `serviciiharta.brasovcity.ro` (WebGIS) | None                                                                      | Allowed by robots, but its layers come only from an internal API, which we don't use (PLAN §10.6) |
+| `www.brasovcity.ro/stiri-wp/wp-json/`  | n/a                                                                       | HTTP 403: the WordPress REST API isn't available                                                  |
 
 ## Sources
 
@@ -66,7 +66,7 @@ Placeholders such as `<project folder>` stand for real path segments. Real folde
 
 - **The Monitorul Oficial Local page** `/monitorul-oficial-local/hotararile-autoritatii-deliberative` leads to a search form that POSTs to `/consiliul-local/consultare-registru-hcl`.
 - **The form is protected by Cloudflare Turnstile,** a bot challenge. **It isn't automated, and never will be by solving or bypassing the challenge.** This answers PLAN §14's first open question: there's no crawlable HCL listing.
-- **Alternatives:** take HCL numbers and dates from the minutes, debate pages and later agendas; and ask the city for an export (Law 544/2001), alongside the permit-register request.
+- **Alternatives:** the minutes give each decision's session date, outcome and votes, but not its number (ADR 0020). The city declined an export (below), so HCL numbers stay unknown.
 
 ### ctatu: technical urbanism committee (P1)
 
@@ -80,15 +80,25 @@ Placeholders such as `<project folder>` stand for real path segments. Real folde
 
 The lookup forms on the hub query `extranet.brasovcity.ro`, which is never requested (PLAN §2, §10.6).
 
+### Law 544/2001 request (23.11.2026)
+
+- A request for a CU/AC export and PUZ/PUD outlines (registered no. 241162/23.11.2026) was
+  answered on 24.11.2026 without data. The answer pointed to the CU/AC lookup forms (on
+  `extranet.brasovcity.ro`, never requested), the WebGIS "Hartă Urbanism" and the HCL register
+  (behind Cloudflare Turnstile). It said Law 544/2001 doesn't oblige the city to compile
+  exports.
+- **Decision: not pursued further.** No follow-up, complaint or permission request. The project
+  uses only documents it can reach publicly.
+
 ### WebGIS
 
 - **Address:** `https://serviciiharta.brasovcity.ro/webgis2update/?SiteGuid=<guid>`. It's a custom OpenLayers 2 application; each map is a `SiteGuid`.
-- **No standard WMS, WFS or ArcGIS REST address is visible on the page.** Layers are configured at runtime by the app's own scripts. Reading those means using an internal API, so we wait for the city's permission (PLAN §2). This answers PLAN §14's second open question as "not exposed publicly as a standard service."
+- **No standard WMS, WFS or ArcGIS REST address is visible on the page.** Layers are configured at runtime by the app's own scripts. Reading those means using an internal API, which we don't do (PLAN §10.6). This answers PLAN §14's second open question as "not exposed publicly as a standard service."
 
 ## Answers to the PLAN §14 open questions
 
-| Question                                             | Answer                                                                                                                           |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Where is the adopted-decisions (HCL) listing?        | It's a register search form behind Cloudflare Turnstile, so it can't be crawled. Use minutes and agendas, and request an export. |
-| Does the WebGIS expose WMS, WFS or ArcGIS REST?      | Not publicly. It's a custom app with runtime configuration, and needs the city's permission.                                     |
-| Is the WordPress REST API on `/stiri-wp/` available? | No: HTTP 403. HTML scraping it is.                                                                                               |
+| Question                                             | Answer                                                                                                    |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Where is the adopted-decisions (HCL) listing?        | It's a register search form behind Cloudflare Turnstile, so it can't be crawled. Use minutes and agendas. |
+| Does the WebGIS expose WMS, WFS or ArcGIS REST?      | Not publicly. It's a custom app with runtime configuration; its internal API isn't used.                  |
+| Is the WordPress REST API on `/stiri-wp/` available? | No: HTTP 403. HTML scraping it is.                                                                        |

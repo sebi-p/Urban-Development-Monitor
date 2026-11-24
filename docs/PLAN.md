@@ -30,7 +30,7 @@ Build Monitor Dezvoltare Urbană as a Postgres/PostGIS data pipeline plus a Next
 
 ## 2. Brașov data sources
 
-Almost everything lives on brasovcity.ro as HTML listings pointing to PDFs under predictable `file-zone/` paths, so v1 needs HTML scrapers plus PDF text extraction. The building-permit register sits on an extranet host that disallows crawlers, so permits need the city's permission or a formal data request.
+Almost everything lives on brasovcity.ro as HTML listings pointing to PDFs under predictable `file-zone/` paths, so v1 needs HTML scrapers plus PDF text extraction. The building-permit register sits on an extranet host that disallows crawlers, so permits are out of scope: the city declined an export on 24.11.2026 (section 10.6).
 
 | Source | What it gives | Format and URL pattern | History | Collection method | Priority |
 | --- | --- | --- | --- | --- | --- |
@@ -41,7 +41,7 @@ Almost everything lives on brasovcity.ro as HTML listings pointing to PDFs under
 | [Council minutes](https://www.brasovcity.ro/file-zone/procese-verbale/consiliu/CMBV-PV-96.pdf) | Votes, amendments (e.g. functions removed from a PUZ), withdrawals | `/file-zone/procese-verbale/consiliu/CMBV-PV-<n>.pdf`, sequential | Back to at least 2013 ([PV 182, Aug 2013](https://www.brasovcity.ro/file-zone/procese-verbale/consiliu/CMBV-PV-182.pdf)) | PDF enumerate + parse, weekly | P1 |
 | Adopted decisions (HCL) | Final approval number and date for each PUZ/PUD | Monitorul Oficial Local section (exact listing URL to confirm in Phase 0) | Since the local official gazette started | PDF parse, daily | P0 |
 | CTATU and CTC committee agendas | Earliest signal: technical urbanism committee reviews before public debate | PDFs under `/file-zone/urbanism/comisii/ctatu/` | 2026 visible; older to confirm | PDF parse, weekly | P1 |
-| CU / AC / certificate-of-completion lookups | Every urbanism certificate and building permit: number, date, applicant, description, address, validity | Search forms on the hub page (years 2005–2026); results served from `extranet.brasovcity.ro`, whose robots.txt blocks crawlers | 2005–present | **Do not scrape.** Ask the city for an export or written permission; file a Law 544/2001 request | P1 (blocked) |
+| CU / AC / certificate-of-completion lookups | Every urbanism certificate and building permit: number, date, applicant, description, address, validity | Search forms on the hub page (years 2005–2026); results served from `extranet.brasovcity.ro`, whose robots.txt blocks crawlers | 2005–present | **Do not scrape.** The city declined an export (Law 544/2001 request, answered 24.11.2026); out of scope | Out of scope |
 | City WebGIS ([urbanism map](https://serviciiharta.brasovcity.ro/webgis2update/?SiteGuid=7ff2167f-f171-4ca0-8b22-162810a591c5), [PUG proposals map](https://hartapug.brasovcity.ro)) | Approved PUZ/PUD outlines, PUG zoning, green spaces, parking, transit layers | WebGIS app; check whether it exposes WMS/WFS or ArcGIS REST endpoints | Current state | Ask permission, then read the service; never hammer tiles | P1 |
 | [ANCPI INSPIRE services](https://inspire-geoportal.ec.europa.eu/srv/api/records/%7B5DCAFDDB-7729-4655-8C5C-845AE8538BFC%7D) | Addresses (RENNS), administrative units, buildings, orthophoto 1:5000 as WMS | Public WMS view services on geoportal.ancpi.ro | Current | Map overlays and address checks; view-only | P2 |
 | OpenStreetMap | Streets, buildings, parks, schools, transit stops for geocoding and impact context | Nominatim (max 1 request/second, no bulk on the public server, identify your app per the [usage policy](https://operations.osmfoundation.org/policies/nominatim/)), Overpass extracts | Current | Cached geocoding; nightly Brașov extract | P0 |
@@ -227,7 +227,7 @@ Launch with 2020–present fully processed, because that window covers the curre
 3. **Recover what was deleted.** Query the Wayback Machine CDX API for `brasovcity.ro/file-zone/*` to find documents no longer linked; store the archive URL as the source and flag it “archived copy”.
 4. **Process newest first.** Queue by year descending so the launch window is complete early and later years fill in without blocking.
 5. **Budget the slow parts.** Fetch at polite rates overnight; OCR runs in parallel on GitHub runners (6-hour job limit, so shard by year); LLM extraction runs only on documents classified as relevant, under the nightly budget. At free-tier LLM rates of a few hundred requests a day, a large back-fill takes weeks; a one-off paid budget compresses it to days.
-6. **Seed what scrapers cannot reach.** The city lookup forms cover permits from 2005, but the register host blocks crawlers. Send a Law 544/2001 request (and a partnership email to the public-information office) for a CSV export of CU/AC since 2015 and for PUZ/PUD outlines from the city GIS; import them through a `manual_import` adapter.
+6. **What scrapers cannot reach stays out.** The city lookup forms cover permits from 2005, but the register host blocks crawlers. A Law 544/2001 request (23.11.2026) for a CU/AC export and PUZ/PUD outlines was declined on 24.11.2026: the city pointed to the same lookup forms, the WebGIS and the HCL register behind Cloudflare Turnstile, and said the law doesn't oblige it to compile exports. The project doesn't pursue exports or permissions. It uses only documents it can reach publicly: debates, notices, agendas, minutes and the urbanism hub.
 7. **Verify before launch.** Hand-check a random sample of 100 projects against the source PDFs; target at least 95% correct status and 90% correct location to street level, and publish the measured accuracy on `/metodologie`.
 
 ## 11. Legal, privacy and trust
@@ -236,7 +236,7 @@ The information is public, but republishing it at scale creates obligations; get
 
 - **Personal data (GDPR).** Permit and certificate registers list private individuals as applicants. Show names only for companies and public bodies; store individuals as “persoană fizică”. Do not publicly re-host PDFs that contain individuals' personal data; link to the city's copy instead. Run a PII detector (CNP pattern, phone, email, signatures page) before mirroring any file.
 - **Copyright.** Official administrative texts (decisions, reports, minutes) can be mirrored. Architect-authored documentation (memorii, planșe) is the designer's work: show a page thumbnail and quote only indicators; link to the original for the full file and keep any full copy private for archival integrity.
-- **Scraping etiquette.** Honour robots.txt (it already blocks the permits register), identify the bot, throttle, and stop if the city asks. Aim for a data-sharing agreement; it is the only durable route.
+- **Scraping etiquette.** Honour robots.txt (it already blocks the permits register), identify the bot, throttle, and stop if the city asks. Use only publicly reachable sources (section 10.6).
 - **Accuracy and right of reply.** Every page shows “last checked” and source links; a “report an error” form; developers and the city can request corrections, handled within 5 working days and logged.
 - **Neutrality.** Describe, never campaign. No ranking of projects, no adjectives in summaries, impact figures labelled as estimates.
 - **Licences.** Code under AGPL-3.0 or MIT; derived data under CC BY 4.0; OSM-derived layers under ODbL with attribution; basemap attribution visible.
@@ -274,7 +274,7 @@ The launch phase is highlighted; v2 work starts only after real residents have u
 | M4.4 | Consultations page, RSS per neighbourhood, about and method pages, RO/EN; neighbourhood boundaries and the archive's neighbourhood facet (moved from M4.3) | All pages pass axe accessibility checks |
 | M5.1 | Back-fill workflow sharded by year with nightly budgets | 2020–present processed |
 | M5.2 | Accuracy audit tooling: random sample, side-by-side with source PDF | Audit results published on `/metodologie` |
-| M5.3 | Council minutes: outcomes and votes from the minutes PDFs (about 180 since 2020, nearly all with a text layer), so back-filled projects get their actual decision instead of staying “in preparation” (deferred from M5.1). The minutes don't give HCL numbers; those come from the Law 544/2001 export request | Golden-set projects get the right session date, outcome, votes and status |
+| M5.3 | Council minutes: outcomes and votes from the minutes PDFs (about 180 since 2020, nearly all with a text layer), so back-filled projects get their actual decision instead of staying “in preparation” (deferred from M5.1). The minutes don't give HCL numbers, and the city declined an export, so they stay unknown | Golden-set projects get the right session date, outcome, votes and status |
 | M5.4 | Monitoring and alerts: a watchdog on Vercel Cron that flags a missed or failed daily or back-fill run; `live-smoke.yml` checking the production pages and API after each deploy; a source-health view in admin (last success per adapter, error rates, the alert after 20 consecutive errors); alerts as GitHub issues (ADR 0021) | A missed run, a failed run and a broken production page each raise an alert within a day |
 | M5.5 | Fixes from the audit (section 10.7): work through what the first audit finds (status rules, geocoding gaps, filters), review the golden labels left pending from earlier milestones, then run and publish a re-audit | Re-audit published on `/metodologie` with status ≥95% and location ≥90% |
 | M5.6 | Launch readiness: `sitemap.xml` and `robots.txt` so project pages are indexed; the map filters from section 8 still missing (neighbourhood, drawn polygon, “near me” that only moves the map; ADR 0022); Răcădău shown as “Valea Cetății (Răcădău)”, and the official neighbourhood boundaries if the town hall sends them; the lawyer's opinion on GDPR and copyright from section 11 (owner's task, not code) | Sitemap lists every published project; the three filters work on desktop and phone; legal opinion received and acted on |
@@ -319,11 +319,11 @@ monitor-dezvoltare-urbana/
 
 ## 14. Risks and open questions
 
-The biggest risk is access to permit data, not technology: plan the product so it is useful with council and urbanism documents alone, and treat permits as an upgrade the city may grant.
+The biggest risk is access to permit data, not technology: the product is built on council and urbanism documents alone, and permits stay out of scope since the city declined an export.
 
 | Risk | Likelihood | Impact | Mitigation |
 | --- | --- | --- | --- |
-| Permit/certificate register stays off-limits (robots.txt) | High | Medium | Launch without it; Law 544/2001 request; offer the city a partnership and attribution |
+| Permit/certificate register stays off-limits (robots.txt) | Certain | Medium | Launch without it; the city declined an export on 24.11.2026, not pursued further |
 | City redesigns its website | Medium | High | Fixtures + weekly live smoke test; adapters isolated; alerts on zero-result runs |
 | Poor PDF quality (scans, rotated plans) | High | Medium | OCR fallback; extraction confidence; review queue; extract only key pages |
 | Free tiers change or shrink | Medium | Medium | Provider-agnostic code (S3 API, plain Postgres, pluggable LLM); upgrade costs are small |
@@ -334,11 +334,13 @@ The biggest risk is access to permit data, not technology: plan the product so i
 
 **Open questions to settle in Phase 0**
 
-- [ ] Exact URL of the adopted-decisions (HCL) listing in Monitorul Oficial Local, and how far back it goes.
-- [ ] Does the city WebGIS expose WMS/WFS or ArcGIS REST endpoints for PUZ/PUD outlines and PUG zoning, and may we use them?
+- [x] Exact URL of the adopted-decisions (HCL) listing in Monitorul Oficial Local, and how far back it goes.
+  - [x] A register search behind Cloudflare Turnstile: not crawlable (docs/sources/brasov.md)
+- [x] Does the city WebGIS expose WMS/WFS or ArcGIS REST endpoints for PUZ/PUD outlines and PUG zoning, and may we use them?
+  - [x] No standard service; its internal API is not used
 - [ ] Does `/stiri-wp/` expose the WordPress REST API (`/wp-json/wp/v2/`) for notices and media? That would replace HTML scraping for that source.
 - [x] Will the city provide a CU/AC export or a data-sharing agreement?
-  - [ ] Only what is already publicly on city platforms
+  - [x] No: the city declined an export on 24.11.2026. Only what is publicly on city platforms is used
 - [x] Which neighbourhood boundaries to use (OSM, PUG units, or hand-drawn), and who maintains them?
   - [ ] OSM or PUG Units
   - [x] M4.4: approximate areas around OSM's points; the city's units replace them when it answers (ADR 0017)

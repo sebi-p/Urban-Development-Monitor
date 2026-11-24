@@ -18,8 +18,8 @@ September 2026 (197 files, 2026-11-23) found that:
   10 abtineri", "în urma votului a fost aprobat în unanimitate", headings like "PUNCTUL 40 -
   RESPINS", and "13 voturi pentru și 13 abțineri, se amână";
 - **the minutes never give the number the adopted decision received.** The maintainer agreed to
-  drop the HCL number from M5.3's done criterion. The numbers should come from the Law 544/2001
-  export request.
+  drop the HCL number from M5.3's done criterion. A Law 544/2001 request for an export was
+  declined on 24.11.2026, so the numbers stay unknown.
 
 ## Decision
 
@@ -77,5 +77,5 @@ September 2026 (197 files, 2026-11-23) found that:
   - 5 go to review, where the minutes name no company or only private initiators on the same
     street;
   - no item lands on a wrong project.
-- **Not here.** HCL numbers (the Law 544/2001 export), votes per councillor, and decisions other
+- **Not here.** HCL numbers (the city declined an export), votes per councillor, and decisions other
   than urban plans.
