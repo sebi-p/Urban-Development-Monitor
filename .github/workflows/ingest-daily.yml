@@ -2,7 +2,9 @@ name: Ingest daily
 
 # PLAN §7: debates, notices, agendas and the urbanism hub every morning, then fetch, extract and
 # classify.
-# 04:30 UTC is 06:30 in Bucharest in winter and 07:30 in summer (GitHub cron is UTC only).
+# Vercel Cron starts it between 04:00 and 04:59 UTC through /api/start/daily (ADR 0021). GitHub's
+# own schedule stays as a backup: it has started runs 8 to 10 hours late, and a second run in a
+# day changes nothing.
 on:
   schedule:
     - cron: "30 4 * * *"

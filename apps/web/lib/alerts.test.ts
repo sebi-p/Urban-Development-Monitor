@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { syncAlerts } from "./alerts";
 import { smokeCheck, smokeReport } from "./smoke";
+import { dispatchWorkflow } from "./workflows";
 
 /** A fake GitHub API: open issues in memory, every call recorded. */
 function github(open: { number: number; body: string; pull_request?: object }[]) {
@@ -92,5 +93,23 @@ describe("page checks", () => {
     expect(smokeReport("https://x.test", bad)).toBe(
       "1 of 8 production checks failed on https://x.test:\n\n- `/c/proiecte/p`: HTTP 500",
     );
+  });
+});
+
+describe("starting a workflow", () => {
+  it("dispatches on main and fails loudly when GitHub refuses", async () => {
+    const calls: string[] = [];
+    const ok = async (url: string, init?: RequestInit) => {
+      calls.push(`${init?.method} ${url} ${String(init?.body)}`);
+      return new Response(null, { status: 204 });
+    };
+    await dispatchWorkflow({ repo: "o/r", token: "t", fetch: ok }, "backfill.yml");
+    expect(calls).toEqual([
+      'POST https://api.github.com/repos/o/r/actions/workflows/backfill.yml/dispatches {"ref":"main"}',
+    ]);
+    const refused = async () => new Response("{}", { status: 403 });
+    await expect(
+      dispatchWorkflow({ repo: "o/r", token: "t", fetch: refused }, "backfill.yml"),
+    ).rejects.toThrow("HTTP 403");
   });
 });

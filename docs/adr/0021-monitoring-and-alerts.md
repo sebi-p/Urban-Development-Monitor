@@ -22,10 +22,11 @@ production site.
   12:00 UTC (`apps/web/vercel.json`), outside GitHub's scheduler. Vercel sends
   `Authorization: Bearer $CRON_SECRET`; any other call gets 401. For each city in the database
   it raises (`packages/db/src/health.ts`):
-  - a missed daily run: none finished in the last 20 hours. The run starts at 04:30 UTC, so
-    a missed morning is older than that by noon, and a late start still counts.
+  - a missed daily run: none finished in the last 20 hours. The run starts between 04:00 and
+    04:59 UTC, so a missed morning is older than that by noon, and a late start still counts.
   - a failed daily run;
-  - a missed or failed back-fill night while the walk isn't done;
+  - a missed or failed back-fill night while the walk isn't done, including a walk that never
+    started in a city with `config.backfill: true`;
   - a source the HTTP client stopped after 20 consecutive errors (`TooManyErrors`), until it
     succeeds again.
     It also runs the page checks below, on the production domain
@@ -36,7 +37,7 @@ production site.
   in the issue body. A new problem opens an issue, and GitHub emails the maintainer. A problem
   that is still there gets a comment, not another issue. The watchdog closes the issues whose
   problem is gone. Vercel needs `GITHUB_ALERT_TOKEN`: a fine-grained token for this repository
-  only, with Issues read/write. Email through a mail service was not chosen: it would add an
+  only, with Issues read/write and Actions read/write (below). Email through a mail service was not chosen: it would add an
   account and a key, and an issue is also a record that the problem was handled.
 - **Failed workflows alert at once.** `ingest-daily` and `backfill` end with an
   `if: failure() || cancelled()` step that opens or comments on the same key's issue, using
@@ -50,6 +51,15 @@ production site.
 - **Source health in `/admin/surse`.** For each adapter: last success, failed runs in the last 7
   and 30 days, failed fetches in the last 7 days, the last error, a mark on any source stopped
   after 20 errors, and what the watchdog would raise now.
+
+- **Vercel Cron starts the runs** (added 2026-11-24). GitHub started the scheduled runs 8 to 10
+  hours late: the daily run at 12:46 and 15:10 UTC instead of 04:30, and the back-fill at 04:39
+  UTC, after the night window, so it was refused and the walk never began. Two more crons
+  call `/api/start/daily` (04:00–04:59 UTC) and `/api/start/backfill` (20:00–20:59 UTC, so
+  22:00–23:59 in Bucharest). They start the workflows with `workflow_dispatch`, using the same
+  token. If GitHub refuses, a `start:<run>` alert issue opens. `ingest-daily` keeps its GitHub
+  schedule as a backup, because a second run in a day changes nothing. `backfill` has no GitHub
+  schedule any more, because a late start fails.
 
 ## Consequences
 

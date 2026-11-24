@@ -1,6 +1,7 @@
 import { citySlugs, runFindings, type Finding } from "@mdu/db";
 import { syncAlerts } from "@/lib/alerts";
 import { getDb } from "@/lib/db";
+import { alertRepo } from "@/lib/workflows";
 import { smokeCheck, smokeReport } from "@/lib/smoke";
 
 export const dynamic = "force-dynamic";
@@ -27,11 +28,7 @@ export async function GET(request: Request) {
   if (report) findings.push({ key: "pages", title: "Production pages are broken", detail: report });
 
   const token = process.env.GITHUB_ALERT_TOKEN;
-  const repo =
-    process.env.GITHUB_ALERT_REPO ??
-    (process.env.VERCEL_GIT_REPO_OWNER && process.env.VERCEL_GIT_REPO_SLUG
-      ? `${process.env.VERCEL_GIT_REPO_OWNER}/${process.env.VERCEL_GIT_REPO_SLUG}`
-      : undefined);
+  const repo = alertRepo();
   if (!token || !repo) {
     // Without a token the findings only reach the function log: fail so Vercel shows it.
     console.error("watchdog: GITHUB_ALERT_TOKEN or the repository is not set", findings);

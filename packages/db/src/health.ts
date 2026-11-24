@@ -45,14 +45,21 @@ async function lastRun(db: Db, city: string, stage: string): Promise<LastRun | n
   return row ? { ...row, hours: Number(row.hours) } : null;
 }
 
-/** True while some adapter's back-fill walk isn't finished (its latest checkpoint). */
+/**
+ * True while the city's back-fill walk isn't finished: some adapter's latest checkpoint isn't
+ * done, or the city has a back-fill (`config.backfill`) that never wrote a checkpoint.
+ */
 async function walkPending(db: Db, city: string): Promise<boolean> {
   const rows = await db.execute<{ done: boolean | null }>(sql`
     select distinct on (r.adapter) (r.stats->>'done')::boolean as done
     from pipeline_run r join jurisdiction j on j.id = r.jurisdiction_id
     where j.slug = ${city} and r.stage = 'backfill'
     order by r.adapter, r.started_at desc`);
-  return rows.some((r) => !r.done);
+  if (rows.length) return rows.some((r) => !r.done);
+  const [j] = await db.execute<{ backfill: boolean | null }>(
+    sql`select (config->>'backfill')::boolean as backfill from jurisdiction where slug = ${city}`,
+  );
+  return j?.backfill === true;
 }
 
 const ago = (hours: number) =>

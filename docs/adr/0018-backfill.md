@@ -31,7 +31,8 @@ sitemap.
   at most 100 numbers, and the years are the shards `--status` reports, newest first. The walk is
   done after 40 articles in a row dated before the target date; an earlier `--since` resumes it.
   No schema change.
-- **Nightly budget.** `.github/workflows/backfill.yml` runs at 20:05 UTC, walks for at most 5.5
+- **Nightly budget.** `.github/workflows/backfill.yml` starts between 20:00 and 20:59 UTC (Vercel Cron since
+  2026-11-24, ADR 0021), walks for at most 5.5
   hours and never past 06:00 Bucharest (`--night-only`), at the shared client's one request per
   2.5 s: about 7,900 numbers a night, so about 5 nights back to January 2020. The daily and
   back-fill workflows share one concurrency group, so only one job talks to the city at a time.

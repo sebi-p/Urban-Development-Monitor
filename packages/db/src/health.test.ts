@@ -91,8 +91,17 @@ describe.skipIf(!adminUrl)("run health (PostGIS)", () => {
     expect(found[0]!.detail).toContain("RuntimeError: redesigned");
   });
 
+  it("a back-fill that never started is missing, unless the city has none", async () => {
+    await run("daily", 5);
+    expect(await keys()).toEqual([`${city}: the nightly back-fill is missing`]);
+    await sql`update jurisdiction set config = config - 'backfill' where id = ${jid}`;
+    expect(await keys()).toEqual([]);
+    await sql`update jurisdiction set config = config || '{"backfill": true}' where id = ${jid}`;
+  });
+
   it("a source stopped after 20 errors is flagged until it succeeds again", async () => {
     await run("daily", 5);
+    await run("backfill", 100, "succeeded", { adapter: "x.notices", stats: { done: true } });
     await run("ingest", 30, "succeeded", { adapter: "x.debates" });
     await run("ingest", 5, "failed", {
       adapter: "x.debates",
@@ -114,6 +123,7 @@ describe.skipIf(!adminUrl)("run health (PostGIS)", () => {
     ).toEqual([
       ["x.agendas", 1, 0, 0, false],
       ["x.debates", 1, 3, 1, true],
+      ["x.notices", 0, 0, 0, false],
     ]);
     await run("ingest", 1, "succeeded", { adapter: "x.debates" });
     expect(await keys()).toEqual([]);

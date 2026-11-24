@@ -20,5 +20,8 @@ config:
     # The name people use, shown next to OpenStreetMap's (slug → name; slugs and links stay).
     names:
       valea-cetatii: "Valea Cetății (Răcădău)"
+  # The nightly back-fill runs for this city: the watchdog expects a night until the walk is
+  # done, also before its first checkpoint (ADR 0021).
+  backfill: true
   legal_regime:
     catuc_from: "2026-08-25" # Law 169/2026; earlier procedures stay pre_catuc

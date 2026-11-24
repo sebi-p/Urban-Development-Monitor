@@ -3,11 +3,11 @@ name: Back-fill (nightly)
 # PLAN §10, M5.1 (ADR 0018): walk the city's notices back to 2020, newest first, a night at a
 # time. Each run resumes where the last stopped; once the walk is done it exits in seconds. The
 # documents it queues are fetched and read by the daily run, under the monthly AI budget.
-# 20:05 UTC is 22:05 in Bucharest in winter and 23:05 in summer; the walk stops by 06:00
-# Bucharest (--night-only) even if GitHub starts the run late.
+# Vercel Cron starts it between 20:00 and 20:59 UTC (22:00–23:59 in Bucharest) through
+# /api/start/backfill (ADR 0021). There is no GitHub schedule: GitHub started scheduled runs
+# 8 to 10 hours late, after the night window, and a late start fails. The walk stops by 06:00
+# Bucharest (--night-only).
 on:
-  schedule:
-    - cron: "5 20 * * *"
   workflow_dispatch:
     inputs:
       since:
