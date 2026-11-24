@@ -25,12 +25,10 @@ export function MapTools({
   city,
   area,
   map,
-  ready,
 }: {
   city: string;
   area?: Area;
   map: RefObject<MapLibreMap | null>;
-  ready: boolean;
 }) {
   const t = useTranslations("Filters");
   const locale = useLocale();
@@ -77,6 +75,8 @@ export function MapTools({
     const mine = ++attempt.current;
     setDrawing(true);
     setMessage("");
+    // Buttons work from the first paint; drawing waits for the map's style.
+    if (!m.isStyleLoaded()) await m.once("load");
     const [{ TerraDraw, TerraDrawPolygonMode }, { TerraDrawMapLibreGLAdapter }] = await Promise.all(
       [import("terra-draw"), import("terra-draw-maplibre-gl-adapter")],
     );
@@ -158,18 +158,12 @@ export function MapTools({
             {t("clearArea")}
           </Button>
         ) : (
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            disabled={!ready}
-            onClick={() => void startDrawing()}
-          >
+          <Button type="button" size="sm" variant="secondary" onClick={() => void startDrawing()}>
             <PenLine aria-hidden className="size-4" />
             {t("drawArea")}
           </Button>
         )}
-        <Button type="button" size="sm" variant="secondary" disabled={!ready} onClick={nearMe}>
+        <Button type="button" size="sm" variant="secondary" onClick={nearMe}>
           <Crosshair aria-hidden className="size-4" />
           {t("nearMe")}
         </Button>

@@ -10,7 +10,7 @@ import type {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { MapTools } from "@/components/MapTools";
 import { localePath } from "@/lib/locale";
 import { HIGHLIGHT, listen, SHOW } from "@/lib/map-events";
@@ -68,7 +68,6 @@ export function ProjectMap({
   const mapRef = useRef<MapLibreMap | null>(null);
   const latest = useRef(projects);
   const latestArea = useRef(area);
-  const [ready, setReady] = useState(false);
   const t = useTranslations("City");
   const status = useTranslations("Status");
   const filters = useTranslations("Filters");
@@ -189,7 +188,6 @@ export function ProjectMap({
           },
         });
         container.current?.setAttribute("data-ready", "true"); // for tests and the 3G budget
-        setReady(true);
         m.on("idle", () => {
           const el = container.current;
           if (!el) return;
@@ -197,11 +195,11 @@ export function ProjectMap({
           el.dataset.clusters = String(clusters.length);
           el.dataset.zoom = m.getZoom().toFixed(1);
           // The cluster nearest the centre (for tests): the edges are under the tools and panels.
-          const { width, height } = m.getCanvas().getBoundingClientRect();
+          const centre = m.project(m.getCenter()); // no DOM read: this runs on every idle
           const off = (f: (typeof clusters)[number]) => {
             if (f.geometry.type !== "Point") return Infinity;
             const q = m.project(f.geometry.coordinates as [number, number]);
-            return Math.hypot(q.x - width / 2, q.y - height / 2);
+            return Math.hypot(q.x - centre.x, q.y - centre.y);
           };
           const first = [...clusters].sort((a, b) => off(a) - off(b))[0]?.geometry;
           // How many highlighted pins are drawn (0 while the pin is inside a cluster).
@@ -299,7 +297,6 @@ export function ProjectMap({
       for (const stop of stops) stop();
       mapRef.current?.remove();
       mapRef.current = null;
-      setReady(false);
     };
   }, [bbox, city, status, filters, locale]);
 
@@ -327,7 +324,7 @@ export function ProjectMap({
         aria-label={t("mapLabel")}
         data-count={projects.features.length}
       />
-      <MapTools city={city} area={area} map={mapRef} ready={ready} />
+      <MapTools city={city} area={area} map={mapRef} />
     </div>
   );
 }
