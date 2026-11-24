@@ -28,7 +28,9 @@ production site.
   - a missed or failed back-fill night while the walk isn't done;
   - a source the HTTP client stopped after 20 consecutive errors (`TooManyErrors`), until it
     succeeds again.
-    It also runs the page checks below.
+    It also runs the page checks below, on the production domain
+    (`VERCEL_PROJECT_PRODUCTION_URL`). The deployment URL that the cron calls is behind Vercel's
+    login, and a check that gets redirected to another host fails.
 - **Alerts are GitHub issues** (`apps/web/lib/alerts.ts`), labelled `alert`. Each problem has a
   key (`brasov:daily`, `brasov:backfill`, `brasov:source:<adapter>`, `pages`) written as a marker
   in the issue body. A new problem opens an issue, and GitHub emails the maintainer. A problem
@@ -39,7 +41,7 @@ production site.
 - **Failed workflows alert at once.** `ingest-daily` and `backfill` end with an
   `if: failure() || cancelled()` step that opens or comments on the same key's issue, using
   `GITHUB_TOKEN` (`issues: write`).
-- **`live-smoke.yml`** runs after each successful production deploy (`deployment_status`) and
+- **`live-smoke.yml`** runs after each successful deploy of `main`: Vercel's `Vercel` commit status. Vercel creates no GitHub deployments, so `deployment_status` never fires. It also runs
   by hand. `apps/web/scripts/smoke.ts` checks the home, method and about pages and, per city,
   the map, archive, feed, GeoJSON API (at least one project) and the first project's page. A
   failure is retried a minute later and then raises the `pages` alert. The same checks run in CI

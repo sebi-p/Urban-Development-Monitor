@@ -1,10 +1,12 @@
 name: Live smoke
 
-# M5.4 (ADR 0021): after each production deploy, check the production pages and API. A failure
+# M5.4 (ADR 0021): after each deploy of main (production), check the production pages and API. A failure
 # is retried once a minute later (the domain can take a moment to point at the new deploy), then
 # opens or comments on the `pages` alert issue; the daily watchdog closes it once pages work.
 on:
-  deployment_status:
+  # Vercel reports each deploy as a commit status named "Vercel" (it creates no GitHub
+  # deployments, so `deployment_status` never fires).
+  status:
   workflow_dispatch:
     inputs:
       cities:
@@ -20,8 +22,8 @@ jobs:
     name: Production pages
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event.deployment_status.state == 'success' &&
-       github.event.deployment.environment == 'Production')
+      (github.event.context == 'Vercel' && github.event.state == 'success' &&
+       contains(github.event.branches.*.name, 'main'))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:

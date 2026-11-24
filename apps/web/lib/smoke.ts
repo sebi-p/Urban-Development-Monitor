@@ -28,6 +28,10 @@ async function check(base: string, e: Expect, f: Fetch, headers: HeadersInit): P
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     const body = await res.text();
+    // A protected deployment answers with Vercel's login page (200) on another host.
+    const host = res.url ? new URL(res.url).host : new URL(base).host;
+    if (host !== new URL(base).host)
+      return { path: e.path, status: res.status, problem: `redirected to ${host}` };
     if (res.status !== 200)
       return { path: e.path, status: res.status, problem: `HTTP ${res.status}` };
     const missing = (e.contains ?? []).find((c) => !body.includes(c));

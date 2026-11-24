@@ -82,6 +82,13 @@ describe("page checks", () => {
     ]);
     expect(smokeReport("https://x.test", ok)).toBe("");
     const bad = await smokeCheck("https://x.test", ["c"], { fetch: site("/c/proiecte/p") });
+    const login = async (url: string) => {
+      const res = await site("")(url);
+      Object.defineProperty(res, "url", { value: "https://vercel.com/login?next=x" });
+      return res;
+    };
+    const guarded = await smokeCheck("https://x.test", ["c"], { fetch: login });
+    expect(guarded[0]!.problem).toBe("redirected to vercel.com");
     expect(smokeReport("https://x.test", bad)).toBe(
       "1 of 8 production checks failed on https://x.test:\n\n- `/c/proiecte/p`: HTTP 500",
     );

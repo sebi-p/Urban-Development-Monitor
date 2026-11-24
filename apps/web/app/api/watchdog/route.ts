@@ -20,7 +20,9 @@ export async function GET(request: Request) {
   const cities = await citySlugs(db);
   const findings: Finding[] = [];
   for (const city of cities) findings.push(...(await runFindings(db, city)));
-  const base = new URL(request.url).origin;
+  // The production domain, not the deployment URL Vercel Cron calls: that one is protected.
+  const domain = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  const base = domain ? `https://${domain}` : new URL(request.url).origin;
   const report = smokeReport(base, await smokeCheck(base, cities));
   if (report) findings.push({ key: "pages", title: "Production pages are broken", detail: report });
 
