@@ -217,10 +217,13 @@ def run(  # noqa: PLR0913
     bbox: tuple[float, float, float, float],
     seeds: Callable[[], list[Seed]] | None,
     refresh: bool = False,
+    names: dict[str, str] | None = None,
     log: Callable[[str], None] = lambda _: None,
 ) -> StageResult:
     """Draw the approximate areas when the city has none (or on `refresh`, unless official
-    boundaries were imported), then assign projects. `seeds` is called only when drawing."""
+    boundaries were imported), then assign projects. `seeds` is called only when drawing.
+    `names` (config `neighbourhoods.names`, slug → name) shows a neighbourhood under the name
+    people use, keeping its slug and links: "Valea Cetății (Răcădău)" (M5.6)."""
     result = StageResult()
     with conn.transaction(), conn.cursor() as cur:
         jid = _jid(cur, city)
@@ -230,6 +233,13 @@ def run(  # noqa: PLR0913
             result.counts.update(write_cells(cur, jid, seeds(), bbox))
         elif official and refresh:
             log(f"keeping imported boundaries ({', '.join(sorted(official))})")
+        for slug, name in (names or {}).items():
+            cur.execute(
+                """update neighbourhood set name = %s
+                   where jurisdiction_id = %s and slug = %s and name is distinct from %s""",
+                (name, jid, slug, name),
+            )
+            result.counts["renamed"] += cur.rowcount
         result.counts["projects_assigned"] += assign(cur, jid)
         cur.execute("select count(*) from neighbourhood where jurisdiction_id = %s", (jid,))
         result.counts["neighbourhoods"] = int(cur.fetchone()[0])  # type: ignore[index]

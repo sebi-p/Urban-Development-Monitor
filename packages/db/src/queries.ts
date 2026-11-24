@@ -12,6 +12,15 @@ import { jurisdiction } from "./schema/index.ts";
 
 export type BBox = [minLon: number, minLat: number, maxLon: number, maxLat: number];
 
+/** A drawn area (M5.6): the corners of a polygon as [lon, lat], not repeating the first. */
+export type Area = [lon: number, lat: number][];
+
+/** The area as a PostGIS geometry; a self-crossing outline is repaired, not refused. */
+export function areaGeometry(area: Area): SQL {
+  const ring = [...area, area[0]!].map(([lon, lat]) => `${lon} ${lat}`).join(",");
+  return sql`ST_MakeValid(ST_GeomFromText(${`POLYGON((${ring}))`}, 4326))`;
+}
+
 export interface JurisdictionSummary {
   slug: string;
   name: string;
@@ -56,6 +65,8 @@ export interface ProjectFilters {
   openConsultation?: boolean;
   /** Neighbourhood slugs (M4.4): projects located in any of them. */
   neighbourhoods?: string[];
+  /** A drawn area (M5.6): projects whose location touches it. */
+  area?: Area;
 }
 
 /** SQL conditions on `project p` shared by the map and the list, so both show the same set. */
@@ -78,6 +89,9 @@ export function filterConditions(filters: ProjectFilters): SQL[] {
   if (filters.neighbourhoods?.length) {
     out.push(sql`p.neighbourhood_id in (select n.id from neighbourhood n
       where n.jurisdiction_id = p.jurisdiction_id and n.slug in ${filters.neighbourhoods})`);
+  }
+  if (filters.area && filters.area.length >= 3) {
+    out.push(sql`ST_Intersects(p.geom, ${areaGeometry(filters.area)})`);
   }
   if (filters.openConsultation) {
     out.push(sql`exists (select 1 from consultation co where co.project_id in ${family}

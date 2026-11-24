@@ -107,3 +107,13 @@ html[data-busy] [data-busy-fade] {
     animation: none;
   }
 }
+
+/* "Near me" (M5.6): the reader's position, drawn only in their browser. */
+.you-are-here {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #2563eb;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 6px rgb(37 99 235 / 0.25);
+}

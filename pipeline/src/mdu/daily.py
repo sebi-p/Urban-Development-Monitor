@@ -84,6 +84,7 @@ def run(  # noqa: PLR0913, PLR0915
     summary_writer: Any = None,
     llm_monthly_usd: float = 5.0,
     neighbourhood_seeds: Callable[[], Any] | None = None,
+    neighbourhood_names: dict[str, str] | None = None,
     log: Callable[[str], None] = lambda _: None,
 ) -> DailyResult:
     result = DailyResult()
@@ -219,7 +220,10 @@ def run(  # noqa: PLR0913, PLR0915
         if bbox is None:
             return {"skipped": "no bounding box"}
         # Draws the approximate areas only the first time; then just assigns new projects.
-        r = neighbourhoods.run(conn, city=city, bbox=bbox, seeds=neighbourhood_seeds, log=log)
+        r = neighbourhoods.run(
+            conn, city=city, bbox=bbox, seeds=neighbourhood_seeds, names=neighbourhood_names,
+            log=log,
+        )  # fmt: skip
         return dict(r.counts)
 
     step("neighbourhoods", None, "neighbourhoods", neighbourhoods_all)

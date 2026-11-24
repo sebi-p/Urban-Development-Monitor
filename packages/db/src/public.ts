@@ -5,6 +5,7 @@
 import type { EventType, ProjectKind, ProjectStatus } from "@mdu/shared";
 import { eq, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
+import { areaGeometry, type Area } from "./queries.ts";
 import { jurisdiction } from "./schema/index.ts";
 
 const PUBLISHED = sql`('auto_published', 'approved')`;
@@ -182,13 +183,16 @@ export async function feedEntries(
   db: Db,
   city: string,
   neighbourhood?: string,
+  drawn?: Area,
 ): Promise<FeedEntry[] | null> {
   const jid = await jurisdictionId(db, city);
   if (jid === null) return null;
-  const area = neighbourhood
+  const inNeighbourhood = neighbourhood
     ? sql`and p.neighbourhood_id = (select n.id from neighbourhood n
           where n.jurisdiction_id = ${jid} and n.slug = ${neighbourhood})`
     : sql``;
+  const inDrawn = drawn ? sql`and ST_Intersects(p.geom, ${areaGeometry(drawn)})` : sql``;
+  const area = sql`${inNeighbourhood} ${inDrawn}`;
   const rows = await db.execute<{
     id: string;
     kind: "new_project" | "event";
@@ -238,5 +242,25 @@ export async function feedEntries(
     summary: r.summary,
     summaryEn: r.summary_en,
     neighbourhood: r.neighbourhood,
+  }));
+}
+
+export interface SitemapProject {
+  city: string;
+  slug: string;
+  updatedAt: string;
+}
+
+/** Every published project page (M5.6 sitemap), newest change first. */
+export async function sitemapProjects(db: Db): Promise<SitemapProject[]> {
+  const rows = await db.execute<{ city: string; slug: string; updated_at: string | Date }>(sql`
+    select j.slug as city, p.slug, p.updated_at
+    from project p join jurisdiction j on j.id = p.jurisdiction_id
+    where p.merged_into_id is null and p.review_state in ${PUBLISHED}
+    order by p.updated_at desc`);
+  return rows.map((r) => ({
+    city: r.city,
+    slug: r.slug,
+    updatedAt: new Date(r.updated_at).toISOString(),
   }));
 }

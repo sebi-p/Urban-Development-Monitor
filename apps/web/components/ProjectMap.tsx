@@ -1,6 +1,6 @@
 "use client";
 
-import type { BBox, ProjectCollection } from "@mdu/db";
+import type { Area, BBox, ProjectCollection } from "@mdu/db";
 import type { ProjectStatus } from "@mdu/shared";
 import type {
   ExpressionSpecification,
@@ -10,7 +10,8 @@ import type {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { MapTools } from "@/components/MapTools";
 import { localePath } from "@/lib/locale";
 import { HIGHLIGHT, listen, SHOW } from "@/lib/map-events";
 import { STATUS_COLOURS } from "@/lib/status";
@@ -22,6 +23,31 @@ const STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 const SOURCE = "projects";
 const RING = "#0f766e"; // the accent: the highlighted pin's ring
 const SHOW_ZOOM = 16; // past clusterMaxZoom, so the pin stands alone
+const AREA = "area"; // the drawn area's outline (M5.6)
+
+function areaData(area?: Area): GeoJSON.FeatureCollection {
+  return {
+    type: "FeatureCollection",
+    features: area
+      ? [
+          {
+            type: "Feature",
+            properties: {},
+            geometry: { type: "Polygon", coordinates: [[...area, area[0]!]] },
+          },
+        ]
+      : [],
+  };
+}
+
+/** The API's collection is GeoJSON with a looser geometry type than MapLibre's. */
+const asGeoJSON = (c: ProjectCollection) => c as unknown as GeoJSON.FeatureCollection;
+
+function areaBounds(area: Area): [number, number, number, number] {
+  const lons = area.map((p) => p[0]);
+  const lats = area.map((p) => p[1]);
+  return [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)];
+}
 
 /**
  * The map is created once; when the filters change, only the data is swapped (setData), so a
@@ -31,14 +57,18 @@ export function ProjectMap({
   city,
   bbox,
   projects,
+  area,
 }: {
   city: string;
   bbox: BBox | null;
   projects: ProjectCollection;
+  area?: Area;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const latest = useRef(projects);
+  const latestArea = useRef(area);
+  const [ready, setReady] = useState(false);
   const t = useTranslations("City");
   const status = useTranslations("Status");
   const filters = useTranslations("Filters");
@@ -53,20 +83,38 @@ export function ProjectMap({
       if (cancelled || !container.current) return;
       // Served from public/ (scripts/copy-assets.mjs); the version busts caches on upgrade.
       maplibregl.setWorkerUrl(`/maplibre/maplibre-gl-worker.mjs?v=${maplibregl.getVersion()}`);
+      const drawn = latestArea.current;
+      const start = drawn ? areaBounds(drawn) : bbox;
+      // A drawn area is framed clear of the tools, and of the side panel on wide screens.
+      const wide = window.matchMedia("(min-width: 1024px)").matches;
+      const padding = drawn
+        ? { top: 72, right: 48, bottom: wide ? 48 : 280, left: wide ? 472 : 24 }
+        : 24;
       const m = new maplibregl.Map({
         container: container.current,
         style: STYLE_URL,
-        ...(bbox
-          ? { bounds: bbox, fitBoundsOptions: { padding: 24 } }
-          : { center: [0, 0], zoom: 1 }),
+        ...(start ? { bounds: start, fitBoundsOptions: { padding } } : { center: [0, 0], zoom: 1 }),
       });
       mapRef.current = m;
       m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
       m.on("load", () => {
+        m.addSource(AREA, { type: "geojson", data: areaData(latestArea.current) });
+        m.addLayer({
+          id: "area-fill",
+          type: "fill",
+          source: AREA,
+          paint: { "fill-color": RING, "fill-opacity": 0.08 },
+        });
+        m.addLayer({
+          id: "area-line",
+          type: "line",
+          source: AREA,
+          paint: { "line-color": RING, "line-width": 2, "line-dasharray": [2, 1] },
+        });
         m.addSource(SOURCE, {
           type: "geojson",
-          data: latest.current,
+          data: asGeoJSON(latest.current),
           cluster: true,
           clusterRadius: 40,
           clusterMaxZoom: 15,
@@ -141,13 +189,21 @@ export function ProjectMap({
           },
         });
         container.current?.setAttribute("data-ready", "true"); // for tests and the 3G budget
+        setReady(true);
         m.on("idle", () => {
           const el = container.current;
           if (!el) return;
           const clusters = m.queryRenderedFeatures({ layers: ["clusters"] });
           el.dataset.clusters = String(clusters.length);
           el.dataset.zoom = m.getZoom().toFixed(1);
-          const first = clusters[0]?.geometry;
+          // The cluster nearest the centre (for tests): the edges are under the tools and panels.
+          const { width, height } = m.getCanvas().getBoundingClientRect();
+          const off = (f: (typeof clusters)[number]) => {
+            if (f.geometry.type !== "Point") return Infinity;
+            const q = m.project(f.geometry.coordinates as [number, number]);
+            return Math.hypot(q.x - width / 2, q.y - height / 2);
+          };
+          const first = [...clusters].sort((a, b) => off(a) - off(b))[0]?.geometry;
           // How many highlighted pins are drawn (0 while the pin is inside a cluster).
           el.dataset.highlighted = String(
             m.queryRenderedFeatures({ layers: ["project-highlight"] }).length,
@@ -166,7 +222,7 @@ export function ProjectMap({
           const source = m.getSource(SOURCE) as GeoJSONSource;
           void source.getClusterExpansionZoom(f.properties.cluster_id as number).then((zoom) => {
             m.easeTo({
-              center: (f.geometry as { coordinates: [number, number] }).coordinates,
+              center: (f.geometry as GeoJSON.Point).coordinates as [number, number],
               zoom,
             });
           });
@@ -243,6 +299,7 @@ export function ProjectMap({
       for (const stop of stops) stop();
       mapRef.current?.remove();
       mapRef.current = null;
+      setReady(false);
     };
   }, [bbox, city, status, filters, locale]);
 
@@ -250,16 +307,27 @@ export function ProjectMap({
   useEffect(() => {
     latest.current = projects;
     const source = mapRef.current?.getSource(SOURCE) as GeoJSONSource | undefined;
-    source?.setData(projects);
+    source?.setData(asGeoJSON(projects));
   }, [projects]);
 
+  // A new drawn area: redraw its outline (the map keeps its view; it was just drawn there).
+  useEffect(() => {
+    latestArea.current = area;
+    const source = mapRef.current?.getSource(AREA) as GeoJSONSource | undefined;
+    source?.setData(areaData(area));
+    if (container.current) container.current.dataset.area = area ? String(area.length) : "";
+  }, [area]);
+
   return (
-    <div
-      ref={container}
-      className="map h-full w-full"
-      role="region"
-      aria-label={t("mapLabel")}
-      data-count={projects.features.length}
-    />
+    <div className="relative h-full w-full">
+      <div
+        ref={container}
+        className="map h-full w-full"
+        role="region"
+        aria-label={t("mapLabel")}
+        data-count={projects.features.length}
+      />
+      <MapTools city={city} area={area} map={mapRef} ready={ready} />
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { getJurisdiction, listProjects, projectsGeoJSON } from "@mdu/db";
+import { getJurisdiction, listNeighbourhoods, listProjects, projectsGeoJSON } from "@mdu/db";
 import { PROJECT_KINDS, PROJECT_STATUSES } from "@mdu/shared";
 import type { Metadata } from "next";
 import { LoaderCircle } from "lucide-react";
@@ -41,11 +41,16 @@ export default async function CityPage({ params, searchParams }: Props) {
   const db = getDb();
   const j = await getJurisdiction(db, city);
   if (!j) notFound();
-  const [projects, list, all] = await Promise.all([
+  const [projects, list, all, areas] = await Promise.all([
     projectsGeoJSON(db, city, toDbFilters(filters)),
     listProjects(db, city, toDbFilters(filters)),
     listProjects(db, city), // filter options: only values that occur
+    listNeighbourhoods(db, city),
   ]);
+  // Neighbourhoods with projects, and the chosen one even if it has none (a shared link).
+  const neighbourhoods = (areas ?? []).filter(
+    (n) => n.projects > 0 || n.slug === filters.neighbourhood,
+  );
   const t = await getTranslations("City");
   const kinds = PROJECT_KINDS.filter((k) => all!.some((p) => p.kind === k));
   const statuses = PROJECT_STATUSES.filter((s) => all!.some((p) => p.status === s));
@@ -61,7 +66,7 @@ export default async function CityPage({ params, searchParams }: Props) {
       <main className="relative h-[calc(100dvh-var(--app-bar-height))] overflow-hidden">
         <h1 className="sr-only">{t("title", { city: j.name })}</h1>
         <div className="absolute inset-0">
-          <ProjectMap city={city} bbox={j.bbox} projects={projects!} />
+          <ProjectMap city={city} bbox={j.bbox} projects={projects!} area={filters.area} />
         </div>
         <BottomSheet
           title={
@@ -75,7 +80,7 @@ export default async function CityPage({ params, searchParams }: Props) {
           }
           toolbar={<FilterChips filters={filters} kinds={kinds} statuses={statuses} />}
         >
-          <FilterForm filters={filters} years={years} />
+          <FilterForm filters={filters} years={years} neighbourhoods={neighbourhoods} />
           <h2 className="sr-only">{t("listHeading", { count: list!.length })}</h2>
           <div data-busy-fade>
             <ProjectList city={city} projects={list!} />

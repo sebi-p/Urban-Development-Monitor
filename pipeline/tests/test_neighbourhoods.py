@@ -97,6 +97,14 @@ def test_cells_are_drawn_once_and_projects_assigned(pg: psycopg.Connection[Any])
     assert again.counts["projects_assigned"] == 0
     assert again.counts["neighbourhoods"] == 2
 
+    # The config's name for a place (M5.6): shown, slug kept, applied once, kept on a redraw.
+    names = {"vest": "Vest (Cartierul Vechi)"}
+    assert nb.run(pg, city="testcity", bbox=BBOX, seeds=fetch, names=names).counts["renamed"] == 1
+    assert nb.run(pg, city="testcity", bbox=BBOX, seeds=fetch, names=names).counts["renamed"] == 0
+    nb.run(pg, city="testcity", bbox=BBOX, seeds=fetch, refresh=True, names=names)
+    row = pg.execute("select name from neighbourhood where slug = 'vest'").fetchone()
+    assert row == ("Vest (Cartierul Vechi)",)
+
     # A refresh with one place gone removes its area and unlinks its project.
     nb.run(pg, city="testcity", bbox=BBOX, seeds=lambda: seeds[:1] + seeds[2:], refresh=True)
     # near-east is now past the halfway line to the neighbouring town: in no neighbourhood.

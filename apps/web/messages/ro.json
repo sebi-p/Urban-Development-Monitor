@@ -178,7 +178,20 @@
     "listTab": "Listă",
     "showOnList": "Vezi în listă",
     "more": "Mai multe filtre",
-    "openProject": "Deschide pagina proiectului"
+    "openProject": "Deschide pagina proiectului",
+    "neighbourhood": "Cartier",
+    "anyNeighbourhood": "oricare",
+    "drawArea": "Desenează zona",
+    "drawHint": "Atinge colțurile zonei pe hartă, apoi atinge primul punct (sau apasă Enter) ca să o închizi.",
+    "cancelDraw": "Renunță",
+    "clearArea": "Șterge zona",
+    "areaFeed": "Flux RSS pentru zonă",
+    "areaTooDetailed": "Zona are prea multe colțuri; desenează-o cu cel mult {max}.",
+    "nearMe": "Lângă mine",
+    "nearMeLooking": "Caut locația ta…",
+    "nearMeError": "Nu am primit locația. Verifică permisiunea browserului.",
+    "nearMeUnsupported": "Browserul nu poate da locația.",
+    "yourPosition": "Poziția ta"
   },
   "Sheet": {
     "label": "Rezultate și filtre",

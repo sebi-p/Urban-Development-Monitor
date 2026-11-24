@@ -412,9 +412,10 @@ def _run_neighbourhoods(args: argparse.Namespace, url: str) -> int:
 
     j = load_jurisdiction(args.city)
     extra = (j.config.get("neighbourhoods") or {}).get("extra") or []
+    names = (j.config.get("neighbourhoods") or {}).get("names") or {}
     with psycopg.connect(url) as conn, _client(args.city) as client:
         result = neighbourhoods.run(
-            conn, city=args.city, bbox=j.bbox, refresh=args.refresh, log=print,
+            conn, city=args.city, bbox=j.bbox, refresh=args.refresh, names=names, log=print,
             seeds=lambda: neighbourhoods.fetch_seeds(client, j.bbox, extra=extra, log=print),
         )  # fmt: skip
     print(f"neighbourhoods: {dict(result.counts)}")
@@ -549,6 +550,7 @@ def _daily(args: argparse.Namespace) -> int:
             addresses=addresses,
             bbox=j.bbox,
             llm_monthly_usd=budget,
+            neighbourhood_names=(j.config.get("neighbourhoods") or {}).get("names") or {},
             neighbourhood_seeds=lambda: neighbourhoods.fetch_seeds(
                 client, j.bbox, extra=extra, log=print
             ),

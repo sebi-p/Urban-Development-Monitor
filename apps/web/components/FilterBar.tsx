@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useEffect, useSyncExternalStore, useTransition, type ChangeEvent } from "react";
 import { setBusy } from "@/lib/busy";
-import { toQuery, type UrlFilters } from "@/lib/filters";
+import { formatArea, parseArea, toQuery, type UrlFilters } from "@/lib/filters";
 import { GROUP_ICON, STATUS_GROUP } from "@/lib/status";
 import { cn } from "@/lib/utils";
 
@@ -85,7 +85,15 @@ export function FilterChips({
   );
 }
 
-export function FilterForm({ filters, years }: { filters: UrlFilters; years: number[] }) {
+export function FilterForm({
+  filters,
+  years,
+  neighbourhoods,
+}: {
+  filters: UrlFilters;
+  years: number[];
+  neighbourhoods: { slug: string; name: string }[];
+}) {
   const t = useTranslations("Filters");
   const router = useRouter();
   const pathname = usePathname();
@@ -100,7 +108,11 @@ export function FilterForm({ filters, years }: { filters: UrlFilters; years: num
     () => true,
     () => false,
   );
-  const more = filters.from !== undefined || filters.to !== undefined || filters.open;
+  const more =
+    filters.from !== undefined ||
+    filters.to !== undefined ||
+    filters.open ||
+    filters.neighbourhood !== undefined;
 
   return (
     <form
@@ -117,6 +129,8 @@ export function FilterForm({ filters, years }: { filters: UrlFilters; years: num
           from: Number(data.get("din")) || undefined,
           to: Number(data.get("pana")) || undefined,
           open: data.get("consultare") === "deschisa",
+          neighbourhood: String(data.get("cartier") ?? "") || undefined,
+          area: parseArea(String(data.get("zona") ?? "")),
         });
         startTransition(() => router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false }));
       }}
@@ -129,6 +143,31 @@ export function FilterForm({ filters, years }: { filters: UrlFilters; years: num
           {t("more")}
         </summary>
         <div className="flex flex-wrap items-center gap-3 border-t border-slate-200 px-3 py-3">
+          {/* The drawn area is set on the map; the form only carries it along. */}
+          <input
+            type="hidden"
+            name="zona"
+            value={filters.area ? formatArea(filters.area) : ""}
+            readOnly
+          />
+          {neighbourhoods.length ? (
+            <label className="flex basis-full items-center gap-2">
+              {t("neighbourhood")}
+              <select
+                name="cartier"
+                defaultValue={filters.neighbourhood ?? ""}
+                onChange={submit}
+                className="min-h-9 max-w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2"
+              >
+                <option value="">{t("anyNeighbourhood")}</option>
+                {neighbourhoods.map((n) => (
+                  <option key={n.slug} value={n.slug}>
+                    {n.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <label className="flex items-center gap-2">
             {t("from")}
             <select

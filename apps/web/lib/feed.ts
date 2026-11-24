@@ -3,6 +3,7 @@ import { DEFAULT_LOCALE, LOCALES } from "@mdu/shared";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { atomFeed } from "@/lib/atom";
 import { getDb } from "@/lib/db";
+import { parseArea, toQuery } from "@/lib/filters";
 import { localePath } from "@/lib/locale";
 import { projectPath } from "@/lib/project";
 
@@ -19,17 +20,25 @@ export async function feedResponse(
   const url = new URL(request.url);
   const locale = LOCALES.find((l) => l === lang) ?? DEFAULT_LOCALE;
   const area = url.searchParams.get("cartier") ?? undefined;
+  const drawn = parseArea(url.searchParams.get("zona") ?? ""); // M5.6
   const db = getDb();
   const [j, areas] = await Promise.all([getJurisdiction(db, city), listNeighbourhoods(db, city)]);
   const n = area ? areas?.find((a) => a.slug === area) : undefined;
   if (!j || (area && !n)) return new Response("Not found", { status: 404 });
-  const entries = (await feedEntries(db, city, n?.slug))!;
+  const entries = (await feedEntries(db, city, n?.slug, drawn))!;
   const t = await getTranslations({ locale, namespace: "Feed" });
   const home = await getTranslations({ locale, namespace: "Home" });
   const eventType = await getTranslations({ locale, namespace: "EventType" });
   const f = await getFormatter({ locale });
   const origin = url.origin;
-  const self = `${origin}${localePath(locale, `/${city}/feed.xml`)}${n ? `?cartier=${n.slug}` : ""}`;
+  const query = toQuery({
+    kinds: [],
+    statuses: [],
+    open: false,
+    neighbourhood: n?.slug,
+    area: drawn,
+  });
+  const self = `${origin}${localePath(locale, `/${city}/feed.xml`)}${query ? `?${query}` : ""}`;
   const title = [home("title"), j.name, n?.name].filter(Boolean).join(" · ");
   const body = atomFeed({
     id: self,

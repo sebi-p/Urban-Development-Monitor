@@ -178,7 +178,20 @@
     "listTab": "List",
     "showOnList": "Show in the list",
     "more": "More filters",
-    "openProject": "Open the project page"
+    "openProject": "Open the project page",
+    "neighbourhood": "Neighbourhood",
+    "anyNeighbourhood": "any",
+    "drawArea": "Draw an area",
+    "drawHint": "Tap the area's corners on the map, then tap the first point (or press Enter) to close it.",
+    "cancelDraw": "Cancel",
+    "clearArea": "Clear area",
+    "areaFeed": "RSS feed for this area",
+    "areaTooDetailed": "The area has too many corners; draw it with at most {max}.",
+    "nearMe": "Near me",
+    "nearMeLooking": "Finding your location…",
+    "nearMeError": "No location received. Check the browser's permission.",
+    "nearMeUnsupported": "This browser can't give a location.",
+    "yourPosition": "Your position"
   },
   "Sheet": {
     "label": "Results and filters",

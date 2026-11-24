@@ -13,7 +13,9 @@ import {
   listConsultations,
   listNeighbourhoods,
   neighbourhoodsGeoJSON,
+  sitemapProjects,
 } from "./public.ts";
+import { listProjects, type Area } from "./queries.ts";
 import { loadJurisdictionFiles, upsertJurisdictions } from "./seed.ts";
 
 loadEnv();
@@ -47,17 +49,20 @@ describe.skipIf(!adminUrl)("M4.4 public queries (PostGIS)", () => {
       )[0]!.id as string;
     const west = await area("vest", "Vest", 25.5, 25.6);
     const east = await area("est", "Est", 25.6, 25.7);
-    const proj = async (slug: string, nid: string, state = "auto_published") =>
+    const proj = async (slug: string, nid: string, lon: number, state = "auto_published") =>
       (
         await sql`insert into project (jurisdiction_id, slug, kind, status, title, review_state,
-            neighbourhood_id, first_seen_at)
+            neighbourhood_id, first_seen_at, geom, geom_precision)
           values (${jid}, ${slug}, 'puz', 'approved', ${`PUZ ${slug}`}, ${state}, ${nid},
-                  now() - interval '2 days')
+                  now() - interval '2 days', ST_SetSRID(ST_MakePoint(${lon}, 45.65), 4326),
+                  'street')
           returning id`
       )[0]!.id as string;
-    const a = await proj("a", west);
-    const b = await proj("b", east);
-    await proj("hidden", east, "pending_review");
+    const a = await proj("a", west, 25.55);
+    const b = await proj("b", east, 25.65);
+    await proj("hidden", east, 25.66, "pending_review");
+    const gone = await proj("merged", east, 25.67);
+    await sql`update project set merged_into_id = ${b} where id = ${gone}`;
     const [src] = await sql`insert into source (jurisdiction_id, adapter, base_url)
       values (${jid}, 'test.docs', 'https://example.org') returning id`;
     const doc = async (url: string, type: string) => {
@@ -129,5 +134,34 @@ describe.skipIf(!adminUrl)("M4.4 public queries (PostGIS)", () => {
     const west = (await feedEntries(handle.db, city, "vest"))!;
     expect(west.map((e) => e.project.slug)).toEqual(["a"]);
     expect(await feedEntries(handle.db, city, "nicaieri")).toEqual([]);
+  });
+
+  // M5.6: a free-drawn polygon (a triangle around a), and one that crosses itself.
+  const triangle: Area = [
+    [25.5, 45.6],
+    [25.6, 45.6],
+    [25.55, 45.7],
+  ];
+  const bowtie: Area = [
+    [25.5, 45.6],
+    [25.7, 45.7],
+    [25.7, 45.6],
+    [25.5, 45.7],
+  ];
+
+  it("filters the map list and the feed by a drawn area", async () => {
+    const inside = (await listProjects(handle.db, city, { area: triangle }))!;
+    expect(inside.map((p) => p.slug)).toEqual(["a"]);
+    const feed = (await feedEntries(handle.db, city, undefined, triangle))!;
+    expect(feed.map((e) => e.project.slug)).toEqual(["a"]);
+    // Repaired, not refused: both lobes of the bow tie count.
+    const crossed = (await listProjects(handle.db, city, { area: bowtie }))!;
+    expect(crossed.map((p) => p.slug).sort()).toEqual(["a", "b"]);
+  });
+
+  it("lists every published project for the sitemap, never hidden or merged ones", async () => {
+    const pages = await sitemapProjects(handle.db);
+    expect(pages.map((p) => `${p.city}/${p.slug}`).sort()).toEqual([`${city}/a`, `${city}/b`]);
+    expect(pages[0]!.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 });

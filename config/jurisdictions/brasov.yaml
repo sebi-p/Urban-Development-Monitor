@@ -17,5 +17,8 @@ config:
   neighbourhoods:
     # Places OpenStreetMap has no point for, as {name, lon, lat}; each becomes an approximate area.
     extra: []
+    # The name people use, shown next to OpenStreetMap's (slug → name; slugs and links stay).
+    names:
+      valea-cetatii: "Valea Cetății (Răcădău)"
   legal_regime:
     catuc_from: "2026-08-25" # Law 169/2026; earlier procedures stay pre_catuc
