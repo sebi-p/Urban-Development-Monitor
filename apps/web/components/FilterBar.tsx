@@ -2,18 +2,20 @@
 
 import type { ProjectKind, ProjectStatus } from "@mdu/shared";
 import { SlidersHorizontal } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { useEffect, useSyncExternalStore, useTransition, type ChangeEvent } from "react";
-import { setBusy } from "@/lib/busy";
+import { useLocale, useTranslations } from "next-intl";
+import { usePathname } from "@/i18n/navigation";
+import { useSyncExternalStore, type ChangeEvent } from "react";
 import { formatArea, parseArea, toQuery, type UrlFilters } from "@/lib/filters";
+import { localePath } from "@/lib/locale";
+import { replaceQuery } from "@/lib/view-memory";
 import { GROUP_ICON, STATUS_GROUP } from "@/lib/status";
 import { cn } from "@/lib/utils";
 
 /**
  * Filters (PLAN §8) as one GET form, `#filters`: chips in the sheet header and the rest in the
  * sheet body, joined with the `form` attribute. Without JavaScript the Apply button submits it;
- * with JavaScript every change replaces the URL at once, so any view can be shared.
+ * with JavaScript every change replaces the URL at once, so any view can be shared, and the page
+ * filters its index without a request (M5.7).
  */
 const FORM_ID = "filters";
 
@@ -95,13 +97,8 @@ export function FilterForm({
   neighbourhoods: { slug: string; name: string }[];
 }) {
   const t = useTranslations("Filters");
-  const router = useRouter();
-  const pathname = usePathname();
-  const [pending, startTransition] = useTransition();
-  useEffect(() => {
-    setBusy(pending);
-    return () => setBusy(false);
-  }, [pending]);
+  const locale = useLocale();
+  const pathname = localePath(locale, usePathname());
   // Apply is only needed without JavaScript: true in the browser, false in the server render.
   const hydrated = useSyncExternalStore(
     noop,
@@ -119,7 +116,6 @@ export function FilterForm({
       id={FORM_ID}
       method="get"
       aria-label={t("heading")}
-      aria-busy={pending}
       onSubmit={(e) => {
         e.preventDefault();
         const data = new FormData(e.currentTarget); // includes the chips (form attribute)
@@ -132,7 +128,7 @@ export function FilterForm({
           neighbourhood: String(data.get("cartier") ?? "") || undefined,
           area: parseArea(String(data.get("zona") ?? "")),
         });
-        startTransition(() => router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false }));
+        replaceQuery(q);
       }}
       className="mb-3 text-sm"
       data-busy-fade
@@ -223,7 +219,22 @@ export function FilterForm({
         >
           {t("apply")}
         </button>
-        <a href={pathname}>{t("reset")}</a>
+        <a
+          href={pathname}
+          onClick={(e) => {
+            const form = document.getElementById(FORM_ID);
+            if (!(form instanceof HTMLFormElement)) return;
+            e.preventDefault();
+            for (const el of form.elements) {
+              if (el instanceof HTMLInputElement && el.type === "checkbox") el.checked = false;
+              else if (el instanceof HTMLSelectElement) el.value = "";
+              else if (el instanceof HTMLInputElement && el.name === "zona") el.value = "";
+            }
+            replaceQuery("");
+          }}
+        >
+          {t("reset")}
+        </a>
       </p>
     </form>
   );

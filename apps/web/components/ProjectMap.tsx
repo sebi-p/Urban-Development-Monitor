@@ -15,6 +15,7 @@ import { MapTools } from "@/components/MapTools";
 import { localePath } from "@/lib/locale";
 import { HIGHLIGHT, listen, SHOW } from "@/lib/map-events";
 import { STATUS_COLOURS } from "@/lib/status";
+import { readView, saveView } from "@/lib/view-memory";
 
 type PinProps = { title: string; status: ProjectStatus; slug: string };
 
@@ -41,7 +42,8 @@ function areaData(area?: Area): GeoJSON.FeatureCollection {
 }
 
 /** The API's collection is GeoJSON with a looser geometry type than MapLibre's. */
-const asGeoJSON = (c: ProjectCollection) => c as unknown as GeoJSON.FeatureCollection;
+const asGeoJSON = (c: ProjectCollection | null) =>
+  (c ?? { type: "FeatureCollection", features: [] }) as unknown as GeoJSON.FeatureCollection;
 
 function areaBounds(area: Area): [number, number, number, number] {
   const lons = area.map((p) => p[0]);
@@ -51,17 +53,21 @@ function areaBounds(area: Area): [number, number, number, number] {
 
 /**
  * The map is created once; when the filters change, only the data is swapped (setData), so a
- * phone doesn't reload the style and tiles. Nearby projects are clustered (M4.1).
+ * phone doesn't reload the style and tiles. Nearby projects are clustered (M4.1). Going back to
+ * the page reopens the map where the reader left it (M5.7). The pins arrive with the city's
+ * index (`projects` is null until then); `located` counts them for the server's first view too.
  */
 export function ProjectMap({
   city,
   bbox,
   projects,
+  located,
   area,
 }: {
   city: string;
   bbox: BBox | null;
-  projects: ProjectCollection;
+  projects: ProjectCollection | null;
+  located: number;
   area?: Area;
 }) {
   const container = useRef<HTMLDivElement>(null);
@@ -89,10 +95,20 @@ export function ProjectMap({
       const padding = drawn
         ? { top: 72, right: 48, bottom: wide ? 48 : 280, left: wide ? 472 : 24 }
         : 24;
+      const saved = readView();
       const m = new maplibregl.Map({
         container: container.current,
         style: STYLE_URL,
-        ...(start ? { bounds: start, fitBoundsOptions: { padding } } : { center: [0, 0], zoom: 1 }),
+        ...(saved?.center && saved.zoom !== undefined
+          ? { center: saved.center, zoom: saved.zoom }
+          : start
+            ? { bounds: start, fitBoundsOptions: { padding } }
+            : { center: [0, 0], zoom: 1 }),
+      });
+      m.on("moveend", () => {
+        const c = m.getCenter();
+        const r = (n: number) => Math.round(n * 1e5) / 1e5;
+        saveView({ center: [r(c.lng), r(c.lat)], zoom: Math.round(m.getZoom() * 100) / 100 });
       });
       mapRef.current = m;
       m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
@@ -276,7 +292,7 @@ export function ProjectMap({
             mark();
           }),
           listen<{ slug: string }>(SHOW, ({ slug }) => {
-            const f = latest.current.features.find((x) => x.properties.slug === slug);
+            const f = latest.current?.features.find((x) => x.properties.slug === slug);
             if (!f || f.geometry.type !== "Point") return;
             const at = f.geometry.coordinates as [number, number];
             pinned = slug;
@@ -322,7 +338,7 @@ export function ProjectMap({
         className="map h-full w-full"
         role="region"
         aria-label={t("mapLabel")}
-        data-count={projects.features.length}
+        data-count={located}
       />
       <MapTools city={city} area={area} map={mapRef} />
     </div>

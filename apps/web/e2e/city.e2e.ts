@@ -1,26 +1,30 @@
 import { expect, test } from "./fixtures";
 
 const listItems = (page: import("@playwright/test").Page) => page.locator(".project-list > li");
+/** The number of results the page reports (the list renders 30 cards at a time). */
+const total = async (page: import("@playwright/test").Page) =>
+  Number((await page.locator("output").first().textContent())?.match(/\d+/)?.[0] ?? 0);
 
 test("filters update the URL, the list and the map together", async ({ page, city }, info) => {
   test.skip(info.project.name !== "desktop", "desktop layout shows map and list side by side");
   await page.goto(`/${city}`);
   const map = page.locator(".map[data-ready=true]");
   await expect(map).toBeVisible();
-  const all = await listItems(page).count();
+  const all = await total(page);
   expect(all).toBeGreaterThan(0);
 
   await page.getByRole("checkbox", { name: "PUZ", exact: true }).check();
   await expect(page).toHaveURL(/tip=puz/);
-  await expect.poll(() => listItems(page).count()).toBeLessThan(all);
+  await expect.poll(() => total(page)).toBeLessThan(all);
   const metas = await listItems(page).locator(".meta").first().allTextContents();
   expect(metas.every((m) => m.startsWith("PUZ"))).toBe(true);
   const located = await page.locator(".map").getAttribute("data-count");
-  expect(Number(located)).toBeLessThanOrEqual(await listItems(page).count());
+  expect(Number(located)).toBeLessThanOrEqual(await total(page));
 
   await page.getByRole("link", { name: "Resetează filtrele" }).click();
   await expect(page).not.toHaveURL(/tip=/);
-  await expect.poll(() => listItems(page).count()).toBe(all);
+  await expect.poll(() => total(page)).toBe(all);
+  await expect(page.getByRole("checkbox", { name: "PUZ", exact: true })).not.toBeChecked();
 });
 
 test("a shared link opens with its filters applied", async ({ page, city }) => {
@@ -36,11 +40,11 @@ test("the filters work without JavaScript", async ({ browser, city }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto(`/${city}`);
-  const all = await listItems(page).count();
+  const all = await total(page);
   await page.getByRole("checkbox", { name: "PUZ", exact: true }).check();
   await page.getByRole("button", { name: "Aplică" }).click();
   await expect(page).toHaveURL(/tip=puz/);
-  expect(await listItems(page).count()).toBeLessThan(all);
+  expect(await total(page)).toBeLessThan(all);
   await context.close();
 });
 
@@ -146,28 +150,60 @@ test("projects without a location have no Arată pe hartă button", async ({ pag
   }
 });
 
-test("while new results load, a bar, a spinner and the faded list show it", async ({
+test("a filter change needs no request once the index is in; before that, cues show", async ({
   page,
   city,
 }) => {
-  await page.goto(`/${city}`);
-  await expect(page.locator(".map[data-ready=true]")).toBeVisible();
-  // Hold the server's answer for the new filters until the cues have been checked.
+  // Hold the city's index until the cues have been checked: the server's first view shows.
   let release!: () => void;
   const held = new Promise<void>((r) => (release = r));
-  await page.route(
-    (url) => url.pathname === `/${city}` && url.searchParams.has("tip"),
-    async (route) => {
-      await held;
-      await route.continue();
-    },
-  );
+  await page.route(`**/api/${city}/map.json`, async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto(`/${city}`);
   await page.getByRole("checkbox", { name: "PUZ", exact: true }).check();
+  await expect(page).toHaveURL(/tip=puz/);
   await expect(page.locator(".busy-bar")).toHaveCSS("opacity", "1");
   await expect(page.locator(".busy-spinner")).toHaveCSS("opacity", "1");
   await expect(page.locator("[data-busy-fade]:has(> .project-list)")).toHaveCSS("opacity", "0.5");
   release();
-  await expect(page).toHaveURL(/tip=puz/);
-  await expect(page.locator(".busy-bar")).toHaveCSS("opacity", "0");
   await expect(page.locator("html")).not.toHaveAttribute("data-busy");
+  await expect(page.locator(".busy-bar")).toHaveCSS("opacity", "0");
+  const metas = await listItems(page).locator(".meta").allTextContents();
+  expect(metas.every((m) => m.startsWith("PUZ"))).toBe(true);
+
+  // From now on filters only touch the URL: no page or data request.
+  const requests: string[] = [];
+  page.on("request", (r) => {
+    if (r.resourceType() === "fetch" || r.resourceType() === "document") requests.push(r.url());
+  });
+  await page.getByRole("checkbox", { name: "PUD", exact: true }).check();
+  await expect(page).toHaveURL(/tip=puz,pud/);
+  await page.getByRole("checkbox", { name: "PUZ", exact: true }).uncheck();
+  await expect(page).toHaveURL(/tip=pud/);
+  expect(requests).toEqual([]);
+});
+
+test("the list shows 30 cards and more as the reader scrolls; a link shows more without JavaScript", async ({
+  browser,
+  page,
+  city,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "the desktop panel scrolls without a drag");
+  await page.goto(`/${city}`);
+  const all = await total(page);
+  test.skip(all <= 30, "the demo data fits on one page");
+  await expect(listItems(page)).toHaveCount(30);
+  await page.locator("[data-more]").scrollIntoViewIfNeeded();
+  await expect.poll(() => listItems(page).count()).toBe(Math.min(all, 60));
+
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const nojs = await context.newPage();
+  await nojs.goto(`/${city}`);
+  await expect(listItems(nojs)).toHaveCount(30);
+  await nojs.locator("[data-more]").click();
+  await expect(nojs).toHaveURL(/afisate=60/);
+  await expect(listItems(nojs)).toHaveCount(Math.min(all, 60));
+  await context.close();
 });

@@ -1,6 +1,5 @@
-import type { ProjectIndicators } from "@mdu/shared";
+import { INDICATOR_ORDER, type ProjectIndicators } from "@mdu/shared";
 import { useFormatter, useTranslations } from "next-intl";
-import { INDICATOR_ORDER } from "@/components/ProjectList";
 
 /** Extracted indicators, each linked to the page of the PDF it was read from (PLAN §8). */
 export function KeyFigures({ indicators }: { indicators: ProjectIndicators }) {

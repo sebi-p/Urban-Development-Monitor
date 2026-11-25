@@ -1,19 +1,13 @@
-import { getJurisdiction, listNeighbourhoods, listProjects, projectsGeoJSON } from "@mdu/db";
-import { PROJECT_KINDS, PROJECT_STATUSES } from "@mdu/shared";
 import type { Metadata } from "next";
-import { LoaderCircle } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { AppBar } from "@/components/AppBar";
+import { CityExplorer } from "@/components/CityExplorer";
 import { SiteNav } from "@/components/SiteNav";
-import { BottomSheet } from "@/components/BottomSheet";
-import { FilterChips, FilterForm } from "@/components/FilterBar";
-import { ListMapBridge } from "@/components/ListMapBridge";
-import { ProjectList } from "@/components/ProjectList";
-import { ProjectMap } from "@/components/ProjectMap";
-import { getDb } from "@/lib/db";
+import { cityIndex } from "@/lib/city-index";
+import { bucharestToday, filterEntries, filterOptions, shownFrom } from "@/lib/explore";
+import { get, parseFilters, toQuery } from "@/lib/filters";
 import { alternates } from "@/lib/locale";
-import { parseFilters, toDbFilters } from "@/lib/filters";
 
 export const dynamic = "force-dynamic";
 
@@ -25,68 +19,57 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, city } = await params;
   setRequestLocale(locale);
-  const j = await getJurisdiction(getDb(), city);
-  if (!j) return {};
+  const index = await cityIndex(city);
+  if (!index) return {};
   const t = await getTranslations("City");
+  const name = index.jurisdiction.name;
   return {
-    title: t("title", { city: j.name }),
-    alternates: alternates(locale, `/${city}`, { city, title: j.name }),
+    title: t("title", { city: name }),
+    alternates: alternates(locale, `/${city}`, { city, title: name }),
   };
 }
 
+/**
+ * The map page (M4.1). The city's index is cached (lib/city-index.ts), so the page needs no
+ * database round trip; the server filters it for the first view and for browsers without
+ * JavaScript, and the browser filters it from then on (M5.7, ADR 0023).
+ */
 export default async function CityPage({ params, searchParams }: Props) {
   const { locale, city } = await params;
   setRequestLocale(locale);
-  const filters = parseFilters(await searchParams);
-  const db = getDb();
-  const j = await getJurisdiction(db, city);
-  if (!j) notFound();
-  const [projects, list, all, areas] = await Promise.all([
-    projectsGeoJSON(db, city, toDbFilters(filters)),
-    listProjects(db, city, toDbFilters(filters)),
-    listProjects(db, city), // filter options: only values that occur
-    listNeighbourhoods(db, city),
-  ]);
+  const raw = await searchParams;
+  const filters = parseFilters(raw);
+  const index = await cityIndex(city);
+  if (!index) notFound();
+  const j = index.jurisdiction;
+  const results = filterEntries(index.entries, filters, bucharestToday());
+  const { kinds, statuses, years } = filterOptions(index.entries);
   // Neighbourhoods with projects, and the chosen one even if it has none (a shared link).
-  const neighbourhoods = (areas ?? []).filter(
-    (n) => n.projects > 0 || n.slug === filters.neighbourhood,
+  const used = new Set(index.entries.map((e) => e.neighbourhood));
+  const neighbourhoods = index.neighbourhoods.filter(
+    (n) => used.has(n.slug) || n.slug === filters.neighbourhood,
   );
   const t = await getTranslations("City");
-  const kinds = PROJECT_KINDS.filter((k) => all!.some((p) => p.kind === k));
-  const statuses = PROJECT_STATUSES.filter((s) => all!.some((p) => p.status === s));
-  const years = [
-    ...new Set(all!.flatMap((p) => (p.eventDate ? [Number(p.eventDate.slice(0, 4))] : []))),
-  ].sort((a, b) => b - a);
-
-  const filtersT = await getTranslations("Filters");
 
   return (
     <>
       <AppBar city={{ slug: city, name: j.name }} actions={<SiteNav city={city} current="map" />} />
       <main className="relative h-[calc(100dvh-var(--app-bar-height))] overflow-hidden">
         <h1 className="sr-only">{t("title", { city: j.name })}</h1>
-        <div className="absolute inset-0">
-          <ProjectMap city={city} bbox={j.bbox} projects={projects!} area={filters.area} />
-        </div>
-        <BottomSheet
-          title={
-            <p className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-              <output aria-live="polite">{filtersT("showing", { count: list!.length })}</output>
-              <LoaderCircle
-                aria-hidden
-                className="busy-spinner size-3.5 shrink-0 text-slate-500 motion-safe:animate-spin"
-              />
-            </p>
-          }
-          toolbar={<FilterChips filters={filters} kinds={kinds} statuses={statuses} />}
-        >
-          <FilterForm filters={filters} years={years} neighbourhoods={neighbourhoods} />
-          <h2 className="sr-only">{t("listHeading", { count: list!.length })}</h2>
-          <div data-busy-fade>
-            <ProjectList city={city} projects={list!} />
-          </div>
-          <ListMapBridge />
-        </BottomSheet>
+        <CityExplorer
+          city={city}
+          bbox={j.bbox}
+          first={{
+            query: toQuery(filters),
+            cards: results.slice(0, shownFrom(get(raw, "afisate"))),
+            total: results.length,
+            located: results.filter((e) => e.at).length,
+          }}
+          kinds={kinds}
+          statuses={statuses}
+          years={years}
+          neighbourhoods={neighbourhoods}
+        />
       </main>
     </>
   );

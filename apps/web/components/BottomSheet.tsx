@@ -4,6 +4,7 @@ import { ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { listen, SHEET } from "@/lib/map-events";
+import { saveView, useSavedView } from "@/lib/view-memory";
 import { cn } from "@/lib/utils";
 
 type Snap = "peek" | "half" | "full";
@@ -13,19 +14,25 @@ const ORDER: Snap[] = ["peek", "half", "full"];
  * Phones: a sheet over the full-screen map, dragged by its handle between three heights (peek,
  * half, full), or toggled with the button. Wide screens: the same content as a floating side
  * panel (CSS only). A link to a list entry (`#p-<slug>`, e.g. from a map popup) opens it full.
- * Without JavaScript the content is still in the page and scrolls.
+ * Without JavaScript the content is still in the page and scrolls. With `remember`, going back
+ * to the page reopens the sheet at the height it had (M5.7).
  */
 export function BottomSheet({
   title,
   toolbar,
+  remember = false,
   children,
 }: {
   title: ReactNode;
   toolbar?: ReactNode;
+  remember?: boolean;
   children: ReactNode;
 }) {
   const t = useTranslations("Sheet");
-  const [snap, setSnap] = useState<Snap>("peek");
+  const saved = useSavedView();
+  const [chosen, setSnap] = useState<Snap | null>(null);
+  const restored = remember ? saved?.snap : undefined;
+  const snap: Snap = chosen ?? (restored && ORDER.includes(restored) ? restored : "peek");
   const drag = useRef<{ y: number; snap: Snap } | null>(null);
 
   useEffect(() => {
@@ -41,6 +48,9 @@ export function BottomSheet({
       stop();
     };
   }, []);
+  useEffect(() => {
+    if (remember && chosen) saveView({ snap: chosen });
+  }, [remember, chosen]);
 
   const step = (dir: 1 | -1, from: Snap = snap) =>
     ORDER[Math.max(0, Math.min(ORDER.length - 1, ORDER.indexOf(from) + dir))]!;
@@ -95,7 +105,9 @@ export function BottomSheet({
         </button>
       </div>
       {toolbar ? <div className="px-4 pt-1 pb-3">{toolbar}</div> : null}
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6">{children}</div>
+      <div data-sheet-body className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6">
+        {children}
+      </div>
     </aside>
   );
 }

@@ -15,6 +15,7 @@ import {
   neighbourhoodsGeoJSON,
   sitemapProjects,
 } from "./public.ts";
+import { mapIndex } from "./map-index.ts";
 import { listProjects, type Area } from "./queries.ts";
 import { loadJurisdictionFiles, upsertJurisdictions } from "./seed.ts";
 
@@ -96,6 +97,31 @@ describe.skipIf(!adminUrl)("M4.4 public queries (PostGIS)", () => {
     await sql?.end();
     await admin?.unsafe(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
     await admin?.end();
+  });
+
+  it("builds the map index: published, unmerged projects with what the filters need", async () => {
+    const index = (await mapIndex(handle.db, city))!;
+    expect(index.jurisdiction.slug).toBe(city);
+    expect(index.neighbourhoods).toEqual([
+      { slug: "est", name: "Est" },
+      { slug: "vest", name: "Vest" },
+    ]);
+    // b has the event (newest first); "hidden" isn't published and "merged" joined b.
+    expect(index.entries.map((e) => e.slug)).toEqual(["b", "a"]);
+    expect(index.entries[0]).toMatchObject({
+      at: [25.65, 45.65],
+      date: "2025-05-01",
+      years: [2025],
+      neighbourhood: "est",
+      consultations: [[null, null]],
+      figures: {},
+    });
+    expect(index.entries[1]).toMatchObject({
+      date: null,
+      years: [],
+      consultations: [["2025-03-01", "2025-03-31"]],
+    });
+    expect(await mapIndex(handle.db, "no-such-city")).toBeNull();
   });
 
   it("lists neighbourhoods with their published projects, and their shapes", async () => {

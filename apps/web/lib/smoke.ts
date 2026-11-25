@@ -16,7 +16,12 @@ interface Expect {
   path: string;
   /** Text the body must contain. */
   contains?: string[];
+  /** The most bytes the body may have (M5.7: the map page stays light). */
+  maxBytes?: number;
 }
+
+/** The map page renders 30 cards whatever the city's size: about 160 KB before compression. */
+export const MAP_PAGE_MAX_BYTES = 400_000;
 
 const TIMEOUT_MS = 20_000;
 
@@ -35,10 +40,15 @@ async function check(base: string, e: Expect, f: Fetch, headers: HeadersInit): P
     if (res.status !== 200)
       return { path: e.path, status: res.status, problem: `HTTP ${res.status}` };
     const missing = (e.contains ?? []).find((c) => !body.includes(c));
+    const bytes = new TextEncoder().encode(body).length;
     return {
       path: e.path,
       status: res.status,
-      problem: missing ? `the page doesn't contain ${JSON.stringify(missing)}` : "",
+      problem: missing
+        ? `the page doesn't contain ${JSON.stringify(missing)}`
+        : e.maxBytes && bytes > e.maxBytes
+          ? `the page has ${bytes} bytes, over its budget of ${e.maxBytes}`
+          : "",
     };
   } catch (err) {
     return {
@@ -50,8 +60,9 @@ async function check(base: string, e: Expect, f: Fetch, headers: HeadersInit): P
 }
 
 /**
- * The home, method and about pages, and for each city its map, archive, feed, GeoJSON API and
- * one project page (the first one the API lists). The API must list at least one project.
+ * The home, method and about pages, and for each city its map (under its size budget), the map's
+ * index, archive, feed, GeoJSON API and one project page (the first one the API lists). The API
+ * must list at least one project.
  */
 export async function smokeCheck(
   base: string,
@@ -67,7 +78,8 @@ export async function smokeCheck(
   ];
   for (const city of cities) {
     pages.push(
-      { path: `/${city}`, contains: ["<main"] },
+      { path: `/${city}`, contains: ["<main"], maxBytes: MAP_PAGE_MAX_BYTES },
+      { path: `/api/${city}/map.json`, contains: ['"entries"'] },
       { path: `/${city}/arhiva`, contains: ["<h1"] },
       { path: `/${city}/feed.xml`, contains: ["<feed"] },
     );

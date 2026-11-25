@@ -5,12 +5,11 @@ import type { Map as MapLibreMap, Marker } from "maplibre-gl";
 import { Crosshair, PenLine, Rss, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, useTransition, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { Button } from "@/components/ui/button";
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { setBusy } from "@/lib/busy";
 import { formatArea, MAX_AREA_POINTS, parseFilters, toQuery } from "@/lib/filters";
 import { localePath } from "@/lib/locale";
+import { replaceQuery } from "@/lib/view-memory";
 
 const NEAR_ZOOM = 15;
 
@@ -32,19 +31,12 @@ export function MapTools({
 }) {
   const t = useTranslations("Filters");
   const locale = useLocale();
-  const router = useRouter();
-  const pathname = usePathname();
   const search = useSearchParams();
-  const [pending, startTransition] = useTransition();
   const [drawing, setDrawing] = useState(false);
   const [message, setMessage] = useState("");
   const draw = useRef<Draw | null>(null);
   const me = useRef<Marker | null>(null);
 
-  useEffect(() => {
-    setBusy(pending);
-    return () => setBusy(false);
-  }, [pending]);
   useEffect(
     () => () => {
       draw.current?.stop();
@@ -56,7 +48,7 @@ export function MapTools({
   const go = (next: Area | undefined) => {
     const f = { ...parseFilters(new URLSearchParams(search.toString())), area: next };
     const q = toQuery(f);
-    startTransition(() => router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false }));
+    replaceQuery(q);
   };
 
   const attempt = useRef(0); // a cancel before terra-draw has loaded wins

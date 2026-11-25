@@ -5,7 +5,7 @@ import { CalendarCheck, ChevronRight, MapPin, Sparkles } from "lucide-react";
 import { AppBar } from "@/components/AppBar";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
-import { LocationNote } from "@/components/ProjectList";
+import { LocationNote } from "@/components/project/LocationNote";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ConsultationBox } from "@/components/project/ConsultationBox";
 import { DocumentList } from "@/components/project/DocumentList";

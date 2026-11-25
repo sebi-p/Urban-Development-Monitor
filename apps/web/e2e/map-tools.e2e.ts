@@ -5,6 +5,9 @@ import { expect, test } from "./fixtures";
 const listItems = (page: import("@playwright/test").Page) => page.locator(".project-list > li");
 const shown = (page: import("@playwright/test").Page) =>
   page.locator("output").first().textContent();
+/** The number of results the page reports (the list renders 30 cards at a time). */
+const total = async (page: import("@playwright/test").Page) =>
+  Number((await shown(page))?.match(/\d+/)?.[0] ?? 0);
 
 // The demo city's box (config bbox) and a triangle far outside it.
 const WHOLE_CITY = "25.5,45.57;25.7,45.57;25.7,45.71;25.5,45.71";
@@ -29,13 +32,13 @@ test("a drawn area filters through the URL; clearing it shows everything again",
   city,
 }) => {
   await page.goto(`/${city}`);
-  const all = await listItems(page).count();
+  const all = await total(page);
   await page.goto(`/${city}?zona=${WHOLE_CITY}`);
   await expect(page.locator(".map[data-area='4']")).toBeAttached();
   // Every located project is inside; projects with no location are in no area.
   const located = Number(await page.locator(".map").getAttribute("data-count"));
   expect(located).toBeGreaterThan(0);
-  await expect(listItems(page)).toHaveCount(located);
+  expect(await total(page)).toBe(located);
   await page.goto(`/${city}?zona=${NOWHERE}`);
   await expect(listItems(page)).toHaveCount(0);
   await expect(page.locator(".map")).toHaveAttribute("data-count", "0");
@@ -44,7 +47,7 @@ test("a drawn area filters through the URL; clearing it shows everything again",
   expect((await page.request.get((await feed.getAttribute("href"))!)).status()).toBe(200);
   await page.getByRole("button", { name: "Șterge zona" }).click();
   await expect(page).not.toHaveURL(/zona=/);
-  await expect.poll(() => listItems(page).count()).toBe(all);
+  await expect.poll(() => total(page)).toBe(all);
 });
 
 test("drawing a polygon on the map sets the area", async ({ page, city }, info) => {

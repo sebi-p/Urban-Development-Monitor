@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { syncAlerts } from "./alerts";
-import { smokeCheck, smokeReport } from "./smoke";
+import { MAP_PAGE_MAX_BYTES, smokeCheck, smokeReport } from "./smoke";
 import { dispatchWorkflow } from "./workflows";
 
 /** A fake GitHub API: open issues in memory, every call recorded. */
@@ -57,17 +57,21 @@ describe("alert issues", () => {
 });
 
 describe("page checks", () => {
-  const site = (broken: string) => async (url: string) => {
-    const path = new URL(url).pathname;
-    if (path === broken) return new Response("oops", { status: 500 });
-    if (path.endsWith(".geojson"))
-      return Response.json({
-        type: "FeatureCollection",
-        features: [{ properties: { slug: "p" } }],
-      });
-    if (path.endsWith(".xml")) return new Response("<feed>");
-    return new Response("<main><h1>x</h1></main>");
-  };
+  const site =
+    (broken: string, heavy = "") =>
+    async (url: string) => {
+      const path = new URL(url).pathname;
+      if (path === broken) return new Response("oops", { status: 500 });
+      if (path.endsWith(".geojson"))
+        return Response.json({
+          type: "FeatureCollection",
+          features: [{ properties: { slug: "p" } }],
+        });
+      if (path.endsWith(".xml")) return new Response("<feed>");
+      if (path.endsWith("map.json")) return Response.json({ entries: [] });
+      if (path === heavy) return new Response(`<main>${"x".repeat(MAP_PAGE_MAX_BYTES)}</main>`);
+      return new Response("<main><h1>x</h1></main>");
+    };
 
   it("checks every page and one project page, and reports only the broken ones", async () => {
     const ok = await smokeCheck("https://x.test", ["c"], { fetch: site("") });
@@ -76,6 +80,7 @@ describe("page checks", () => {
       "/metodologie",
       "/despre",
       "/c",
+      "/api/c/map.json",
       "/c/arhiva",
       "/c/feed.xml",
       "/api/c/projects.geojson",
@@ -91,7 +96,11 @@ describe("page checks", () => {
     const guarded = await smokeCheck("https://x.test", ["c"], { fetch: login });
     expect(guarded[0]!.problem).toBe("redirected to vercel.com");
     expect(smokeReport("https://x.test", bad)).toBe(
-      "1 of 8 production checks failed on https://x.test:\n\n- `/c/proiecte/p`: HTTP 500",
+      "1 of 9 production checks failed on https://x.test:\n\n- `/c/proiecte/p`: HTTP 500",
+    );
+    const heavy = await smokeCheck("https://x.test", ["c"], { fetch: site("", "/c") });
+    expect(heavy.find((c) => c.path === "/c")!.problem).toBe(
+      `the page has ${MAP_PAGE_MAX_BYTES + 13} bytes, over its budget of ${MAP_PAGE_MAX_BYTES}`,
     );
   });
 });

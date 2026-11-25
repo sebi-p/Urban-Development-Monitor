@@ -15,6 +15,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { adminLogin, signIn, signOut } from "@/auth";
 import { AUDIT_TAG } from "@/lib/audit";
+import { INDEX_TAG } from "@/lib/city-index";
 import { getDb } from "@/lib/db";
 
 /** Every action checks the session again: a server action is a public POST endpoint. */
@@ -44,6 +45,7 @@ export async function decideAction(form: FormData) {
   if (decision !== "approve" && decision !== "reject") throw new Error("bad decision");
   await decideCandidate(getDb(), { id: text(form, "id"), decision, actor });
   revalidatePath("/admin");
+  updateTag(INDEX_TAG); // the map page shows the change at once
 }
 
 export async function mergeAction(form: FormData) {
@@ -51,6 +53,7 @@ export async function mergeAction(form: FormData) {
   const projectId = text(form, "projectId");
   await mergeProjects(getDb(), { projectId, intoId: text(form, "intoId"), actor });
   revalidatePath(`/admin/projects/${projectId}`);
+  updateTag(INDEX_TAG); // the map page shows the change at once
 }
 
 export async function splitAction(form: FormData) {
@@ -58,12 +61,14 @@ export async function splitAction(form: FormData) {
   const projectId = text(form, "projectId");
   await splitProject(getDb(), { projectId, actor });
   revalidatePath(`/admin/projects/${projectId}`);
+  updateTag(INDEX_TAG); // the map page shows the change at once
 }
 
 export async function locateAction(projectId: string, lon: number, lat: number) {
   const actor = await requireAdmin();
   await setManualLocation(getDb(), { projectId, lon, lat, actor });
   revalidatePath(`/admin/projects/${projectId}`);
+  updateTag(INDEX_TAG); // the map page shows the change at once
 }
 
 export async function rerunAction(form: FormData) {

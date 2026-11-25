@@ -1,8 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["fra1"],
   "crons": [
-    { "path": "/api/watchdog", "schedule": "0 12 * * *" },
-    { "path": "/api/start/daily", "schedule": "0 4 * * *" },
-    { "path": "/api/start/backfill", "schedule": "0 20 * * *" }
+    {
+      "path": "/api/watchdog",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/start/daily",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/start/backfill",
+      "schedule": "0 20 * * *"
+    }
   ]
 }

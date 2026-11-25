@@ -121,28 +121,19 @@ export default async function StylePage({ params }: { params: Promise<{ locale: 
           city="stil"
           projects={[
             {
-              id: "sample",
               slug: "exemplu",
               title: "PUZ Ansamblu de locuințe colective, Strada Lungă",
               kind: "puz",
               status: "in_public_consultation",
               address: "Strada Lungă nr. 5",
               geomPrecision: "parcel",
-              hasLocation: true,
-              eventDate: "2026-11-03",
-              eventTitle: null,
-              sourceUrl: null,
-              documents: [{ label: "05. Memoriu", url: "#", size_bytes: null, role: "memoriu" }],
+              at: [25.6, 45.65],
+              date: "2026-11-03",
+              years: [2026],
+              neighbourhood: null,
+              consultations: [],
               initiator: "SC EXEMPLU SRL",
-              indicators: {
-                height_regime: {
-                  value: "P+4E+R",
-                  source_document_id: "x",
-                  page: 2,
-                  confidence: "medium",
-                },
-                pot_percent: { value: 35, source_document_id: "x", page: 2, confidence: "medium" },
-              },
+              figures: { height_regime: "P+4E+R", pot_percent: 35 },
             },
           ]}
         />

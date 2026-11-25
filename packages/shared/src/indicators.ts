@@ -36,3 +36,17 @@ export interface ProjectIndicators {
     prompt_version: string;
   };
 }
+
+/** Display order of the indicators on cards and project pages (PLAN §6). */
+export const INDICATOR_ORDER = [
+  "height_regime",
+  "max_height_m",
+  "pot_percent",
+  "cut",
+  "dwellings",
+  "parking_spaces",
+  "green_space_percent",
+  "site_area_m2",
+] as const satisfies readonly (keyof ProjectIndicators)[];
+
+export type CardFigure = (typeof INDICATOR_ORDER)[number];
