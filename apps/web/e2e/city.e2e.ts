@@ -173,10 +173,12 @@ test("a filter change needs no request once the index is in; before that, cues s
   const metas = await listItems(page).locator(".meta").allTextContents();
   expect(metas.every((m) => m.startsWith("PUZ"))).toBe(true);
 
-  // From now on filters only touch the URL: no page or data request.
+  // From now on filters only touch the URL: neither the page nor its index is asked for again
+  // (map glyphs and prefetched project pages may load meanwhile).
   const requests: string[] = [];
   page.on("request", (r) => {
-    if (r.resourceType() === "fetch" || r.resourceType() === "document") requests.push(r.url());
+    const path = new URL(r.url()).pathname;
+    if (path === `/${city}` || path.endsWith("/map.json")) requests.push(r.url());
   });
   await page.getByRole("checkbox", { name: "PUD", exact: true }).check();
   await expect(page).toHaveURL(/tip=puz,pud/);

@@ -6,5 +6,5 @@ test("the production page checks pass", async ({ city, baseURL }, info) => {
   test.skip(info.project.name !== "desktop", "plain HTTP: once is enough");
   const checks = await smokeCheck(baseURL!, [city]);
   expect(smokeReport(baseURL!, checks)).toBe("");
-  expect(checks.length).toBe(8);
+  expect(checks.length).toBe(9);
 });
