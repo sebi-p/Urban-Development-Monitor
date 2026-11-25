@@ -16,7 +16,7 @@ import {
   sitemapProjects,
 } from "./public.ts";
 import { mapIndex } from "./map-index.ts";
-import { listProjects, type Area } from "./queries.ts";
+import { getProject, listProjects, type Area } from "./queries.ts";
 import { loadJurisdictionFiles, upsertJurisdictions } from "./seed.ts";
 
 loadEnv();
@@ -189,5 +189,53 @@ describe.skipIf(!adminUrl)("M4.4 public queries (PostGIS)", () => {
     const pages = await sitemapProjects(handle.db);
     expect(pages.map((p) => `${p.city}/${p.slug}`).sort()).toEqual([`${city}/a`, `${city}/b`]);
     expect(pages[0]!.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it("gives a project page its council items, oldest first, with the minutes page", async () => {
+    const [j] = await sql`select id from jurisdiction where slug = ${city}`;
+    const jid = j!.id as number;
+    const [src] = await sql`select id from source limit 1`;
+    const file = async (url: string) => {
+      const [d] = await sql`
+        insert into raw_document (jurisdiction_id, url, fetched_at, sha256, mime, size_bytes)
+        values (${jid}, ${url}, now(), ${randomBytes(32).toString("hex")}, 'application/pdf', 1)
+        returning id`;
+      await sql`insert into "fetch" (jurisdiction_id, source_id, url, status, raw_document_id,
+          fetched_at)
+        values (${jid}, ${src!.id}, ${url}, 'fetched', ${d!.id}, now())`;
+      return d!.id as string;
+    };
+    const agenda = await file("https://example.org/odz.pdf");
+    const minutes = await file("https://example.org/pv.pdf");
+    const [s1] = await sql`
+      insert into council_session (jurisdiction_id, session_date, source_ref, agenda_document_id,
+        minutes_document_id)
+      values (${jid}, '2026-09-25', 'S-1', ${agenda}, ${minutes}) returning id`;
+    const [s2] = await sql`
+      insert into council_session (jurisdiction_id, session_date, source_ref)
+      values (${jid}, '2026-10-30', 'S-2') returning id`;
+    const [b] = await sql`select id from project where slug = 'b'`;
+    await sql`
+      insert into agenda_item (jurisdiction_id, session_id, item_number, item_text, project_id,
+        outcome, votes_for, votes_abstain, raw_document_id, page)
+      values (${jid}, ${s2!.id}, 3, 'PUZ b', ${b!.id}, null, null, null, null, null),
+             (${jid}, ${s1!.id}, 24, 'PUZ b', ${b!.id}, 'adopted', 21, 3, ${minutes}, 6)`;
+    const found = await getProject(handle.db, city, "b");
+    if (!found.found) throw new Error("b not found");
+    expect(found.project.council).toEqual([
+      {
+        sessionDate: "2026-09-25",
+        itemNumber: 24,
+        outcome: "adopted",
+        votes: { for: 21, against: null, abstain: 3, absent: null, unanimous: false },
+        minutesUrl: "https://example.org/pv.pdf",
+        page: 6,
+        agendaUrl: "https://example.org/odz.pdf",
+      },
+      expect.objectContaining({ sessionDate: "2026-10-30", outcome: null, minutesUrl: null }),
+    ]);
+    const a = await getProject(handle.db, city, "a");
+    expect(a.found && a.project.council).toEqual([]);
+    await sql`truncate council_session cascade`;
   });
 });

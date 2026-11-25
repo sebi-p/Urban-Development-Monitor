@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import type { CouncilItem } from "@mdu/db";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { CalendarCheck, ChevronRight, MapPin, Sparkles } from "lucide-react";
+import { CalendarCheck, ChevronRight, Landmark, MapPin, Sparkles } from "lucide-react";
 import { AppBar } from "@/components/AppBar";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
@@ -14,6 +15,7 @@ import { MiniMap } from "@/components/project/MiniMap";
 import { Timeline, type TimelineItem } from "@/components/project/Timeline";
 import { Card } from "@/components/ui/card";
 import { mainConsultation, today } from "@/lib/consultation";
+import { councilDecision, councilSource, voteParts, withCouncilFiles } from "@/lib/council";
 import { Link, permanentRedirect } from "@/i18n/navigation";
 import { jsonLdScript, projectJsonLd } from "@/lib/jsonld";
 import { alternates, localePath } from "@/lib/locale";
@@ -46,12 +48,39 @@ function summaryIn(locale: string, p: { summaryRo: string | null; summaryEn: str
   return locale === "en" ? (p.summaryEn ?? p.summaryRo) : p.summaryRo;
 }
 
+const VOTE_KEYS = {
+  for: "votesFor",
+  against: "votesAgainst",
+  abstain: "votesAbstain",
+  absent: "votesAbsent",
+} as const;
+
+/**
+ * For a project with no summary that the Local Council had (often known only from the minutes,
+ * with no files of its own): what the council did and the vote, from the stored minutes item.
+ */
+async function councilSummary(council: CouncilItem[]) {
+  const item = councilDecision(council);
+  if (!item) return null;
+  const t = await getTranslations("Project");
+  const f = await getFormatter();
+  const date = f.dateTime(new Date(`${item.sessionDate}T12:00:00`), { dateStyle: "long" });
+  const sentences = [t("summaryCouncil", { outcome: item.outcome ?? "none", date })];
+  if (item.outcome === "adopted" || item.outcome === "rejected") {
+    const parts = voteParts(item.votes).map(({ part, n }) => t(VOTE_KEYS[part], { n }));
+    if (item.votes.unanimous) sentences.push(t("summaryUnanimous"));
+    else if (parts.length > 0) sentences.push(t("summaryVotes", { votes: parts.join(", ") }));
+  }
+  return { text: sentences.join(" "), item, source: councilSource(item) };
+}
+
 async function describe(locale: string, city: string, slug: string) {
   const { j, p } = await load(locale, city, slug);
   const t = await getTranslations("Project");
   const kind = await getTranslations("Kind");
   return (
     summaryIn(locale, p) ??
+    (await councilSummary(p.council))?.text ??
     t("metaDescription", { kind: kind(p.kind), city: j.name, title: p.title })
   );
 }
@@ -112,6 +141,10 @@ export default async function ProjectPage({ params }: Props) {
     ? p.documents.find((d) => d.url === summarySource.source_url)
     : undefined;
   const docLabel = (d: (typeof p.documents)[number]) => d.label ?? docType(d.role ?? "other");
+  const council = summary ? null : await councilSummary(p.council);
+  const documents = withCouncilFiles(p.documents, p.council, (file) =>
+    t(file === "agenda" ? "councilAgenda" : "councilMinutes"),
+  );
   const base = siteUrl();
   const jsonLd = projectJsonLd(p, {
     url: new URL(localePath(locale, projectPath(city, slug)), base).toString(),
@@ -201,8 +234,37 @@ export default async function ProjectPage({ params }: Props) {
                 )}
               </p>
             </>
+          ) : council ? (
+            <>
+              <p className="mt-2 text-base leading-relaxed text-slate-800">{council.text}</p>
+              {p.documents.length === 0 && (
+                <p className="mt-2 text-sm text-slate-600">{t("summaryCouncilOnly")}</p>
+              )}
+              <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                <span className="inline-flex items-center gap-1">
+                  <Landmark aria-hidden className="size-3.5 shrink-0" />
+                  {t("summaryFromMinutes")}
+                </span>
+                {council.source && (
+                  <a
+                    className="source-chip inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-700"
+                    href={council.source}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    {council.item.minutesUrl
+                      ? council.item.page
+                        ? t("summarySource", { doc: t("councilMinutes"), page: council.item.page })
+                        : t("councilMinutes")
+                      : t("councilAgenda")}
+                  </a>
+                )}
+              </p>
+            </>
           ) : (
-            <p className="mt-2 text-sm text-slate-600">{t("noSummary")}</p>
+            <p className="mt-2 text-sm text-slate-600">
+              {t(documents.length > 0 ? "noSummary" : "noSummaryYet")}
+            </p>
           )}
         </Card>
 
@@ -227,7 +289,7 @@ export default async function ProjectPage({ params }: Props) {
           <h2 id="documents-heading" className="mb-3 text-base font-semibold">
             {t("documentsHeading")}
           </h2>
-          <DocumentList documents={p.documents} />
+          <DocumentList documents={documents} />
         </section>
 
         <section aria-labelledby="location-heading" className="space-y-3">

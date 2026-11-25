@@ -1,5 +1,6 @@
 /** Read-only queries for the public site (admin writes are in admin.ts, ADR 0012). */
 import type {
+  AgendaOutcome,
   DocumentRole,
   EventType,
   ProjectIndicators,
@@ -355,6 +356,25 @@ export interface ConsultationItem {
   page: number | null;
 }
 
+/** An item of a Local Council session that is about the project (from the minutes, M5.3). */
+export interface CouncilItem {
+  sessionDate: string; // ISO date
+  itemNumber: number;
+  /** Null while the minutes aren't read yet: the item is only on the agenda. */
+  outcome: AgendaOutcome | null;
+  votes: {
+    for: number | null;
+    against: number | null;
+    abstain: number | null;
+    absent: number | null;
+    unanimous: boolean;
+  };
+  /** The session's minutes and the page that records the outcome. */
+  minutesUrl: string | null;
+  page: number | null;
+  agendaUrl: string | null;
+}
+
 export interface NearbyProject {
   slug: string;
   title: string;
@@ -375,6 +395,8 @@ export interface ProjectDetail extends ProjectListItem {
   lastCheckedAt: string;
   events: ProjectEventItem[];
   consultations: ConsultationItem[];
+  /** Oldest first. */
+  council: CouncilItem[];
   nearby: NearbyProject[];
 }
 
@@ -416,7 +438,10 @@ export async function getProject(db: Db, city: string, slug: string): Promise<Pr
   if (!item) return { found: false, redirectTo: null };
 
   const family = sql`(select c.id from project c where c.id = ${p.id} or c.merged_into_id = ${p.id})`;
-  const [events, consultations, nearby, checked] = await Promise.all([
+  const url = (doc: SQL) =>
+    sql`(select f.url from "fetch" f where f.raw_document_id = ${doc}
+         order by f.fetched_at desc nulls last limit 1)`;
+  const [events, consultations, nearby, checked, council] = await Promise.all([
     db.execute<{ date: string; type: EventType; title: string; source_url: string | null }>(sql`
       select event_date::text as date, event_type as type, title,
              details->>'source_url' as source_url
@@ -460,6 +485,26 @@ export async function getProject(db: Db, city: string, slug: string): Promise<Pr
       select max(f.fetched_at)::text as at
       from project_document pd join "fetch" f on f.raw_document_id = pd.raw_document_id
       where pd.project_id in ${family}`),
+    db.execute<{
+      session_date: string;
+      item_number: number;
+      outcome: AgendaOutcome | null;
+      votes_for: number | null;
+      votes_against: number | null;
+      votes_abstain: number | null;
+      votes_absent: number | null;
+      unanimous: boolean;
+      minutes_url: string | null;
+      page: number | null;
+      agenda_url: string | null;
+    }>(sql`
+      select s.session_date::text, ai.item_number, ai.outcome, ai.votes_for, ai.votes_against,
+             ai.votes_abstain, ai.votes_absent, ai.unanimous, ai.page,
+             ${url(sql`coalesce(ai.raw_document_id, s.minutes_document_id)`)} as minutes_url,
+             ${url(sql`s.agenda_document_id`)} as agenda_url
+      from agenda_item ai join council_session s on s.id = ai.session_id
+      where ai.project_id in ${family}
+      order by s.session_date, ai.item_number`),
   ]);
   const fetched = checked[0]?.at;
   return {
@@ -489,6 +534,21 @@ export async function getProject(db: Db, city: string, slug: string): Promise<Pr
         publicMeetingPlace: c.public_meeting_place,
         sourceUrl: c.source_url,
         page: c.page,
+      })),
+      council: council.map((c) => ({
+        sessionDate: c.session_date,
+        itemNumber: c.item_number,
+        outcome: c.outcome,
+        votes: {
+          for: c.votes_for,
+          against: c.votes_against,
+          abstain: c.votes_abstain,
+          absent: c.votes_absent,
+          unanimous: c.unanimous,
+        },
+        minutesUrl: c.minutes_url,
+        page: c.page,
+        agendaUrl: c.agenda_url,
       })),
       nearby: nearby.map((n) => ({
         slug: n.slug,
