@@ -34,7 +34,9 @@ another site.
 - **aws4fetch** (MIT, about 3 KB, no dependencies) signs the R2 requests. The web app gets a
   read-only R2 token (`R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` in
   Vercel); the public pages never read R2. Without the variables the viewer says so and the links
-  still work.
+  still work. `R2_ENDPOINT` is the same as the pipeline's, ending in the bucket name: the pipeline's
+  objects sit under a folder of that name (key `<bucket>/raw/…`), so an endpoint without it
+  answers 404 for every file.
 
 ## Consequences
 
