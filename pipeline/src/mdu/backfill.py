@@ -63,12 +63,18 @@ class Cursor:
 
 
 def load_cursor(conn: psycopg.Connection[Any], city: str, adapter: str) -> Cursor | None:
-    row = conn.execute(
-        """select r.stats from pipeline_run r join jurisdiction j on j.id = r.jurisdiction_id
-           where j.slug = %s and r.adapter = %s and r.stage = 'backfill'
-           order by r.started_at desc, r.id desc limit 1""",
-        (city, adapter),
-    ).fetchone()
+    """The latest checkpoint. Read in its own transaction: a bare read on a connection that isn't
+    in autocommit leaves one open, and the night's checkpoints would then be savepoints in it,
+    committed only at the end. The walked count breaks ties (rows written in one transaction share
+    `now()`), as it only grows."""
+    with conn.transaction():
+        row = conn.execute(
+            """select r.stats from pipeline_run r join jurisdiction j on j.id = r.jurisdiction_id
+               where j.slug = %s and r.adapter = %s and r.stage = 'backfill'
+               order by r.started_at desc, (r.stats->>'walked')::int desc nulls last, r.id desc
+               limit 1""",
+            (city, adapter),
+        ).fetchone()
     if row is None:
         return None
     s = row[0]
@@ -85,10 +91,10 @@ def load_cursor(conn: psycopg.Connection[Any], city: str, adapter: str) -> Curso
 def _save(conn: psycopg.Connection[Any], city: str, adapter: str, cursor: Cursor) -> None:
     with conn.transaction():
         conn.execute(
-            """insert into pipeline_run (jurisdiction_id, adapter, stage, status, finished_at,
-                   stats)
-               select id, %s, 'backfill', 'succeeded', now(), %s from jurisdiction
-               where slug = %s""",
+            """insert into pipeline_run (jurisdiction_id, adapter, stage, status, started_at,
+                   finished_at, stats)
+               select id, %s, 'backfill', 'succeeded', clock_timestamp(), clock_timestamp(), %s
+               from jurisdiction where slug = %s""",
             (adapter, cursor.as_json(), city),
         )
 
@@ -156,7 +162,11 @@ def run(  # noqa: PLR0913
     records: list[ProjectRecord] = []
     items: list[stages.DiscoveredItem] = []
 
-    def flush() -> None:
+    def flush() -> None:  # one transaction: what the checkpoint found, then the checkpoint
+        with conn.transaction():
+            _flush()
+
+    def _flush() -> None:
         if records:
             write_records(
                 conn, city=city, adapter=adapter.key, base_url=adapter.base_url,

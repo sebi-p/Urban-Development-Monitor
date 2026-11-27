@@ -657,7 +657,8 @@ def _backfill(args: argparse.Namespace) -> int:
     if not adapters:
         print("no adapter with a back-fill", file=sys.stderr)
         return EXIT_FAILED
-    with psycopg.connect(url) as conn:
+    # Autocommit: each checkpoint commits on its own, so a crash loses one checkpoint, not a night.
+    with psycopg.connect(url, autocommit=True) as conn:
         if args.status:
             print("\n".join(backfill.status(conn, args.city, adapters)))
             return 0

@@ -1,5 +1,6 @@
 """M5.1: the notices back-fill walks article numbers down to a date, on saved pages."""
 
+import json
 from datetime import date
 from typing import Any
 
@@ -149,3 +150,48 @@ def test_each_night_leaves_one_row_for_the_watchdog(pg: psycopg.Connection[Any])
     ]
     # The walk's checkpoint is a separate stage: a night row never resets the cursor.
     assert backfill.load_cursor(pg, "brasov", "brasov.notices") is None
+
+
+def test_each_checkpoint_commits_on_a_connection_outside_autocommit(
+    pg: psycopg.Connection[Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Production's shape: a bare read once left a transaction open all night, so the checkpoints
+    were savepoints in it, committed only when the connection closed."""
+    _jid(pg)
+    monkeypatch.setattr(backfill, "CHECKPOINT", 2)
+    client, _ = site({NEWEST - 1: "puz-information-notice"})
+    ticks = iter(range(100))
+    pg.autocommit = False
+    try:
+        r = backfill.run(
+            pg, client, StreetIndex({}), ADAPTERS["brasov.notices"], city="brasov",
+            since=date(2020, 1, 1), seconds=5, upload=None, clock=lambda: float(next(ticks)),
+        )  # fmt: skip
+        assert r.walked == 4
+        assert pg.info.transaction_status == psycopg.pq.TransactionStatus.IDLE
+    finally:
+        pg.rollback()
+        pg.autocommit = True
+    stamps = pg.execute(
+        "select count(distinct started_at), count(*) from pipeline_run where stage = 'backfill'"
+    ).fetchone()
+    assert stamps == (3, 3)  # each checkpoint committed (two, then the last), with its own time
+
+
+def test_resumes_from_the_furthest_checkpoint_when_times_tie(pg: psycopg.Connection[Any]) -> None:
+    _jid(pg)
+    row = pg.execute("select id from jurisdiction where slug = 'brasov'").fetchone()
+    assert row
+    jid = row[0]
+    for walked, next_id in ((200, 800), (100, 900), (300, 700)):
+        stats = {"next_id": next_id, "since": "2020-01-01", "done": False, "walked": walked}
+        pg.execute(
+            """insert into pipeline_run (jurisdiction_id, adapter, stage, status, started_at,
+                   stats)
+               values (%s, 'brasov.notices', 'backfill', 'succeeded',
+                       '2026-11-26 20:50:56+00', %s)""",
+            (jid, json.dumps(stats)),
+        )
+    cursor = backfill.load_cursor(pg, "brasov", "brasov.notices")
+    assert cursor is not None
+    assert (cursor.walked, cursor.next_id) == (300, 700)
